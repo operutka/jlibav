@@ -1,0 +1,55 @@
+/*
+ * Copyright (C) 2012 Ondrej Perutka
+ *
+ * This program is free software: you can redistribute it and/or 
+ * modify it under the terms of the GNU Lesser General Public 
+ * License as published by the Free Software Foundation, either 
+ * version 3 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public 
+ * License along with this library. If not, see 
+ * <http://www.gnu.org/licenses/>.
+ */
+package org.libav.avformat.bridge;
+
+import com.sun.jna.Pointer;
+import com.sun.jna.Structure;
+
+/**
+ * Mirror of the native AVProbeData struct for the libavformat v53.x.x and 
+ * 54.x.x. For details see the Libav documentation.
+ * 
+ * @author Ondrej Perutka
+ */
+public class AVProbeData extends Structure {
+    
+    public Pointer filename;
+    public Pointer buf;
+    public int buf_size;
+
+    public AVProbeData() {
+        super();
+        initFieldOrder();
+    }
+
+    public AVProbeData(Pointer filename, Pointer buf, int buf_size) {
+        super();
+        this.filename = filename;
+        this.buf = buf;
+        this.buf_size = buf_size;
+        initFieldOrder();
+    }
+
+    private void initFieldOrder() {
+        setFieldOrder(new java.lang.String[]{"filename", "buf", "buf_size"});
+    }
+
+    public static class ByReference extends AVProbeData implements Structure.ByReference { }
+    public static class ByValue extends AVProbeData implements Structure.ByValue { }
+        
+}
