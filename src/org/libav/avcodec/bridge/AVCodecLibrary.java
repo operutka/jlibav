@@ -25,6 +25,7 @@ import org.bridj.BridJ;
 import org.bridj.NativeLibrary;
 import org.bridj.Pointer;
 import org.bridj.ann.Library;
+import org.bridj.ann.Optional;
 import org.libav.bridge.ILibrary;
 
 /**
@@ -714,16 +715,24 @@ public final class AVCodecLibrary implements ILibrary {
         public static native void av_init_packet(Pointer<?> pkt);
         public static native int av_new_packet(Pointer<?> pkt, int size);
         public static native void av_free_packet(Pointer<?> pkt);
-        public static native int avcodec_open(Pointer<?> avctx, Pointer<?> codec);
-        public static native int avcodec_open2(Pointer<?> avctx, Pointer<?> codec, Pointer<Pointer<?>> options);
+        @Optional
+	public static native int avcodec_open(Pointer<?> avctx, Pointer<?> codec);
+        @Optional
+	public static native int avcodec_open2(Pointer<?> avctx, Pointer<?> codec, Pointer<Pointer<?>> options);
         public static native int avcodec_close(Pointer<?> avctx);
         public static native int avcodec_decode_video2(Pointer<?> avctx, Pointer<?> picture, Pointer<Integer> got_picture_ptr, Pointer<?> avpkt);
-        public static native int avcodec_encode_video(Pointer<?> avctx, Pointer<Byte> buf, int buf_size, Pointer<?> pict);
-        public static native int avcodec_encode_video2(Pointer<?> avctx, Pointer<?> avpkt, Pointer<?> frame, Pointer<Integer> got_packet_ptr);
-        public static native int avcodec_decode_audio3(Pointer<?> avctx, Pointer<Short> samples, Pointer<Integer> frame_size_ptr, Pointer<?> avpkt);
-        public static native int avcodec_decode_audio4(Pointer<?> avctx, Pointer<?> frame, Pointer<Integer> got_frame_ptr, Pointer<?> avpkt);
-        public static native int avcodec_encode_audio(Pointer<?> avctx, Pointer<Byte> buf, int buf_size, Pointer<Short> samples);
-        public static native int avcodec_encode_audio2(Pointer<?> avctx, Pointer<?> avpkt, Pointer<?> frame, Pointer<Integer> got_packet_ptr);
+        @Optional
+	public static native int avcodec_encode_video(Pointer<?> avctx, Pointer<Byte> buf, int buf_size, Pointer<?> pict);
+        @Optional
+	public static native int avcodec_encode_video2(Pointer<?> avctx, Pointer<?> avpkt, Pointer<?> frame, Pointer<Integer> got_packet_ptr);
+        @Optional
+	public static native int avcodec_decode_audio3(Pointer<?> avctx, Pointer<Short> samples, Pointer<Integer> frame_size_ptr, Pointer<?> avpkt);
+        @Optional
+	public static native int avcodec_decode_audio4(Pointer<?> avctx, Pointer<?> frame, Pointer<Integer> got_frame_ptr, Pointer<?> avpkt);
+        @Optional
+	public static native int avcodec_encode_audio(Pointer<?> avctx, Pointer<Byte> buf, int buf_size, Pointer<Short> samples);
+        @Optional
+	public static native int avcodec_encode_audio2(Pointer<?> avctx, Pointer<?> avpkt, Pointer<?> frame, Pointer<Integer> got_packet_ptr);
         public static native int avpicture_get_size(int pix_fmt, int width, int height);
         public static native int avpicture_fill(Pointer<?> picture, Pointer<Byte> ptr, int pix_fmt, int width, int height);
         public static native int avpicture_layout(Pointer<?> src, int pix_fmt, int width, int height, Pointer<Byte> dest, int dest_size);

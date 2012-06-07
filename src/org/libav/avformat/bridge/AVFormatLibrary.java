@@ -25,6 +25,7 @@ import org.bridj.BridJ;
 import org.bridj.NativeLibrary;
 import org.bridj.Pointer;
 import org.bridj.ann.Library;
+import org.bridj.ann.Optional;
 import org.libav.bridge.ILibrary;
 
 /**
@@ -532,26 +533,37 @@ public final class AVFormatLibrary implements ILibrary {
         
 	public static native int avformat_version();
 	public static native void av_register_all();
+        @Optional
 	public static native int avformat_network_init();
+        @Optional
 	public static native int av_open_input_file(Pointer<Pointer<?>> ic_ptr, Pointer<Byte> filename, Pointer<?> fmt, int buf_size, Pointer<?> ap);
+	@Optional
 	public static native int avformat_open_input(Pointer<Pointer<?>> ps, Pointer<Byte> filename, Pointer<?> fmt, Pointer<Pointer<?>> options);
+	@Optional
 	public static native void av_close_input_file(Pointer<?> s);
+	@Optional
 	public static native void avformat_close_input(Pointer<Pointer<?>> s);
 	public static native Pointer<?> avformat_alloc_context();
 	public static native void avformat_free_context(Pointer<?> s);
 	public static native Pointer<?> av_guess_format(Pointer<Byte> short_name, Pointer<Byte> filename, Pointer<Byte> mime_type);
 	public static native int avio_open(Pointer<Pointer<?>> s, Pointer<Byte> url, int flags);
 	public static native int avio_close(Pointer<?> s);
+	@Optional
 	public static native int av_find_stream_info(Pointer<?> ic);
+	@Optional
 	public static native int avformat_find_stream_info(Pointer<?> ic, Pointer<Pointer<?>> options);
+	@Optional
 	public static native Pointer<?> avformat_new_stream(Pointer<?> s, Pointer<?> c);
+	@Optional
 	public static native Pointer<?> av_new_stream(Pointer<?> s, int id);
 	public static native int av_read_frame(Pointer<?> s, Pointer<?> pkt);
 	public static native int av_read_play(Pointer<?> s);
 	public static native int av_read_pause(Pointer<?> s);
 	public static native int av_write_frame(Pointer<?> s, Pointer<?> pkt);
 	public static native int av_interleaved_write_frame(Pointer<?> s, Pointer<?> pkt);
+	@Optional
 	public static native int avformat_write_header(Pointer<?> s, Pointer<Pointer<?>> options);
+	@Optional
 	public static native int av_write_header(Pointer<?> s);
 	public static native int av_write_trailer(Pointer<?> s);
 	public static native int av_sdp_create(Pointer<Pointer<?>> ac, int n_files, Pointer<Byte> buf, int size);
