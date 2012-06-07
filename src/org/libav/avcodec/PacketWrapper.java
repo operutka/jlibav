@@ -198,7 +198,7 @@ public class PacketWrapper extends AbstractPacketWrapper {
         // FIX: change next call into copyTo(...), after the method is fixed
         Pointer<Byte> pData = getData();
         if (pData != null)
-            pData.copyBytesTo(result.getData(), getSize());
+            pData.copyTo(result.getData(), getSize());
         
         result.setPts(getPts());
         result.setDts(getDts());

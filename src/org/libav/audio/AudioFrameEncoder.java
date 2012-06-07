@@ -211,8 +211,7 @@ public class AudioFrameEncoder implements IEncoder {
             tmp = tmpFrame.getLineSize().get(0) - offset;
             if (size < tmp)
                 tmp = size;
-            // FIX: change next call into copyTo(...), after the method is fixed
-            data.copyBytesTo(tmpFrame.getData().get(0).offset(offset), tmp);
+            data.copyTo(tmpFrame.getData().get(0).offset(offset), tmp);
             offset += tmp;
             size -= tmp;
             data = data.offset(tmp);
