@@ -33,6 +33,9 @@ import org.libav.swscale.bridge.SWScaleLibrary;
  */
 public class LibraryManager {
     
+    private static final String PKEY_LIBPATH = "org.libav.libpath";
+    private static final String DEFAULT_LIBPATH = "libav";
+    
     private static LibraryManager instance = null;
 
     private final AVUtilLibrary avUtil;
@@ -41,7 +44,7 @@ public class LibraryManager {
     private final SWScaleLibrary swScale;
     
     private LibraryManager() throws IOException {
-        BridJ.addLibraryPath("libav");
+        BridJ.addLibraryPath(System.getProperty(PKEY_LIBPATH, DEFAULT_LIBPATH));
         
         BridJ.addNativeLibraryAlias(AVCodecLibrary.LIB_NAME, AVCodecLibrary.LIB_NAME);
         for (int i = AVCodecLibrary.MIN_MAJOR_VERSION; i <= AVCodecLibrary.MAX_MAJOR_VERSION; i++)

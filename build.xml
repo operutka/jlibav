@@ -17,11 +17,14 @@
     <property name="test.classes.dir" value="${test.dir}${file.separator}classes" />
     <property name="test.results.dir" value="${test.dir}${file.separator}results" />
     <property name="test.src.dir" value="test" />
+    
+    <property name="org.libav.libpath" value="libav" />
 
     <target name="test" depends="compileTests">
         <delete dir="${test.results.dir}" />
         <mkdir dir="${test.results.dir}" />
         <junit printsummary="on">
+            <sysproperty key="org.libav.libpath" value="${org.libav.libpath}" />
             <classpath>
                 <pathelement location="${classes.dir}" />
                 <pathelement location="${test.classes.dir}" />

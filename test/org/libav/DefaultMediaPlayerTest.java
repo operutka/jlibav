@@ -53,14 +53,14 @@ public class DefaultMediaPlayerTest {
         mp.play();
         mp.join();
         
-        // FIX: check seeking
-        /*if (mp.isSeekable()) {
+        IMediaReader mr = mp.getMediaReader();
+        if (mr.isSeekable()) {
             System.out.println("media file is seekable, testing seek...");
-            mp.seek(0);
+            mr.seek(0);
             mp.play();
             Thread.sleep(500);
             mp.stop();
-        }*/
+        }
         
         mp.close();
     }
