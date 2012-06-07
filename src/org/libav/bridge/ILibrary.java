@@ -15,28 +15,41 @@
  * License along with this library. If not, see 
  * <http://www.gnu.org/licenses/>.
  */
-package org.libav.c.bridge;
-
-import com.sun.jna.Library;
-import com.sun.jna.Pointer;
+package org.libav.bridge;
 
 /**
- * Interface to provide access to the native C library.
- * 
+ *
  * @author Ondrej Perutka
  */
-public interface ICLibrary extends Library {
+public interface ILibrary {
     
     /**
-     * Copies the values of num bytes from the location pointed by source 
-     * directly to the memory block pointed by destination.
+     * Get library major version.
      * 
-     * @param dest pointer to the destination array where the content is to be 
-     * copied
-     * @param src pointer to the source of data to be copied
-     * @param size number of bytes to copy
-     * @return destination is returned
+     * @return major version
      */
-    Pointer memcpy(Pointer dest, Pointer src, int size);
+    public int getMajorVersion();
+
+    /**
+     * Get library micro version.
+     * 
+     * @return micro version
+     */
+    public int getMicroVersion();
+
+    /**
+     * Get library minor version.
+     * 
+     * @return minor version
+     */
+    public int getMinorVersion();
+    
+    /**
+     * Check whether the given function exists in this version of the library.
+     * 
+     * @param functionName name of the function
+     * @return true if the function exists, false otherwise
+     */
+    public boolean functionExists(String functionName);
     
 }

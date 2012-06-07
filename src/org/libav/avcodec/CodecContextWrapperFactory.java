@@ -17,11 +17,10 @@
  */
 package org.libav.avcodec;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 import org.libav.avcodec.bridge.AVCodecContext53;
 import org.libav.avcodec.bridge.AVCodecContext54;
-import org.libav.avcodec.bridge.IAVCodecLibrary;
-import org.libav.bridge.LibavLibraryWrapper;
+import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.bridge.LibraryManager;
 
 /**
@@ -31,11 +30,11 @@ import org.libav.bridge.LibraryManager;
  */
 public class CodecContextWrapperFactory {
     
-    private static final LibavLibraryWrapper<IAVCodecLibrary> libWrapper;
+    private static final AVCodecLibrary codecLib;
     private static final CodecContextWrapperFactory instance;
     
     static {
-        libWrapper = LibraryManager.getInstance().getAVCodecLibraryWrapper();
+        codecLib = LibraryManager.getInstance().getAVCodecLibrary();
         instance = new CodecContextWrapperFactory();
     }
     
@@ -45,8 +44,8 @@ public class CodecContextWrapperFactory {
      * @param codecContext pointer to an AVCodecContext struct
      * @return codec context wrapper
      */
-    public ICodecContextWrapper wrap(Pointer codecContext) {
-        switch (libWrapper.getMajorVersion()) {
+    public ICodecContextWrapper wrap(Pointer<?> codecContext) {
+        switch (codecLib.getMajorVersion()) {
             case 53: return wrap(new AVCodecContext53(codecContext));
             case 54: return wrap(new AVCodecContext54(codecContext));
         }

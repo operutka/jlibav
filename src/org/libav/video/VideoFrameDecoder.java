@@ -17,16 +17,16 @@
  */
 package org.libav.video;
 
-import com.sun.jna.Pointer;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import org.bridj.Pointer;
 import org.libav.IDecoder;
 import org.libav.LibavException;
 import org.libav.avcodec.*;
 import org.libav.avformat.IStreamWrapper;
 import org.libav.avutil.bridge.AVMediaType;
-import org.libav.avutil.bridge.IAVUtilLibrary;
+import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.data.IFrameConsumer;
 import org.libav.util.Rational;
 
@@ -102,7 +102,7 @@ public class VideoFrameDecoder implements IDecoder {
             return;
         
         //System.out.printf("VP: dts = %d\n", sTimeBase.mul(packet.getDts()).longValue());
-        Pointer tmp = packet.getData();
+        Pointer<Byte> tmp = packet.getData();
         while (packet.getSize() > 0) {
             if (cc.decodeVideoFrame(packet, frame))
                 sendFrame(transformPts(frame));
@@ -145,7 +145,7 @@ public class VideoFrameDecoder implements IDecoder {
     
     private IFrameWrapper transformPts(IFrameWrapper frame) {
         //System.out.printf("decoded frame: pts = %d, packet_pts = %d, packet_dts = %d, sTimeBase = %s\n", frame.getPts(), frame.getPacketPts(), frame.getPacketDts(), sTimeBase.toString());
-        if (frame.getPacketDts() != IAVUtilLibrary.AV_NOPTS_VALUE)
+        if (frame.getPacketDts() != AVUtilLibrary.AV_NOPTS_VALUE)
             frame.setPts(sTimeBase.mul(frame.getPacketDts()).longValue());
         else {
             frame.setPts(pts);

@@ -17,19 +17,19 @@
  */
 package org.libav.video;
 
-import com.sun.jna.Pointer;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import org.bridj.Pointer;
 import org.libav.IEncoder;
 import org.libav.LibavException;
 import org.libav.avcodec.*;
-import org.libav.avcodec.bridge.IAVCodecLibrary;
+import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.avformat.IFormatContextWrapper;
 import org.libav.avformat.IStreamWrapper;
-import org.libav.avformat.bridge.IAVFormatLibrary;
+import org.libav.avformat.bridge.AVFormatLibrary;
 import org.libav.avutil.bridge.AVMediaType;
-import org.libav.avutil.bridge.IAVUtilLibrary;
+import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.bridge.LibraryManager;
 import org.libav.data.IPacketConsumer;
 import org.libav.util.Rational;
@@ -41,7 +41,7 @@ import org.libav.util.Rational;
  */
 public class VideoFrameEncoder implements IEncoder {
     
-    private static final IAVUtilLibrary utilLib = LibraryManager.getInstance().getAVUtilLibraryWrapper().getLibrary();
+    private static final AVUtilLibrary utilLib = LibraryManager.getInstance().getAVUtilLibrary();
     
     public static final int DEFAULT_OUTPUT_BUFFER_SIZE = 200000;
     
@@ -51,7 +51,7 @@ public class VideoFrameEncoder implements IEncoder {
     private boolean rawFormat;
     
     private int outputBufferSize;
-    private Pointer outputBuffer;
+    private Pointer<Byte> outputBuffer;
     private IPacketWrapper packet;
     private Rational ptsTransformBase;
     private long ptsOffset;
@@ -74,7 +74,7 @@ public class VideoFrameEncoder implements IEncoder {
         if (cc.getCodecType() != AVMediaType.AVMEDIA_TYPE_VIDEO)
             throw new IllegalArgumentException("not a video stream");
         
-        rawFormat = (formatContext.getOutputFormat().getFlags() & IAVFormatLibrary.AVFMT_RAWPICTURE) != 0;
+        rawFormat = (formatContext.getOutputFormat().getFlags() & AVFormatLibrary.AVFMT_RAWPICTURE) != 0;
         
         outputBufferSize = DEFAULT_OUTPUT_BUFFER_SIZE;
         outputBuffer = malloc(outputBufferSize);
@@ -138,8 +138,8 @@ public class VideoFrameEncoder implements IEncoder {
         this.outputBufferSize = outputBufferSize;
     }
     
-    private Pointer malloc(int size) {
-        Pointer ptr = utilLib.av_malloc(size);
+    private Pointer<Byte> malloc(int size) {
+        Pointer<Byte> ptr = utilLib.av_malloc(size).as(Byte.class);
         if (ptr == null)
             throw new OutOfMemoryError("not enough memory for the video frame encoder");
         
@@ -182,9 +182,9 @@ public class VideoFrameEncoder implements IEncoder {
         if (rawFormat) {
             if (frame == null)
                 return null;
-            packet.setFlags(packet.getFlags() | IAVCodecLibrary.AV_PKT_FLAG_KEY);
-            packet.setData(frame.getPointer());
-            packet.setSize(FrameWrapperFactory.getInstance().getAVPictureSize());
+            packet.setFlags(packet.getFlags() | AVCodecLibrary.AV_PKT_FLAG_KEY);
+            packet.setData(frame.getPointer().as(Byte.class));
+            packet.setSize((int)FrameWrapperFactory.getInstance().getAVPictureSize());
             packet.setStreamIndex(stream.getIndex());
         } else {
             packet.setData(outputBuffer);
@@ -197,8 +197,8 @@ public class VideoFrameEncoder implements IEncoder {
             cc.clearWrapperCache();
             IFrameWrapper codedFrame = cc.getCodedFrame();
             if (codedFrame.isKeyFrame())
-                packet.setFlags(packet.getFlags() | IAVCodecLibrary.AV_PKT_FLAG_KEY);
-            if (frame.getPts() != IAVUtilLibrary.AV_NOPTS_VALUE) {
+                packet.setFlags(packet.getFlags() | AVCodecLibrary.AV_PKT_FLAG_KEY);
+            if (frame.getPts() != AVUtilLibrary.AV_NOPTS_VALUE) {
                 if (ptsOffset == -1)
                     ptsOffset = frame.getPts();
                 // FIX: this does not allow to change frame rate neither respects the codec context time base

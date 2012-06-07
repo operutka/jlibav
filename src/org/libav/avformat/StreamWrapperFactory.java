@@ -17,11 +17,10 @@
  */
 package org.libav.avformat;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
+import org.libav.avformat.bridge.AVFormatLibrary;
 import org.libav.avformat.bridge.AVStream53;
 import org.libav.avformat.bridge.AVStream54;
-import org.libav.avformat.bridge.IAVFormatLibrary;
-import org.libav.bridge.LibavLibraryWrapper;
 import org.libav.bridge.LibraryManager;
 
 /**
@@ -31,11 +30,11 @@ import org.libav.bridge.LibraryManager;
  */
 public class StreamWrapperFactory {
     
-    private static final LibavLibraryWrapper<IAVFormatLibrary> libWrapper;
+    private static final AVFormatLibrary formatLib;
     private static final StreamWrapperFactory instance;
     
     static {
-        libWrapper = LibraryManager.getInstance().getAVFormatLibraryWrapper();
+        formatLib = LibraryManager.getInstance().getAVFormatLibrary();
         instance = new StreamWrapperFactory();
     }
     
@@ -45,8 +44,8 @@ public class StreamWrapperFactory {
      * @param stream pointer to an AVStream struct
      * @return stream wrapper
      */
-    public IStreamWrapper wrap(Pointer stream) {
-        switch (libWrapper.getMajorVersion()) {
+    public IStreamWrapper wrap(Pointer<?> stream) {
+        switch (formatLib.getMajorVersion()) {
             case 53: return wrap(new AVStream53(stream));
             case 54: return wrap(new AVStream54(stream));
         }

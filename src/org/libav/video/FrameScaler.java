@@ -26,7 +26,7 @@ import org.libav.avcodec.IFrameWrapper;
 import org.libav.data.IFrameConsumer;
 import org.libav.data.IFrameProducer;
 import org.libav.swscale.ScaleContextWrapper;
-import org.libav.swscale.bridge.ISWScaleLibrary;
+import org.libav.swscale.bridge.SWScaleLibrary;
 
 /**
  * Native vide frame scaler.
@@ -68,7 +68,7 @@ public class FrameScaler implements IFrameConsumer, IFrameProducer {
         this.dstWidth = dstWidth;
         this.dstHeight = dstHeight;
         this.dstFormat = dstPixelFormat;
-        scalingAlg = ISWScaleLibrary.SWS_BICUBIC;
+        scalingAlg = SWScaleLibrary.SWS_BICUBIC;
         
         init();
         

@@ -17,7 +17,7 @@
  */
 package org.libav.avformat;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 import org.libav.avformat.bridge.AVInputFormat54;
 
 /**
@@ -40,15 +40,15 @@ public class InputFormatWrapper54 extends AbstractInputFormatWrapper {
     }
     
     @Override
-    public Pointer getPointer() {
-        return format.getPointer();
+    public Pointer<?> getPointer() {
+        return Pointer.pointerTo(format);
     }
 
     @Override
     public String getName() {
         if (name == null) {
-            Pointer ptr = (Pointer)format.readField("name");
-            name = ptr == null ? null : ptr.getString(0);
+            Pointer<Byte> ptr = format.name();
+            name = ptr == null ? null : ptr.getCString();
         }
         
         return name;
@@ -57,14 +57,14 @@ public class InputFormatWrapper54 extends AbstractInputFormatWrapper {
     @Override
     public int getFlags() {
         if (flags == null)
-            flags = (Integer)format.readField("flags");
+            flags = format.flags();
         
         return flags;
     }
 
     @Override
     public void setFlags(int flags) {
-        format.writeField("flags", flags);
+        format.flags(flags);
         this.flags = flags;
     }
     

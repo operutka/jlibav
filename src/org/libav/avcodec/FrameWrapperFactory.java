@@ -17,11 +17,11 @@
  */
 package org.libav.avcodec;
 
-import com.sun.jna.Native;
-import com.sun.jna.Pointer;
+import org.bridj.BridJ;
+import org.bridj.Pointer;
+import org.bridj.StructObject;
 import org.libav.LibavException;
 import org.libav.avcodec.bridge.*;
-import org.libav.bridge.LibavLibraryWrapper;
 import org.libav.bridge.LibraryManager;
 
 /**
@@ -31,11 +31,11 @@ import org.libav.bridge.LibraryManager;
  */
 public class FrameWrapperFactory {
     
-    private static final LibavLibraryWrapper<IAVCodecLibrary> libWrapper;
+    private static final AVCodecLibrary codecLib;
     private static final FrameWrapperFactory instance;
     
     static {
-        libWrapper = LibraryManager.getInstance().getAVCodecLibraryWrapper();
+        codecLib = LibraryManager.getInstance().getAVCodecLibrary();
         instance = new FrameWrapperFactory();
     }
     
@@ -45,8 +45,8 @@ public class FrameWrapperFactory {
      * @param frame pointer to an AVFrame struct
      * @return frame wrapper
      */
-    public IFrameWrapper wrap(Pointer frame) {
-        switch (libWrapper.getMajorVersion()) {
+    public IFrameWrapper wrap(Pointer<?> frame) {
+        switch (codecLib.getMajorVersion()) {
             case 53: return wrap(new AVFrame53(frame));
             case 54: return wrap(new AVFrame54(frame));
         }
@@ -81,7 +81,7 @@ public class FrameWrapperFactory {
      * @throws LibavException if the frame cannot be allocated
      */
     public IFrameWrapper allocFrame() throws LibavException {
-        switch (libWrapper.getMajorVersion()) {
+        switch (codecLib.getMajorVersion()) {
             case 53: return FrameWrapper53.allocateFrame();
             case 54: return FrameWrapper54.allocateFrame();
         }
@@ -100,7 +100,7 @@ public class FrameWrapperFactory {
      * @throws LibavException if the frame cannot be allocated
      */
     public IFrameWrapper allocPicture(int pixelFormat, int width, int height) throws LibavException {
-        switch (libWrapper.getMajorVersion()) {
+        switch (codecLib.getMajorVersion()) {
             case 53: return FrameWrapper53.allocatePicture(pixelFormat, width, height);
             case 54: return FrameWrapper54.allocatePicture(pixelFormat, width, height);
         }
@@ -113,10 +113,10 @@ public class FrameWrapperFactory {
      * 
      * @return size of the native AVPicture structure
      */
-    public int getAVPictureSize() {
-        switch (libWrapper.getMajorVersion()) {
-            case 53: return Native.getNativeSize(AVPicture53.class);
-            case 54: return Native.getNativeSize(AVPicture54.class);
+    public long getAVPictureSize() {
+        switch (codecLib.getMajorVersion()) {
+            case 53: return BridJ.sizeOf(AVPicture53.class);
+            case 54: return BridJ.sizeOf(AVPicture54.class);
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavcodec");

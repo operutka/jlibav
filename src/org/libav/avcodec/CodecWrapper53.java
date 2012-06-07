@@ -17,11 +17,10 @@
  */
 package org.libav.avcodec;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avcodec.bridge.AVCodec53;
-import org.libav.avcodec.bridge.IAVCodecLibrary;
-import org.libav.bridge.CustomNativeString;
+import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.bridge.LibraryManager;
 
 /**
@@ -31,11 +30,10 @@ import org.libav.bridge.LibraryManager;
  */
 public class CodecWrapper53 extends AbstractCodecWrapper {
     
-    private static final IAVCodecLibrary lib;
+    private static final AVCodecLibrary lib;
     
     static {
-        LibraryManager lm = LibraryManager.getInstance();
-        lib = lm.getAVCodecLibraryWrapper().getLibrary();
+        lib = LibraryManager.getInstance().getAVCodecLibrary();
     }
     
     private AVCodec53 codec;
@@ -50,14 +48,14 @@ public class CodecWrapper53 extends AbstractCodecWrapper {
     }
     
     @Override
-    public Pointer getPointer() {
-        return codec.getPointer();
+    public Pointer<?> getPointer() {
+        return Pointer.pointerTo(codec);
     }
 
     @Override
     public int getId() {
         if (id == null)
-            id = (Integer)codec.readField("id");
+            id = codec.id();
         
         return id;
     }
@@ -65,7 +63,7 @@ public class CodecWrapper53 extends AbstractCodecWrapper {
     @Override
     public int getType() {
         if (type == null)
-            type = (Integer)codec.readField("type");
+            type = codec.type();
         
         return type;
     }
@@ -73,8 +71,8 @@ public class CodecWrapper53 extends AbstractCodecWrapper {
     @Override
     public String getName() {
         if (name == null) {
-            Pointer p = (Pointer)codec.readField("name");
-            name = p == null ? null : p.getString(0);
+            Pointer<Byte> p = codec.name();
+            name = p == null ? null : p.getCString();
         }
         
         return name;
@@ -83,7 +81,7 @@ public class CodecWrapper53 extends AbstractCodecWrapper {
     @Override
     public int getCapabilities() {
         if (capabilities == null)
-            capabilities = (Integer)codec.readField("capabilities");
+            capabilities = codec.capabilities();
         
         return capabilities;
     }
@@ -105,8 +103,8 @@ public class CodecWrapper53 extends AbstractCodecWrapper {
     }
     
     public static CodecWrapper53 findDecoderByName(String name) throws LibavException {
-        CustomNativeString cns = new CustomNativeString(name, "UTF-8", 1);
-        Pointer ptr = lib.avcodec_find_decoder_by_name(cns.getPointer());
+        Pointer<Byte> nm = Pointer.pointerToCString(name);
+        Pointer ptr = lib.avcodec_find_decoder_by_name(nm);
         if (ptr == null)
             throw new LibavException("unable to find decoder");
         
@@ -114,8 +112,8 @@ public class CodecWrapper53 extends AbstractCodecWrapper {
     }
     
     public static CodecWrapper53 findEncoderByName(String name) throws LibavException {
-        CustomNativeString cns = new CustomNativeString(name, "UTF-8", 1);
-        Pointer ptr = lib.avcodec_find_encoder_by_name(cns.getPointer());
+        Pointer<Byte> nm = Pointer.pointerToCString(name);
+        Pointer ptr = lib.avcodec_find_encoder_by_name(nm);
         if (ptr == null)
             throw new LibavException("unable to find encoder");
         

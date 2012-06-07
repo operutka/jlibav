@@ -17,7 +17,7 @@
  */
 package org.libav.avformat;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avcodec.IPacketWrapper;
 import org.libav.bridge.IWrapper;
@@ -182,7 +182,7 @@ public interface IFormatContextWrapper extends IWrapper {
      * 
      * @return format context private data
      */
-    Pointer getPrivateData();
+    Pointer<?> getPrivateData();
     
     /**
      * Notify the stream server the application is able to receive data.

@@ -17,7 +17,7 @@
  */
 package org.libav.avcodec;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 
 /**
  * Abstract wrapper for the AVPacket.
@@ -28,7 +28,7 @@ public abstract class AbstractPacketWrapper implements IPacketWrapper {
 
     protected Integer streamIndex;
     protected Integer size;
-    protected Pointer data;
+    protected Pointer<Byte> data;
     protected Integer flags;
     protected Long pts;
     protected Long dts;

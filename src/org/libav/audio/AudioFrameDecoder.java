@@ -17,18 +17,18 @@
  */
 package org.libav.audio;
 
-import com.sun.jna.Pointer;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import org.bridj.Pointer;
 import org.libav.IDecoder;
 import org.libav.LibavException;
 import org.libav.avcodec.*;
-import org.libav.avcodec.bridge.IAVCodecLibrary;
+import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.avformat.IStreamWrapper;
 import org.libav.avutil.bridge.AVMediaType;
 import org.libav.avutil.bridge.AVSampleFormat;
-import org.libav.avutil.bridge.IAVUtilLibrary;
+import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.bridge.LibraryManager;
 import org.libav.data.IFrameConsumer;
 import org.libav.util.Rational;
@@ -40,7 +40,7 @@ import org.libav.util.Rational;
  */
 public class AudioFrameDecoder implements IDecoder {
     
-    private static final IAVUtilLibrary utilLib = LibraryManager.getInstance().getAVUtilLibraryWrapper().getLibrary();
+    private static final AVUtilLibrary utilLib = LibraryManager.getInstance().getAVUtilLibrary();
     
     private IStreamWrapper stream;
     private ICodecContextWrapper cc;
@@ -49,7 +49,7 @@ public class AudioFrameDecoder implements IDecoder {
     private long pts;
     
     private IFrameWrapper audioFrame;
-    private Pointer sampleBuffer;
+    private Pointer<Byte> sampleBuffer;
     private int sampleBufferSize;
     
     private final Set<IFrameConsumer> consumers;
@@ -75,12 +75,12 @@ public class AudioFrameDecoder implements IDecoder {
         pts = 0;
         
         audioFrame = FrameWrapperFactory.getInstance().allocFrame();
-        sampleBufferSize = IAVCodecLibrary.AVCODEC_MAX_AUDIO_FRAME_SIZE;
-        sampleBuffer = utilLib.av_malloc(IAVCodecLibrary.AVCODEC_MAX_AUDIO_FRAME_SIZE + IAVCodecLibrary.FF_INPUT_BUFFER_PADDING_SIZE);
+        sampleBufferSize = AVCodecLibrary.AVCODEC_MAX_AUDIO_FRAME_SIZE;
+        sampleBuffer = utilLib.av_malloc(AVCodecLibrary.AVCODEC_MAX_AUDIO_FRAME_SIZE + AVCodecLibrary.FF_INPUT_BUFFER_PADDING_SIZE).as(Byte.class);
         if (sampleBuffer == null)
             throw new OutOfMemoryError("unable to allocate memory to decode the audio stream");
-        audioFrame.setData(0, sampleBuffer);
-        audioFrame.setLineSize(0, sampleBufferSize);
+        audioFrame.getData().set(0, sampleBuffer);
+        audioFrame.getLineSize().set(0, sampleBufferSize);
 
         consumers = Collections.synchronizedSet(new HashSet<IFrameConsumer>());
     }
@@ -118,9 +118,9 @@ public class AudioFrameDecoder implements IDecoder {
             return;
         
         //System.out.printf("AP: dts = %d\n", sTimeBase.mul(packet.getDts()).longValue());
-        Pointer tmp = packet.getData();
+        Pointer<Byte> tmp = packet.getData();
         while (packet.getSize() > 0) {
-            audioFrame.setLineSize(0, sampleBufferSize);
+            audioFrame.getLineSize().set(0, sampleBufferSize);
             if (cc.decodeAudioFrame(packet, audioFrame))
                 sendFrame(transformPts(audioFrame));
         }
@@ -145,7 +145,7 @@ public class AudioFrameDecoder implements IDecoder {
         
         packet.setSize(0);
         packet.setData(null);
-        audioFrame.setLineSize(0, sampleBufferSize);
+        audioFrame.getLineSize().set(0, sampleBufferSize);
         if (cc.decodeAudioFrame(packet, audioFrame))
             result = audioFrame;
         packet.free();
@@ -161,11 +161,11 @@ public class AudioFrameDecoder implements IDecoder {
     }
     
     private IFrameWrapper transformPts(IFrameWrapper frame) {
-        if (frame.getPacketDts() != IAVUtilLibrary.AV_NOPTS_VALUE)
+        if (frame.getPacketDts() != AVUtilLibrary.AV_NOPTS_VALUE)
             frame.setPts(sTimeBase.mul(frame.getPacketDts()).longValue());
         else {
             frame.setPts(pts);
-            pts += frame.getLineSize()[0] * 8000 / (cc.getChannels() * cc.getSampleRate() * AVSampleFormat.getBitsPerSample(cc.getSampleFormat()));
+            pts += frame.getLineSize().get(0) * 8000 / (cc.getChannels() * cc.getSampleRate() * AVSampleFormat.getBitsPerSample(cc.getSampleFormat()));
         }
         
         return frame;

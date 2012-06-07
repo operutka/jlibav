@@ -25,7 +25,7 @@ import org.libav.avcodec.FrameWrapperFactory;
 import org.libav.avcodec.ICodecContextWrapper;
 import org.libav.avcodec.IFrameWrapper;
 import org.libav.avutil.bridge.AVSampleFormat;
-import org.libav.avutil.bridge.IAVUtilLibrary;
+import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.bridge.LibraryManager;
 
 /**
@@ -34,7 +34,7 @@ import org.libav.bridge.LibraryManager;
  */
 public class DefaultMediaWriterTest {
     
-    private static final IAVUtilLibrary lib = LibraryManager.getInstance().getAVUtilLibraryWrapper().getLibrary();
+    private static final AVUtilLibrary lib = LibraryManager.getInstance().getAVUtilLibrary();
     
     @Test
     public void testFileIO() throws Exception {
@@ -54,8 +54,8 @@ public class DefaultMediaWriterTest {
         ICodecContextWrapper cc = ve.getCodecContext();
         IFrameWrapper picture = FrameWrapperFactory.getInstance().allocPicture(cc.getPixelFormat(), cc.getWidth(), cc.getHeight());
         IFrameWrapper af = FrameWrapperFactory.getInstance().allocFrame();
-        af.setData(0, lib.av_malloc(10000));
-        af.setLineSize(0, 7680);
+        af.getData().set(0, lib.av_malloc(10000).as(Byte.class));
+        af.getLineSize().set(0, 7680);
         
         mw.writeHeader();
         for (int i = 0; i < 125; i++) {
@@ -67,7 +67,7 @@ public class DefaultMediaWriterTest {
         me.close();
         
         picture.free();
-        lib.av_free(af.getData()[0]);
+        lib.av_free(af.getData().get(0));
         af.free();
     }
     

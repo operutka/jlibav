@@ -17,18 +17,14 @@
  */
 package org.libav.bridge;
 
-import com.sun.jna.Native;
-import com.sun.jna.NativeLibrary;
-import com.sun.jna.Platform;
-import java.io.File;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.libav.avcodec.bridge.IAVCodecLibrary;
-import org.libav.avcodec.bridge.SynchronizedAVCodecLibrary;
-import org.libav.avformat.bridge.IAVFormatLibrary;
-import org.libav.avutil.bridge.IAVUtilLibrary;
-import org.libav.c.bridge.ICLibrary;
-import org.libav.swscale.bridge.ISWScaleLibrary;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.bridj.BridJ;
+import org.libav.avcodec.bridge.AVCodecLibrary;
+import org.libav.avformat.bridge.AVFormatLibrary;
+import org.libav.avutil.bridge.AVUtilLibrary;
+import org.libav.swscale.bridge.SWScaleLibrary;
 
 /**
  * This singleton class loads the dynamic libraries and holds refrences to them.
@@ -39,68 +35,39 @@ public class LibraryManager {
     
     private static LibraryManager instance = null;
 
-    private final LibavLibraryWrapper<IAVUtilLibrary> avUtil;
-    private final LibavLibraryWrapper<IAVCodecLibrary> avCodec;
-    private final LibavLibraryWrapper<IAVFormatLibrary> avFormat;
-    private final LibavLibraryWrapper<ISWScaleLibrary> swScale;
-    private final ICLibrary cLib;
+    private final AVUtilLibrary avUtil;
+    private final AVCodecLibrary avCodec;
+    private final AVFormatLibrary avFormat;
+    private final SWScaleLibrary swScale;
     
-    private LibraryManager() {
-        System.setProperty("jna.library.path", "libav");
-        System.setProperty("jna.nosys", "true");
-        String avUtilLibPath = getLibPath("avutil");
-        String avCodecLibPath = getLibPath("avcodec");
-        String avFormatLibPath = getLibPath("avformat");
-        String swScaleLibPath = getLibPath("swscale");
+    private LibraryManager() throws IOException {
+        BridJ.addLibraryPath("libav");
         
-        IAVUtilLibrary avUtilLib = (IAVUtilLibrary)Native.loadLibrary(avUtilLibPath, IAVUtilLibrary.class);
-        IAVCodecLibrary avCodecLib = (IAVCodecLibrary)Native.loadLibrary(avCodecLibPath, IAVCodecLibrary.class);
-        avCodecLib = new SynchronizedAVCodecLibrary(avCodecLib);
-        IAVFormatLibrary avFormatLib = (IAVFormatLibrary)Native.loadLibrary(avFormatLibPath, IAVFormatLibrary.class);
-        ISWScaleLibrary swScaleLib = (ISWScaleLibrary)Native.loadLibrary(swScaleLibPath, ISWScaleLibrary.class);
+        BridJ.addNativeLibraryAlias(AVCodecLibrary.LIB_NAME, AVCodecLibrary.LIB_NAME);
+        for (int i = AVCodecLibrary.MIN_MAJOR_VERSION; i <= AVCodecLibrary.MAX_MAJOR_VERSION; i++)
+            BridJ.addNativeLibraryAlias(AVCodecLibrary.LIB_NAME, AVCodecLibrary.LIB_NAME + "-" + i);
         
-        avUtil = new LibavLibraryWrapper<IAVUtilLibrary>(NativeLibrary.getInstance(avUtilLibPath), avUtilLib, avUtilLib.avutil_version(), 51, 51);
-        avCodec = new LibavLibraryWrapper<IAVCodecLibrary>(NativeLibrary.getInstance(avCodecLibPath), avCodecLib, avCodecLib.avcodec_version(), 53, 54);
-        avFormat = new LibavLibraryWrapper<IAVFormatLibrary>(NativeLibrary.getInstance(avFormatLibPath), avFormatLib, avFormatLib.avformat_version(), 53, 54);
-        swScale = new LibavLibraryWrapper<ISWScaleLibrary>(NativeLibrary.getInstance(swScaleLibPath), swScaleLib, swScaleLib.swscale_version(), 2, 2);
-        cLib = (ICLibrary)Native.loadLibrary((Platform.C_LIBRARY_NAME), ICLibrary.class);
+        BridJ.addNativeLibraryAlias(AVFormatLibrary.LIB_NAME, AVFormatLibrary.LIB_NAME);
+        for (int i = AVFormatLibrary.MIN_MAJOR_VERSION; i <= AVFormatLibrary.MAX_MAJOR_VERSION; i++)
+            BridJ.addNativeLibraryAlias(AVFormatLibrary.LIB_NAME, AVFormatLibrary.LIB_NAME + "-" + i);
         
-        avFormatLib.av_register_all();
+        BridJ.addNativeLibraryAlias(AVUtilLibrary.LIB_NAME, AVUtilLibrary.LIB_NAME);
+        for (int i = AVUtilLibrary.MIN_MAJOR_VERSION; i <= AVUtilLibrary.MAX_MAJOR_VERSION; i++)
+            BridJ.addNativeLibraryAlias(AVUtilLibrary.LIB_NAME, AVUtilLibrary.LIB_NAME + "-" + i);
+        
+        BridJ.addNativeLibraryAlias(SWScaleLibrary.LIB_NAME, SWScaleLibrary.LIB_NAME);
+        for (int i = SWScaleLibrary.MIN_MAJOR_VERSION; i <= SWScaleLibrary.MAX_MAJOR_VERSION; i++)
+            BridJ.addNativeLibraryAlias(SWScaleLibrary.LIB_NAME, SWScaleLibrary.LIB_NAME + "-" + i);
+        
+        avUtil = new AVUtilLibrary();
+        avCodec = new AVCodecLibrary();
+        avFormat = new AVFormatLibrary();
+        swScale = new SWScaleLibrary();
+        
+        avFormat.av_register_all();
         if (avFormat.functionExists("avformat_network_init"))
-            avFormatLib.avformat_network_init();
-        avCodecLib.avcodec_register_all();
-    }
-    
-    private String getLibPath(String libName) {
-        File result = findLibInDir(new File("."), libName);
-        if (result != null)
-            return result.getAbsolutePath();
-        
-        String jnaLibPath = System.getProperty("jna.library.path");
-        if (jnaLibPath != null)
-            result = findLibInDir(new File(jnaLibPath), libName);
-        if (result != null)
-            return result.getAbsolutePath();
-        
-        return libName;
-    }
-    
-    private File findLibInDir(File dir, String libName) {
-        if (!dir.isDirectory())
-            return null;
-        
-        Pattern p = Pattern.compile("(lib)?" + libName + "(-\\d+)?\\.(dll|so)(\\.\\d+)*", Pattern.CASE_INSENSITIVE);
-        
-        File[] files = dir.listFiles();
-        for (File file : files) {
-            if (!file.isFile())
-                continue;
-            Matcher m = p.matcher(file.getName());
-            if (m.matches())
-                return file;
-        }
-        
-        return null;
+            avFormat.avformat_network_init();
+        avCodec.avcodec_register_all();
     }
     
     /**
@@ -108,7 +75,7 @@ public class LibraryManager {
      * 
      * @return avutil library wrapper
      */
-    public LibavLibraryWrapper<IAVUtilLibrary> getAVUtilLibraryWrapper() {
+    public AVUtilLibrary getAVUtilLibrary() {
         return avUtil;
     }
     
@@ -117,7 +84,7 @@ public class LibraryManager {
      * 
      * @return avcodec library wrapper
      */
-    public LibavLibraryWrapper<IAVCodecLibrary> getAVCodecLibraryWrapper() {
+    public AVCodecLibrary getAVCodecLibrary() {
         return avCodec;
     }
     
@@ -126,7 +93,7 @@ public class LibraryManager {
      * 
      * @return avformat library wrapper
      */
-    public LibavLibraryWrapper<IAVFormatLibrary> getAVFormatLibraryWrapper() {
+    public AVFormatLibrary getAVFormatLibrary() {
         return avFormat;
     }
     
@@ -135,17 +102,8 @@ public class LibraryManager {
      * 
      * @return swscale library wrapper
      */
-    public LibavLibraryWrapper<ISWScaleLibrary> getSWScaleLibraryWrapper() {
+    public SWScaleLibrary getSWScaleLibrary() {
         return swScale;
-    }
-    
-    /**
-     * Get C library.
-     * 
-     * @return C library
-     */
-    public ICLibrary getCLibrary() {
-        return cLib;
     }
     
     /**
@@ -154,8 +112,12 @@ public class LibraryManager {
      * @return instance of the LibraryManager
      */
     public static LibraryManager getInstance() {
-        if (instance == null)
-            instance = new LibraryManager();
+        try {
+            if (instance == null)
+                instance = new LibraryManager();
+        } catch (IOException ex) {
+            Logger.getLogger(LibraryManager.class.getName()).log(Level.SEVERE, "unable to load native libraries", ex);
+        }
         
         return instance;
     }

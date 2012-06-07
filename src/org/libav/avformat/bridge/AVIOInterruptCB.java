@@ -17,50 +17,51 @@
  */
 package org.libav.avformat.bridge;
 
-import com.sun.jna.Callback;
-import com.sun.jna.Pointer;
-import com.sun.jna.Structure;
+import org.bridj.Callback;
+import org.bridj.Pointer;
+import org.bridj.StructObject;
+import org.bridj.ann.Field;
 
 /**
- * Mirror of the native AVIOInterruptCB struct from the libavformat v54.x.x. 
- * For details see the Libav documentation.
- * 
+ * Mirror of the native AVIOInterruptCB struct from the libavformat v54.x.x. For
+ * details see the Libav documentation.
+ *
  * @author Ondrej Perutka
  */
-public class AVIOInterruptCB extends Structure {
-    
-    public InterruptCallback callback;
-    public Pointer opaque;
-    
-    public interface InterruptCallback extends Callback {
-        int apply(Pointer voidPtr1);
-    }
-    
+public class AVIOInterruptCB extends StructObject {
+
     public AVIOInterruptCB() {
         super();
-        initFieldOrder();
     }
-    
-    public AVIOInterruptCB(Pointer p) {
-        super(p);
-        initFieldOrder();
+
+    public AVIOInterruptCB(Pointer pointer) {
+        super(pointer);
     }
-    
-    public AVIOInterruptCB(InterruptCallback callback, Pointer opaque) {
-        super();
-        this.callback = callback;
-        this.opaque = opaque;
-        initFieldOrder();
+
+    @Field(0)
+    public Pointer<AVIOInterruptCB.InterruptCallback> callback() {
+        return this.io.getPointerField(this, 0);
     }
-    
-    private void initFieldOrder() {
-        setFieldOrder(new String[] { 
-            "callback", 
-            "opaque",
-        });
+
+    @Field(0)
+    public AVIOInterruptCB callback(Pointer<AVIOInterruptCB.InterruptCallback> callback) {
+        this.io.setPointerField(this, 0, callback);
+        return this;
     }
-    
-    public static class ByReference extends AVIOInterruptCB implements Structure.ByReference { }
-    public static class ByValue extends AVIOInterruptCB implements Structure.ByValue { }
+
+    @Field(1)
+    public Pointer<?> opaque() {
+        return this.io.getPointerField(this, 1);
+    }
+
+    @Field(1)
+    public AVIOInterruptCB opaque(Pointer<?> opaque) {
+        this.io.setPointerField(this, 1, opaque);
+        return this;
+    }
+
+    public static abstract class InterruptCallback extends Callback<InterruptCallback> {
+        public abstract int apply(Pointer<?> voidPtr1);
+    }
     
 }

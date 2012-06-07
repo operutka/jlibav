@@ -17,10 +17,15 @@
  */
 package org.libav.avcodec.bridge;
 
-import com.sun.jna.Library;
-import com.sun.jna.Pointer;
-import com.sun.jna.ptr.IntByReference;
-import com.sun.jna.ptr.PointerByReference;
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.bridj.BridJ;
+import org.bridj.NativeLibrary;
+import org.bridj.Pointer;
+import org.bridj.ann.Library;
+import org.libav.bridge.ILibrary;
 
 /**
  * Interface to provide access to the native avcodec library. The methods'
@@ -28,7 +33,7 @@ import com.sun.jna.ptr.PointerByReference;
  * 
  * @author Ondrej Perutka
  */
-public interface IAVCodecLibrary extends Library {
+public final class AVCodecLibrary implements ILibrary {
     
     public static final int AVCODEC_MAX_AUDIO_FRAME_SIZE  = 192000;
     public static final int FF_INPUT_BUFFER_PADDING_SIZE = 8;
@@ -117,6 +122,54 @@ public interface IAVCodecLibrary extends Library {
 
     public static final int CODEC_FLAG2_BIT_RESERVOIR = 0x00020000;
 
+    public static final String LIB_NAME = BridJ.getNativeLibraryName(Lib.class);
+    public static final int MIN_MAJOR_VERSION = 53;
+    public static final int MAX_MAJOR_VERSION = 54;
+    
+    private int majorVersion;
+    private int minorVersion;
+    private int microVersion;
+    
+    private NativeLibrary lib;
+    
+    public AVCodecLibrary() throws IOException {
+        lib = BridJ.getNativeLibrary(Lib.class);
+        
+        int libVersion = avcodec_version();
+        
+        majorVersion = (libVersion >> 16) & 0xff;
+        minorVersion = (libVersion >> 8) & 0xff;
+        microVersion = libVersion & 0xff;
+        String version = String.format("%d.%d.%d", majorVersion, minorVersion, microVersion);
+        
+        File libFile = BridJ.getNativeLibraryFile(LIB_NAME);
+        
+        Logger.getLogger(getClass().getName()).log(Level.INFO, "Loading {0} library, version {1}...", new Object[] { libFile.getAbsolutePath(), version });
+        
+        if (majorVersion < MIN_MAJOR_VERSION || majorVersion > MAX_MAJOR_VERSION)
+            throw new UnsatisfiedLinkError("Unsupported version of the " + LIB_NAME + " native library. (" + MIN_MAJOR_VERSION + ".x.x <= required <= " + MAX_MAJOR_VERSION + ".x.x, found " + version + ")");
+    }
+
+    @Override
+    public boolean functionExists(String functionName) {
+        return lib.getSymbol(functionName) != null;
+    }
+
+    @Override
+    public int getMajorVersion() {
+        return majorVersion;
+    }
+
+    @Override
+    public int getMicroVersion() {
+        return microVersion;
+    }
+
+    @Override
+    public int getMinorVersion() {
+        return minorVersion;
+    }
+    
     /**
      * Get version of the avcodec library. Bits 23 to 16 represents major
      * version, bits 15 to 8 are for minor version and bits 7 to 0 are for
@@ -124,7 +177,9 @@ public interface IAVCodecLibrary extends Library {
      * 
      * @return version of the avcodec library
      */
-    int avcodec_version();
+    public int avcodec_version() {
+        return Lib.avcodec_version();
+    }
     
     /**
      * Register all the codecs, parsers and bitstream filters which were enabled 
@@ -133,7 +188,9 @@ public interface IAVCodecLibrary extends Library {
      * If you do not call this function you can select exactly which formats you 
      * want to support, by using the individual registration functions.
      */
-    void avcodec_register_all();
+    public void avcodec_register_all() {
+        Lib.avcodec_register_all();
+    }
     
     /**
      * Finds a decoder for the specified codec.
@@ -141,7 +198,9 @@ public interface IAVCodecLibrary extends Library {
      * @param codecId one of the CodecID constants
      * @return a pointer to a decoder or null, if no such decoder exists
      */
-    Pointer avcodec_find_decoder(int codecId);
+    public Pointer<?> avcodec_find_decoder(int id) {
+        return Lib.avcodec_find_decoder(id);
+    }
     
     /**
      * Find a registered decoder with the specified name.
@@ -149,7 +208,9 @@ public interface IAVCodecLibrary extends Library {
      * @param name name of the requested decoder
      * @return a decoder if one was found, NULL otherwise
      */
-    Pointer avcodec_find_decoder_by_name(Pointer name);
+    public Pointer<?> avcodec_find_decoder_by_name(Pointer<Byte> name) {
+        return Lib.avcodec_find_decoder_by_name(name);
+    }
     
     /**
      * Finds a encoder for the specified codec.
@@ -157,7 +218,9 @@ public interface IAVCodecLibrary extends Library {
      * @param codecId one of the CodecID constants
      * @return  a pointer to an encoder or null, if no such encoder exists
      */
-    Pointer avcodec_find_encoder(int codecId);
+    public Pointer<?> avcodec_find_encoder(int id) {
+        return Lib.avcodec_find_encoder(id);
+    }
     
     /**
      * Find a registered encoder with the specified name.
@@ -165,7 +228,9 @@ public interface IAVCodecLibrary extends Library {
      * @param name name of the requested encoder
      * @return an encoder if one was found, NULL otherwise
      */
-    Pointer avcodec_find_encoder_by_name(Pointer name);
+    public Pointer<?> avcodec_find_encoder_by_name(Pointer<Byte> name) {
+        return Lib.avcodec_find_encoder_by_name(name);
+    }
     
     /**
      * Allocate an AVCodecContext and set its fields to default values. 
@@ -176,7 +241,9 @@ public interface IAVCodecLibrary extends Library {
      * a different codec
      * @return a pointer to an AVCodecContext or null on failure
      */
-    Pointer avcodec_alloc_context3(Pointer codec);
+    public Pointer<?> avcodec_alloc_context3(Pointer<?> codec) {
+        return Lib.avcodec_alloc_context3(codec);
+    }
     
     /**
      * Allocate an AVFrame and set its fields to default values. 
@@ -184,7 +251,9 @@ public interface IAVCodecLibrary extends Library {
      * 
      * @return An AVFrame filled with default values or NULL on failure.
      */
-    Pointer avcodec_alloc_frame();
+    public Pointer<?> avcodec_alloc_frame() {
+        return Lib.avcodec_alloc_frame();
+    }
     
     /**
      * Set the fields of the given AVFrame to default values.
@@ -192,14 +261,18 @@ public interface IAVCodecLibrary extends Library {
      * @param pic The AVFrame of which the fields should be set to default 
      * values.
      */
-    void avcodec_get_frame_defaults(Pointer pic);
+    public void avcodec_get_frame_defaults(Pointer<?> pic) {
+        Lib.avcodec_get_frame_defaults(pic);
+    }
     
     /**
      * Initialize optional fields of a packet with default values.
      * 
      * @param pkt packet
      */
-    void av_init_packet(Pointer packet);
+    public void av_init_packet(Pointer<?> pkt) {
+        Lib.av_init_packet(pkt);
+    }
     
     /**
      * Allocate the payload of a packet and initialize its fields with default 
@@ -209,14 +282,18 @@ public interface IAVCodecLibrary extends Library {
      * @param size wanted payload size
      * @return 0 if OK, AVERROR_xxx otherwise
      */
-    int av_new_packet(Pointer packet, int size);
+    public int av_new_packet(Pointer<?> pkt, int size) {
+        return Lib.av_new_packet(pkt, size);
+    }
     
     /**
      * Free a packet.
      * 
      * @param pkt packet to free
      */
-    void av_free_packet(Pointer packet);
+    public void av_free_packet(Pointer<?> pkt) {
+        Lib.av_free_packet(pkt);
+    }
     
     /**
      * Initialize the AVCodecContext to use the given AVCodec. Prior to using this
@@ -233,7 +310,9 @@ public interface IAVCodecLibrary extends Library {
      * @param codec The codec to use within the context.
      * @return zero on success, a negative value on error
      */
-    int avcodec_open(Pointer context, Pointer codec);
+    public synchronized int avcodec_open(Pointer<?> avctx, Pointer<?> codec) {
+        return Lib.avcodec_open(avctx, codec);
+    }
     
     /**
      * Initialize the AVCodecContext to use the given AVCodec.
@@ -254,9 +333,13 @@ public interface IAVCodecLibrary extends Library {
      * not found
      * @return zero on success, a negative value on error
      */
-    int avcodec_open2(Pointer context, Pointer codec, PointerByReference options);
+    public synchronized int avcodec_open2(Pointer<?> avctx, Pointer<?> codec, Pointer<Pointer<?>> options) {
+        return Lib.avcodec_open2(avctx, codec, options);
+    }
     
-    int avcodec_close(Pointer context);
+    public synchronized int avcodec_close(Pointer<?> avctx) {
+        return Lib.avcodec_close(avctx);
+    }
     
     /**
      * Decode the video frame of size avpkt->size from avpkt->data into picture. 
@@ -301,7 +384,9 @@ public interface IAVCodecLibrary extends Library {
      * @return On error a negative value is returned, otherwise the number of 
      * bytes used or zero if no frame could be decompressed.
      */
-    int avcodec_decode_video2(Pointer context, Pointer picture, IntByReference got_picture_ptr, Pointer packet);
+    public int avcodec_decode_video2(Pointer<?> avctx, Pointer<?> picture, Pointer<Integer> got_picture_ptr, Pointer<?> avpkt) {
+        return Lib.avcodec_decode_video2(avctx, picture, got_picture_ptr, avpkt);
+    }
     
     /**
      * Encode a video frame from pict into buf. The input picture should be 
@@ -316,7 +401,9 @@ public interface IAVCodecLibrary extends Library {
      * @return On error a negative value is returned, on success zero or the 
      * number of bytes used from the output buffer.
      */
-    int avcodec_encode_video(Pointer context, Pointer buf, int buf_size, Pointer picture);
+    public int avcodec_encode_video(Pointer<?> avctx, Pointer<Byte> buf, int buf_size, Pointer<?> pict) {
+        return Lib.avcodec_encode_video(avctx, buf, buf_size, pict);
+    }
     
     /**
      * Encode a frame of video. 
@@ -349,7 +436,9 @@ public interface IAVCodecLibrary extends Library {
      * got_packet_ptr is undefined and should not be used.
      * @return 0 on success, negative error code on failure
      */
-    int avcodec_encode_video2(Pointer avctx, Pointer avpkt, Pointer frame, IntByReference got_packet_ptr);
+    public int avcodec_encode_video2(Pointer<?> avctx, Pointer<?> avpkt, Pointer<?> frame, Pointer<Integer> got_packet_ptr) {
+        return Lib.avcodec_encode_video2(avctx, avpkt, frame, got_packet_ptr);
+    }
     
     /**
      * Decode the audio frame of size avpkt->size from avpkt->data into samples. 
@@ -398,7 +487,9 @@ public interface IAVCodecLibrary extends Library {
      * bytes used or zero if no frame data was decompressed (used) from the 
      * input AVPacket.
      */
-    int avcodec_decode_audio3(Pointer avctx, Pointer samples, IntByReference frameSizePtr, Pointer packet);
+    public int avcodec_decode_audio3(Pointer<?> avctx, Pointer<Short> samples, Pointer<Integer> frameSizePtr, Pointer<?> avpkt) {
+        return Lib.avcodec_decode_audio3(avctx, samples, frameSizePtr, avpkt);
+    }
     
     /**
      * Decode the audio frame of size avpkt->size from avpkt->data into frame. 
@@ -434,7 +525,9 @@ public interface IAVCodecLibrary extends Library {
      * decoding, otherwise the number of bytes consumed from the input AVPacket 
      * is returned.
      */
-    int avcodec_decode_audio4(Pointer avctx, Pointer frame, IntByReference gotFramePtr, Pointer avpkt);
+    public int avcodec_decode_audio4(Pointer<?> avctx, Pointer<?> frame, Pointer<Integer> gotFramePtr, Pointer<?> avpkt) {
+        return Lib.avcodec_decode_audio4(avctx, frame, gotFramePtr, avpkt);
+    }
     
     /**
      * Encode an audio frame from samples into buf.
@@ -457,7 +550,9 @@ public interface IAVCodecLibrary extends Library {
      * @return On error a negative value is returned, on success zero or 
      * the number of bytes used to encode the data read from the input buffer.
      */
-    int avcodec_encode_audio(Pointer avctx, Pointer buf, int bufSize, Pointer samples);
+    public int avcodec_encode_audio(Pointer<?> avctx, Pointer<Byte> buf, int bufSize, Pointer<Short> samples) {
+        return Lib.avcodec_encode_audio(avctx, buf, bufSize, samples);
+    }
     
     /**
      * Encode a frame of audio. 
@@ -489,7 +584,9 @@ public interface IAVCodecLibrary extends Library {
      * got_packet_ptr is undefined and should not be used.
      * @return 0 on success, negative error code on failure
      */
-    int avcodec_encode_audio2(Pointer avctx, Pointer avpkt, Pointer frame, IntByReference got_packet_ptr);
+    public int avcodec_encode_audio2(Pointer<?> avctx, Pointer<?> avpkt, Pointer<?> frame, Pointer<Integer> got_packet_ptr) {
+        return Lib.avcodec_encode_audio2(avctx, avpkt, frame, got_packet_ptr);
+    }
     
     /**
      * Calculate the size in bytes that a picture of the given width and height 
@@ -505,7 +602,9 @@ public interface IAVCodecLibrary extends Library {
      * @return Image data size in bytes or -1 on error (e.g. too large 
      * dimensions).
      */
-    int avpicture_get_size(int pix_fmt, int width, int height);
+    public int avpicture_get_size(int pix_fmt, int width, int height) {
+        return Lib.avpicture_get_size(pix_fmt, width, height);
+    }
     
     /**
      * Fill in the AVPicture fields. 
@@ -528,7 +627,9 @@ public interface IAVCodecLibrary extends Library {
      * @param height the height of the image in pixels
      * @return size of the image data in bytes
      */
-    int avpicture_fill(Pointer picture, Pointer ptr, int pix_fmt, int width, int height);
+    public int avpicture_fill(Pointer<?> picture, Pointer<Byte> ptr, int pix_fmt, int width, int height) {
+        return Lib.avpicture_fill(picture, ptr, pix_fmt, width, height);
+    }
     
     /**
      * Copy pixel data from an AVPicture into a buffer. 
@@ -545,7 +646,9 @@ public interface IAVCodecLibrary extends Library {
      * @return the number of bytes written to dest, or a negative value (error 
      * code) on error
      */
-    int avpicture_layout(Pointer picture, int pix_fmt, int width, int height, Pointer dest, int dest_size);
+    public int avpicture_layout(Pointer<?> src, int pix_fmt, int width, int height, Pointer<Byte> dest, int dest_size) {
+        return Lib.avpicture_layout(src, pix_fmt, width, height, dest, dest_size);
+    }
     
     /**
      * Initialize audio resampling context.
@@ -566,7 +669,9 @@ public interface IAVCodecLibrary extends Library {
      * sampling rate
      * @return allocated ReSampleContext, NULL if error occured
      */
-    Pointer av_audio_resample_init(int outputChannels, int inputChannels, int outputRate, int inputRate, int sampleFmtOut, int sampleFmtIn, int filterLength, int log2PhaseCount, int linear, double cutoff);
+    public Pointer<?> av_audio_resample_init(int outputChannels, int inputChannels, int outputRate, int inputRate, int sampleFmtOut, int sampleFmtIn, int filterLength, int log2PhaseCount, int linear, double cutoff) {
+        return Lib.av_audio_resample_init(outputChannels, inputChannels, outputRate, inputRate, sampleFmtOut, sampleFmtIn, filterLength, log2PhaseCount, linear, cutoff);
+    }
     
     /**
      * Resample the input using given ReSampleContext.
@@ -577,7 +682,9 @@ public interface IAVCodecLibrary extends Library {
      * @param nbSamples
      * @return 0 if error
      */
-    int audio_resample(Pointer s, Pointer output, Pointer input, int nbSamples);
+    public int audio_resample(Pointer<?> s, Pointer<Byte> output, Pointer<Byte> input, int nbSamples) {
+        return Lib.audio_resample(s, output, input, nbSamples);
+    }
     
     /**
      * Free resample context.
@@ -585,6 +692,44 @@ public interface IAVCodecLibrary extends Library {
      * @param s non-NULL pointer to a resample context previously created 
      * with av_audio_resample_init()
      */
-    void audio_resample_close(Pointer s);
+    public void audio_resample_close(Pointer<?> s) {
+        Lib.audio_resample_close(s);
+    }
+    
+    @Library("avcodec")
+    private static class Lib {
+        static {
+            BridJ.register();
+        }
+
+        public static native int avcodec_version();
+        public static native void avcodec_register_all();
+        public static native Pointer<?> avcodec_find_decoder(int id);
+        public static native Pointer<?> avcodec_find_decoder_by_name(Pointer<Byte> name);
+        public static native Pointer<?> avcodec_find_encoder(int id);
+        public static native Pointer<?> avcodec_find_encoder_by_name(Pointer<Byte> name);
+        public static native Pointer<?> avcodec_alloc_context3(Pointer<?> codec);
+        public static native Pointer<?> avcodec_alloc_frame();
+        public static native void avcodec_get_frame_defaults(Pointer<?> pic);
+        public static native void av_init_packet(Pointer<?> pkt);
+        public static native int av_new_packet(Pointer<?> pkt, int size);
+        public static native void av_free_packet(Pointer<?> pkt);
+        public static native int avcodec_open(Pointer<?> avctx, Pointer<?> codec);
+        public static native int avcodec_open2(Pointer<?> avctx, Pointer<?> codec, Pointer<Pointer<?>> options);
+        public static native int avcodec_close(Pointer<?> avctx);
+        public static native int avcodec_decode_video2(Pointer<?> avctx, Pointer<?> picture, Pointer<Integer> got_picture_ptr, Pointer<?> avpkt);
+        public static native int avcodec_encode_video(Pointer<?> avctx, Pointer<Byte> buf, int buf_size, Pointer<?> pict);
+        public static native int avcodec_encode_video2(Pointer<?> avctx, Pointer<?> avpkt, Pointer<?> frame, Pointer<Integer> got_packet_ptr);
+        public static native int avcodec_decode_audio3(Pointer<?> avctx, Pointer<Short> samples, Pointer<Integer> frame_size_ptr, Pointer<?> avpkt);
+        public static native int avcodec_decode_audio4(Pointer<?> avctx, Pointer<?> frame, Pointer<Integer> got_frame_ptr, Pointer<?> avpkt);
+        public static native int avcodec_encode_audio(Pointer<?> avctx, Pointer<Byte> buf, int buf_size, Pointer<Short> samples);
+        public static native int avcodec_encode_audio2(Pointer<?> avctx, Pointer<?> avpkt, Pointer<?> frame, Pointer<Integer> got_packet_ptr);
+        public static native int avpicture_get_size(int pix_fmt, int width, int height);
+        public static native int avpicture_fill(Pointer<?> picture, Pointer<Byte> ptr, int pix_fmt, int width, int height);
+        public static native int avpicture_layout(Pointer<?> src, int pix_fmt, int width, int height, Pointer<Byte> dest, int dest_size);
+        public static native Pointer<?> av_audio_resample_init(int output_channels, int input_channels, int output_rate, int input_rate, int sample_fmt_out, int sample_fmt_in, int filter_length, int log2_phase_count, int linear, double cutoff);
+        public static native int audio_resample(Pointer<?> s, Pointer<Byte> output, Pointer<Byte> input, int nb_samples);
+        public static native void audio_resample_close(Pointer<?> s);
+    }
     
 }

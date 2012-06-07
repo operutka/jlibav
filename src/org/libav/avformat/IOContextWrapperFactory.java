@@ -17,7 +17,7 @@
  */
 package org.libav.avformat;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 import org.libav.avformat.bridge.AVIOContext;
 
 /**
@@ -39,7 +39,7 @@ public class IOContextWrapperFactory {
      * @param ioContext pointer to an AVIOContext struct
      * @return IO context wrapper
      */
-    public IIOContextWrapper wrap(Pointer ioContext) {
+    public IIOContextWrapper wrap(Pointer<?> ioContext) {
         return wrap(new AVIOContext(ioContext));
     }
     

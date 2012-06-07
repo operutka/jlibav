@@ -17,8 +17,15 @@
  */
 package org.libav.swscale.bridge;
 
-import com.sun.jna.Library;
-import com.sun.jna.Pointer;
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.bridj.BridJ;
+import org.bridj.NativeLibrary;
+import org.bridj.Pointer;
+import org.bridj.ann.Library;
+import org.libav.bridge.ILibrary;
 
 /**
  * Interface to provide access to the native swscale library. The methods'
@@ -26,7 +33,7 @@ import com.sun.jna.Pointer;
  * 
  * @author Ondrej Perutka
  */
-public interface ISWScaleLibrary extends Library {
+public final class SWScaleLibrary implements ILibrary {
     
     public static final int SWS_FAST_BILINEAR = 1;
     public static final int SWS_BILINEAR = 2;
@@ -39,6 +46,54 @@ public interface ISWScaleLibrary extends Library {
     public static final int SWS_SINC = 0x100;
     public static final int SWS_LANCZOS = 0x200;
     public static final int SWS_SPLINE = 0x400;
+
+    public static final String LIB_NAME = BridJ.getNativeLibraryName(Lib.class);
+    public static final int MIN_MAJOR_VERSION = 2;
+    public static final int MAX_MAJOR_VERSION = 2;
+    
+    private int majorVersion;
+    private int minorVersion;
+    private int microVersion;
+    
+    private NativeLibrary lib;
+    
+    public SWScaleLibrary() throws IOException {
+        lib = BridJ.getNativeLibrary(Lib.class);
+        
+        int libVersion = swscale_version();
+        
+        majorVersion = (libVersion >> 16) & 0xff;
+        minorVersion = (libVersion >> 8) & 0xff;
+        microVersion = libVersion & 0xff;
+        String version = String.format("%d.%d.%d", majorVersion, minorVersion, microVersion);
+        
+        File libFile = BridJ.getNativeLibraryFile(LIB_NAME);
+        
+        Logger.getLogger(getClass().getName()).log(Level.INFO, "Loading {0} library, version {1}...", new Object[] { libFile.getAbsolutePath(), version });
+        
+        if (majorVersion < MIN_MAJOR_VERSION || majorVersion > MAX_MAJOR_VERSION)
+            throw new UnsatisfiedLinkError("Unsupported version of the " + LIB_NAME + " native library. (" + MIN_MAJOR_VERSION + ".x.x <= required <= " + MAX_MAJOR_VERSION + ".x.x, found " + version + ")");
+    }
+    
+    @Override
+    public boolean functionExists(String functionName) {
+        return lib.getSymbol(functionName) != null;
+    }
+
+    @Override
+    public int getMajorVersion() {
+        return majorVersion;
+    }
+
+    @Override
+    public int getMicroVersion() {
+        return microVersion;
+    }
+
+    @Override
+    public int getMinorVersion() {
+        return minorVersion;
+    }
     
     /**
      * Get version of the swscale library. Bits 23 to 16 represents major
@@ -47,7 +102,9 @@ public interface ISWScaleLibrary extends Library {
      * 
      * @return version of the swscale library
      */
-    int swscale_version();
+    public int swscale_version() {
+        return Lib.swscale_version();
+    }
     
     /**
      * Checks if context can be reused, otherwise reallocates a new one. 
@@ -73,7 +130,9 @@ public interface ISWScaleLibrary extends Library {
      * @param param 
      * @return a pointer to an allocated context, or NULL in case of error
      */
-    Pointer sws_getCachedContext(Pointer context, int srcW, int srcH, int srcFormat, int dstW, int dstH, int dstFormat, int flags, Pointer srcFilter, Pointer dstFilter, Pointer param);
+    public Pointer<?> sws_getCachedContext(Pointer<?> context, int srcW, int srcH, int srcFormat, int dstW, int dstH, int dstFormat, int flags, Pointer<?> srcFilter, Pointer<?> dstFilter, Pointer<Double> param) {
+        return Lib.sws_getCachedContext(context, srcW, srcH, srcFormat, dstW, dstH, dstFormat, flags, srcFilter, dstFilter, param);
+    }
     
     /**
      * Frees the swscaler context swsContext. 
@@ -82,7 +141,9 @@ public interface ISWScaleLibrary extends Library {
      * 
      * @param swsContext 
      */
-    void sws_freeContext(Pointer swsContext);
+    public void sws_freeContext(Pointer<?> swsContext) {
+        Lib.sws_freeContext(swsContext);
+    }
     
     /**
      * Scales the image slice in srcSlice and puts the resulting scaled slice in 
@@ -113,5 +174,20 @@ public interface ISWScaleLibrary extends Library {
      * destination image
      * @return the height of the output slice
      */
-    int sws_scale(Pointer context, Pointer[] srcSlice, int[] srcStride, int srcSliceY, int srcSliceH, Pointer[] dst, int[] dstStride);
+    public int sws_scale(Pointer<?> c, Pointer<Pointer<Byte>> srcSlice, Pointer<Integer> srcStride, int srcSliceY, int srcSliceH, Pointer<Pointer<Byte>> dst, Pointer<Integer> dstStride) {
+        return Lib.sws_scale(c, srcSlice, srcStride, srcSliceY, srcSliceH, dst, dstStride);
+    }
+    
+    @Library("swscale")
+    private static class Lib {
+        static {
+            BridJ.register();
+	}
+        
+	public static native int swscale_version();
+	public static native Pointer<?> sws_getCachedContext(Pointer<?> context, int srcW, int srcH, int srcFormat, int dstW, int dstH, int dstFormat, int flags, Pointer<?> srcFilter, Pointer<?> dstFilter, Pointer<Double> param);
+	public static native void sws_freeContext(Pointer<?> swsContext);
+	public static native int sws_scale(Pointer<?> c, Pointer<Pointer<Byte>> srcSlice, Pointer<Integer> srcStride, int srcSliceY, int srcSliceH, Pointer<Pointer<Byte>> dst, Pointer<Integer> dstStride);
+    }
+    
 }

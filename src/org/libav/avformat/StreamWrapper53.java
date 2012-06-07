@@ -17,12 +17,11 @@
  */
 package org.libav.avformat;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 import org.libav.avcodec.CodecContextWrapperFactory;
 import org.libav.avcodec.ICodecContextWrapper;
 import org.libav.avformat.bridge.AVStream53;
-import org.libav.avutil.bridge.AVRational;
-import org.libav.avutil.bridge.IAVUtilLibrary;
+import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.bridge.LibraryManager;
 import org.libav.util.Rational;
 
@@ -45,11 +44,11 @@ public class StreamWrapper53 extends AbstractStreamWrapper {
     }
     
     @Override
-    public Pointer getPointer() {
+    public Pointer<?> getPointer() {
         if (stream == null)
             return null;
         
-        return stream.getPointer();
+        return Pointer.pointerTo(stream);
     }
     
     @Override
@@ -57,8 +56,8 @@ public class StreamWrapper53 extends AbstractStreamWrapper {
         if (stream == null)
             return;
         
-        IAVUtilLibrary lib = LibraryManager.getInstance().getAVUtilLibraryWrapper().getLibrary();
-        lib.av_free(stream.getPointer());
+        AVUtilLibrary lib = LibraryManager.getInstance().getAVUtilLibrary();
+        lib.av_free(getPointer());
         stream = null;
     }
     
@@ -68,7 +67,7 @@ public class StreamWrapper53 extends AbstractStreamWrapper {
             return null;
         
         if (codecContext == null) {
-            Pointer p = (Pointer)stream.readField("codec");
+            Pointer<?> p = stream.codec();
             codecContext = p == null ? null : CodecContextWrapperFactory.getInstance().wrap(p);
         }
         
@@ -80,7 +79,7 @@ public class StreamWrapper53 extends AbstractStreamWrapper {
         if (stream == null)
             return;
         
-        stream.writeField("codec", codecContext == null ? null : codecContext.getPointer());
+        stream.codec(codecContext == null ? null : codecContext.getPointer());
         this.codecContext = codecContext;
     }
     
@@ -90,7 +89,7 @@ public class StreamWrapper53 extends AbstractStreamWrapper {
             return -1;
         
         if (index == null)
-            index = (Integer)stream.readField("index");
+            index = stream.index();
         
         return index;
     }
@@ -101,7 +100,7 @@ public class StreamWrapper53 extends AbstractStreamWrapper {
             return null;
         
         if (frameRate == null)
-            frameRate = new Rational((AVRational)stream.readField("r_frame_rate"));
+            frameRate = new Rational(stream.r_frame_rate());
         
         return frameRate;
     }
@@ -112,7 +111,7 @@ public class StreamWrapper53 extends AbstractStreamWrapper {
             return null;
         
         if (timeBase == null)
-            timeBase = new Rational((AVRational)stream.readField("time_base"));
+            timeBase = new Rational(stream.time_base());
         
         return timeBase;
     }
@@ -125,8 +124,8 @@ public class StreamWrapper53 extends AbstractStreamWrapper {
         if (timeBase == null)
             timeBase = new Rational(0, 0);
         
-        AVRational avr = new AVRational((int)timeBase.getNumerator(), (int)timeBase.getDenominator());
-        stream.writeField("time_base", avr);
+        stream.time_base().num((int)timeBase.getNumerator());
+        stream.time_base().den((int)timeBase.getDenominator());
         this.timeBase = timeBase;
     }
 
@@ -136,7 +135,7 @@ public class StreamWrapper53 extends AbstractStreamWrapper {
             return -1;
         
         if (frameCount == null)
-            frameCount = (Long)stream.readField("nb_frames");
+            frameCount = stream.nb_frames();
         
         return frameCount;
     }
@@ -147,7 +146,7 @@ public class StreamWrapper53 extends AbstractStreamWrapper {
             return -1;
         
         if (duration == null)
-            duration = (Long)stream.readField("duration");
+            duration = stream.duration();
         
         return duration;
     }

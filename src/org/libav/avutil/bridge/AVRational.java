@@ -17,36 +17,47 @@
  */
 package org.libav.avutil.bridge;
 
-import com.sun.jna.Structure;
+import org.bridj.Pointer;
+import org.bridj.StructObject;
+import org.bridj.ann.Field;
+
 
 /**
- * Mirror of the native AVRational struct. For details see the Libav 
+ * Mirror of the native AVRational struct. For details see the Libav
  * documentation.
- * 
+ *
  * @author Ondrej Perutka
  */
-public class AVRational extends Structure {
-    
-    public int num;
-    public int den;
-    
+public class AVRational extends StructObject {
+
     public AVRational() {
         super();
-        initFieldOrder();
     }
     
-    public AVRational(int num, int den) {
-        super();
-        this.num = num;
-        this.den = den;
-        initFieldOrder();
+    public AVRational(Pointer pointer) {
+        super(pointer);
     }
-    
-    private void initFieldOrder() {
-        setFieldOrder(new java.lang.String[]{"num", "den"});
+
+    @Field(0)
+    public int num() {
+        return this.io.getIntField(this, 0);
     }
-    
-    public static class ByReference extends AVRational implements Structure.ByReference { };
-    public static class ByValue extends AVRational implements Structure.ByValue { };
-    
+
+    @Field(0)
+    public AVRational num(int num) {
+        this.io.setIntField(this, 0, num);
+        return this;
+    }
+
+    @Field(1)
+    public int den() {
+        return this.io.getIntField(this, 1);
+    }
+
+    @Field(1)
+    public AVRational den(int den) {
+        this.io.setIntField(this, 1, den);
+        return this;
+    }
+
 }

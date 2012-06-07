@@ -17,9 +17,9 @@
  */
 package org.libav.avcodec;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 import org.libav.LibavException;
-import org.libav.avcodec.bridge.IAVCodecLibrary;
+import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.bridge.LibraryManager;
 
 /**
@@ -29,11 +29,11 @@ import org.libav.bridge.LibraryManager;
  */
 public class ResampleContextWrapper implements IResampleContextWrapper {
 
-    private static final IAVCodecLibrary codecLib = LibraryManager.getInstance().getAVCodecLibraryWrapper().getLibrary();
+    private static final AVCodecLibrary codecLib = LibraryManager.getInstance().getAVCodecLibrary();
     
-    private Pointer rc;
+    private Pointer<?> rc;
 
-    public ResampleContextWrapper(Pointer resampleContext) {
+    public ResampleContextWrapper(Pointer<?> resampleContext) {
         this.rc = resampleContext;
     }
     
@@ -51,12 +51,12 @@ public class ResampleContextWrapper implements IResampleContextWrapper {
     }
 
     @Override
-    public Pointer getPointer() {
+    public Pointer<?> getPointer() {
         return rc;
     }
     
     @Override
-    public int resample(Pointer inputBuffer, Pointer outputBuffer, int frameCount) throws LibavException {
+    public int resample(Pointer<Byte> inputBuffer, Pointer<Byte> outputBuffer, int frameCount) throws LibavException {
         if (rc == null)
             return 0;
         
@@ -68,7 +68,7 @@ public class ResampleContextWrapper implements IResampleContextWrapper {
     }
     
     public static ResampleContextWrapper allocateResampleContext(int inputChanelCount, int outputChanelCount, int inputSampleRate, int outputSampleRate, int inputSampleFormat, int outputSampleFormat, int filterLength, int log2PhaseCount, int linear, double cutoff) throws LibavException {
-        Pointer ptr = codecLib.av_audio_resample_init(outputChanelCount, inputChanelCount, outputSampleRate, inputSampleRate, outputSampleFormat, inputSampleFormat, filterLength, log2PhaseCount, linear, cutoff);
+        Pointer<?> ptr = codecLib.av_audio_resample_init(outputChanelCount, inputChanelCount, outputSampleRate, inputSampleRate, outputSampleFormat, inputSampleFormat, filterLength, log2PhaseCount, linear, cutoff);
         if (ptr == null)
             throw new LibavException("unable to create audio resample context");
         

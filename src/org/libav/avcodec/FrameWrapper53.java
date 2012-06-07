@@ -17,12 +17,11 @@
  */
 package org.libav.avcodec;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 import org.libav.LibavException;
+import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.avcodec.bridge.AVFrame53;
-import org.libav.avcodec.bridge.IAVCodecLibrary;
-import org.libav.avutil.bridge.IAVUtilLibrary;
-import org.libav.bridge.LibavLibraryWrapper;
+import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.bridge.LibraryManager;
 
 /**
@@ -32,18 +31,16 @@ import org.libav.bridge.LibraryManager;
  */
 public class FrameWrapper53 extends AbstractFrameWrapper {
     
-    private static final IAVCodecLibrary codecLib;
-    private static final IAVUtilLibrary utilLib;
+    private static final AVCodecLibrary codecLib;
+    private static final AVUtilLibrary utilLib;
 
     private static final boolean hasNbSamples;
     
     static {
-        LibraryManager lm = LibraryManager.getInstance();
-        LibavLibraryWrapper<IAVCodecLibrary> avc = lm.getAVCodecLibraryWrapper();
-        codecLib = avc.getLibrary();
-        utilLib = lm.getAVUtilLibraryWrapper().getLibrary();
+        codecLib = LibraryManager.getInstance().getAVCodecLibrary();
+        utilLib = LibraryManager.getInstance().getAVUtilLibrary();
         
-        hasNbSamples = avc.getMajorVersion() > 53 || (avc.getMajorVersion() == 53 && avc.getMinorVersion() >= 25);
+        hasNbSamples = codecLib.getMajorVersion() > 53 || (codecLib.getMajorVersion() == 53 && codecLib.getMinorVersion() >= 25);
     }
     
     private AVFrame53 frame;
@@ -62,11 +59,11 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
     }
     
     @Override
-    public Pointer getPointer() {
+    public Pointer<?> getPointer() {
         if (frame == null)
             return null;
         
-        return frame.getPointer();
+        return Pointer.pointerTo(frame);
     }
     
     @Override
@@ -78,7 +75,7 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
             for (Pointer p : toBeFreed)
                 utilLib.av_free(p);
         }
-        utilLib.av_free(frame.getPointer());
+        utilLib.av_free(getPointer());
         frame = null;
         toBeFreed = null;
     }
@@ -88,29 +85,19 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
         if (frame == null)
             return;
         
-        codecLib.avcodec_get_frame_defaults(frame.getPointer());
+        codecLib.avcodec_get_frame_defaults(getPointer());
         clearWrapperCache();
     }
     
     @Override
-    public Pointer[] getData() {
+    public Pointer<Pointer<Byte>> getData() {
         if (frame == null)
             return null;
         
         if (data == null)
-            data = (Pointer[])frame.readField("data");
+            data = frame.data();
         
         return data;
-    }
-    
-    @Override
-    public void setData(int index, Pointer ptr) {
-        if (frame == null)
-            return;
-        
-        getData();
-        data[index] = ptr;
-        frame.writeField("data", data);
     }
 
     @Override
@@ -119,24 +106,14 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
     }
     
     @Override
-    public int[] getLineSize() {
+    public Pointer<Integer> getLineSize() {
         if (frame == null)
             return null;
         
         if (lineSize == null)
-            lineSize = (int[])frame.readField("linesize");
+            lineSize = frame.linesize();
         
         return lineSize;
-    }
-    
-    @Override
-    public void setLineSize(int index, int size) {
-        if (frame == null)
-            return;
-        
-        getLineSize();
-        lineSize[index] = size;
-        frame.writeField("linesize", lineSize);
     }
 
     @Override
@@ -150,7 +127,7 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
             return false;
         
         if (keyFrame == null)
-            keyFrame = (Integer)frame.readField("key_frame") == 0 ? false : true;
+            keyFrame = frame.key_frame() == 0 ? false : true;
         
         return keyFrame;
     }
@@ -160,7 +137,7 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
         if (frame == null)
             return;
         
-        frame.writeField("key_frame", keyFrame);
+        frame.key_frame(keyFrame ? 1 : 0);
         this.keyFrame = keyFrame;
     }
     
@@ -170,7 +147,7 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
             return 0;
         
         if (pts == null)
-            pts = (Long)frame.readField("pts");
+            pts = frame.pts();
         
         return pts;
     }
@@ -180,7 +157,7 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
         if (frame == null)
             return;
         
-        frame.writeField("pts", pts);
+        frame.pts(pts);
         this.pts = pts;
     }
     
@@ -190,7 +167,7 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
             return 0;
         
         if (repeatPicture == null)
-            repeatPicture = (Integer)frame.readField("repeat_pict");
+            repeatPicture = frame.repeat_pict();
         
         return repeatPicture;
     }
@@ -200,7 +177,7 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
         if (frame == null)
             return;
         
-        frame.writeField("repeat_pict", repeatPicture);
+        frame.repeat_pict(repeatPicture);
         this.repeatPicture = repeatPicture;
     }
     
@@ -210,7 +187,7 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
             return 0;
         
         if (packetDts == null)
-            packetDts = (Long)frame.readField("pkt_dts");
+            packetDts = frame.pkt_dts();
         
         return packetDts;
     }
@@ -220,7 +197,7 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
         if (frame == null)
             return;
         
-        frame.writeField("pkt_dts", packetDts);
+        frame.pkt_dts(packetDts);
         this.packetDts = packetDts;
     }
     
@@ -230,7 +207,7 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
             return 0;
         
         if (packetPts == null)
-            packetPts = (Long)frame.readField("pkt_pts");
+            packetPts = frame.pkt_pts();
         
         return packetPts;
     }
@@ -240,7 +217,7 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
         if (frame == null)
             return;
         
-        frame.writeField("pkt_pts", packetPts);
+        frame.pkt_pts(packetPts);
         this.packetPts = packetPts;
     }
 
@@ -252,7 +229,7 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
             return 0;
         
         if (nbSamples == null)
-            nbSamples = (Integer)frame.readField("nb_samples");
+            nbSamples = frame.nb_samples();
         
         return nbSamples;
     }
@@ -264,7 +241,7 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
         if (frame == null)
             return;
         
-        frame.writeField("nb_samples", nbSamples);
+        frame.nb_samples(nbSamples);
         this.nbSamples = nbSamples;
     }
     
@@ -286,16 +263,16 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
     }
     
     public static FrameWrapper53 allocateFrame() throws LibavException {
-        Pointer ptr = codecLib.avcodec_alloc_frame();
+        Pointer<?> ptr = codecLib.avcodec_alloc_frame();
         if (ptr == null)
             throw new LibavException("unable to allocate a new frame");
         
         return new FrameWrapper53(new AVFrame53(ptr));
     }
     
-    private static Pointer allocatePictureBuffer(int pixelFormat, int width, int height) throws LibavException {
+    private static Pointer<?> allocatePictureBuffer(int pixelFormat, int width, int height) throws LibavException {
         int size = codecLib.avpicture_get_size(pixelFormat, width, height);
-        Pointer result = utilLib.av_malloc(size);
+        Pointer<?> result = utilLib.av_malloc(size);
         if (result == null)
             throw new LibavException("unable to allocate a new picture");
 

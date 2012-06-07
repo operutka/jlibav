@@ -17,17 +17,17 @@
  */
 package org.libav.audio;
 
-import com.sun.jna.Pointer;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avcodec.IFrameWrapper;
 import org.libav.avcodec.IResampleContextWrapper;
 import org.libav.avcodec.ResampleContextWrapperFactory;
-import org.libav.avcodec.bridge.IAVCodecLibrary;
+import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.avutil.bridge.AVSampleFormat;
-import org.libav.avutil.bridge.IAVUtilLibrary;
+import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.bridge.LibraryManager;
 import org.libav.data.IFrameConsumer;
 
@@ -38,7 +38,7 @@ import org.libav.data.IFrameConsumer;
  */
 public class Frame2AudioFrameAdapter implements IFrameConsumer, IAudioFrameProducer {
 
-    private static final IAVUtilLibrary utilLib = LibraryManager.getInstance().getAVUtilLibraryWrapper().getLibrary();
+    private static final AVUtilLibrary utilLib = LibraryManager.getInstance().getAVUtilLibrary();
     
     private int inputChannelCount;
     private int inputSampleRate;
@@ -51,7 +51,7 @@ public class Frame2AudioFrameAdapter implements IFrameConsumer, IAudioFrameProdu
     private int outputBitsPerSample;
     
     private IResampleContextWrapper resampleContext;
-    private Pointer resampleBuffer;
+    private Pointer<Byte> resampleBuffer;
     
     private final Set<IAudioFrameConsumer> consumers;
 
@@ -96,7 +96,7 @@ public class Frame2AudioFrameAdapter implements IFrameConsumer, IAudioFrameProdu
         
         if (inputChannelCount != outputChannelCount || inputSampleFormat != outputSampleFormat || inputSampleRate != outputSampleRate) {
             resampleContext = ResampleContextWrapperFactory.getInstance().alloc(inputChannelCount, outputChannelCount, inputSampleRate, outputSampleRate, inputSampleFormat, outputSampleFormat, 16, 10, 0, 0.8);
-            resampleBuffer = utilLib.av_malloc(IAVCodecLibrary.AVCODEC_MAX_AUDIO_FRAME_SIZE + IAVCodecLibrary.FF_INPUT_BUFFER_PADDING_SIZE);
+            resampleBuffer = utilLib.av_malloc(AVCodecLibrary.AVCODEC_MAX_AUDIO_FRAME_SIZE + AVCodecLibrary.FF_INPUT_BUFFER_PADDING_SIZE).as(Byte.class);
         }
     }
     
@@ -203,16 +203,16 @@ public class Frame2AudioFrameAdapter implements IFrameConsumer, IAudioFrameProdu
     @Override
     public synchronized void processFrame(Object producer, IFrameWrapper frame) throws LibavException {
         if (resampleContext == null)
-            sendAudioFrame(frame.getData()[0], frame.getLineSize()[0]);
+            sendAudioFrame(frame.getData().get(0), frame.getLineSize().get(0));
         else {
-            int fc = frame.getLineSize()[0] / (inputChannelCount * inputBitsPerSample / 8);
-            fc = resampleContext.resample(frame.getData()[0], resampleBuffer, fc);
+            int fc = frame.getLineSize().get(0) / (inputChannelCount * inputBitsPerSample / 8);
+            fc = resampleContext.resample(frame.getData().get(0), resampleBuffer, fc);
             sendAudioFrame(resampleBuffer, fc * outputChannelCount * outputBitsPerSample / 8);
         }
     }
     
-    private void sendAudioFrame(Pointer data, int len) throws LibavException {
-        AudioFrame af = new AudioFrame(data.getByteArray(0, len), outputChannelCount, outputSampleFormat, outputSampleRate);
+    private void sendAudioFrame(Pointer<Byte> data, int len) throws LibavException {
+        AudioFrame af = new AudioFrame(data.getBytes(len), outputChannelCount, outputSampleFormat, outputSampleRate);
         
         synchronized (consumers) {
             for (IAudioFrameConsumer c : consumers)

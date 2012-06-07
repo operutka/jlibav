@@ -17,7 +17,7 @@
  */
 package org.libav.avformat;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 import org.libav.avformat.bridge.AVIOContext;
 
 /**
@@ -39,14 +39,14 @@ public class IOContextWrapper extends AbstractIOContextWrapper {
     }
 
     @Override
-    public Pointer getPointer() {
-        return context.getPointer();
+    public Pointer<?> getPointer() {
+        return Pointer.pointerTo(context);
     }
     
     @Override
     public boolean isSeekable() {
         if (seekable == null) {
-            int s = (Integer)context.readField("seekable");
+            int s = context.seekable();
             seekable = s == 0 ? false : true;
         }
         

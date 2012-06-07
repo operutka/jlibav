@@ -17,7 +17,7 @@
  */
 package org.libav.avcodec;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 import org.libav.bridge.IWrapper;
 
 /**
@@ -86,7 +86,7 @@ public interface IPacketWrapper extends IWrapper, Cloneable {
      * 
      * @return data
      */
-    Pointer getData();
+    Pointer<Byte> getData();
     
     /**
      * Set the data property of the AVPacket. The value may be 
@@ -94,7 +94,7 @@ public interface IPacketWrapper extends IWrapper, Cloneable {
      * 
      * @param data 
      */
-    void setData(Pointer data);
+    void setData(Pointer<Byte> data);
     
     /**
      * Get the flags property from the AVPacket.

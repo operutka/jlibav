@@ -27,7 +27,7 @@ import org.libav.avcodec.IFrameWrapper;
 import org.libav.avutil.bridge.PixelFormat;
 import org.libav.data.IFrameConsumer;
 import org.libav.swscale.ScaleContextWrapper;
-import org.libav.swscale.bridge.ISWScaleLibrary;
+import org.libav.swscale.bridge.SWScaleLibrary;
 
 /**
  * Frame to VideoFrame adapter. It translates frame wrappers to video frames.
@@ -71,7 +71,7 @@ public class Frame2VideoFrameAdapter implements IFrameConsumer, IVideoFrameProdu
         dstFormat = PixelFormat.PIX_FMT_BGRA;
         if (ByteOrder.BIG_ENDIAN.equals(ByteOrder.nativeOrder()))
             dstFormat = PixelFormat.PIX_FMT_ARGB;
-        scalingAlg = ISWScaleLibrary.SWS_BICUBIC;
+        scalingAlg = SWScaleLibrary.SWS_BICUBIC;
         
         init();
         
@@ -205,7 +205,7 @@ public class Frame2VideoFrameAdapter implements IFrameConsumer, IVideoFrameProdu
             return;
         
         scaleContext.scale(frame, rgbPicture, 0, srcHeight);
-        int[] pixels = rgbPicture.getData()[0].getIntArray(0, dstWidth * dstHeight);
+        int[] pixels = rgbPicture.getData().get(0).getInts(dstWidth * dstHeight);
         sendVideoFrame(new VideoFrame(pixels, dstWidth, dstHeight, frame.getPts()));
     }
     

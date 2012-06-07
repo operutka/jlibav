@@ -17,16 +17,13 @@
  */
 package org.libav.avformat;
 
-import com.sun.jna.Native;
-import com.sun.jna.Pointer;
-import com.sun.jna.ptr.PointerByReference;
 import java.nio.charset.Charset;
+import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avcodec.IPacketWrapper;
 import org.libav.avformat.bridge.AVFormatContext54;
-import org.libav.avformat.bridge.IAVFormatLibrary;
-import org.libav.avutil.bridge.IAVUtilLibrary;
-import org.libav.bridge.CustomNativeString;
+import org.libav.avformat.bridge.AVFormatLibrary;
+import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.bridge.LibraryManager;
 
 /**
@@ -36,11 +33,10 @@ import org.libav.bridge.LibraryManager;
  */
 public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
     
-    private static final IAVFormatLibrary formatLib;
+    private static final AVFormatLibrary formatLib;
     
     static {
-        LibraryManager lm = LibraryManager.getInstance();
-        formatLib = lm.getAVFormatLibraryWrapper().getLibrary();
+        formatLib = LibraryManager.getInstance().getAVFormatLibrary();
     }
     
     private AVFormatContext54 context;
@@ -57,11 +53,11 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
     }
     
     @Override
-    public Pointer getPointer() {
+    public Pointer<?> getPointer() {
         if (isClosed())
             return null;
         
-        return context.getPointer();
+        return Pointer.pointerTo(context);
     }
     
     @Override
@@ -70,11 +66,12 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
             return;
         
         if (outputContext) {
-            if (getIOContext() != null && (getOutputFormat().getFlags() & IAVFormatLibrary.AVFMT_NOFILE) == 0)
+            if (getIOContext() != null && (getOutputFormat().getFlags() & AVFormatLibrary.AVFMT_NOFILE) == 0)
                 formatLib.avio_close(getIOContext().getPointer());
-            LibraryManager.getInstance().getAVUtilLibraryWrapper().getLibrary().av_free(context.getPointer());
+            LibraryManager.getInstance().getAVUtilLibrary().av_free(getPointer());
         } else {
-            PointerByReference ps = new PointerByReference(context.getPointer());
+            Pointer<Pointer<?>> ps = Pointer.allocatePointer();
+            ps.set(getPointer());
             formatLib.avformat_close_input(ps);
         }
         
@@ -92,7 +89,7 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
         if (isClosed())
             return;
         
-        int result = formatLib.avformat_find_stream_info(context.getPointer(), null);
+        int result = formatLib.avformat_find_stream_info(getPointer(), null);
         if (result < 0)
             throw new LibavException(result);
     }
@@ -106,14 +103,16 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
             return streams;
         
         getStreamCount();
-        Pointer pStrms = (Pointer)context.readField("streams");
+        Pointer<Pointer<?>> pStrms = context.streams();
         if (pStrms == null)
             return null;
         
-        Pointer[] strms = pStrms.getPointerArray(0, streamCount);
+        Pointer<?> pStrm;
         streams = new IStreamWrapper[streamCount];
-        for (int i = 0; i < streamCount; i++)
-            streams[i] = strms[i] == null ? null : StreamWrapperFactory.getInstance().wrap(strms[i]);
+        for (int i = 0; i < streamCount; i++) {
+            pStrm = pStrms.get(i);
+            streams[i] = pStrm == null ? null : StreamWrapperFactory.getInstance().wrap(pStrm);
+        }
         
         return streams;
     }
@@ -124,7 +123,7 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
             return 0;
         
         if (streamCount == null)
-            streamCount = (Integer)context.readField("nb_streams");
+            streamCount = context.nb_streams();
         
         return streamCount;
     }
@@ -136,8 +135,7 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
         
         getStreams();
         streams[streamIndex] = stream;
-        Pointer pStrms = (Pointer)context.readField("streams");
-        pStrms.write(Native.POINTER_SIZE * streamIndex, new Pointer[] { stream == null ? null : stream.getPointer() }, 0, 1);
+        context.streams().set(streamIndex, stream == null ? null : stream.getPointer());
     }
     
     @Override
@@ -145,7 +143,7 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
         if (isClosed())
             return null;
         
-        Pointer pStream = formatLib.avformat_new_stream(context.getPointer(), null);
+        Pointer pStream = formatLib.avformat_new_stream(getPointer(), null);
         if (pStream == null)
             throw new LibavException("unable to create a new stream");
         
@@ -159,10 +157,8 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
         if (isClosed())
             return null;
         
-        if (fileName == null) {
-            byte[] data = (byte[])context.readField("filename");
-            fileName = new String(data, Charset.forName("UTF-8"));
-        }
+        if (fileName == null)
+            fileName = context.filename().getStringAtOffset(0, Pointer.StringType.C, Charset.forName("UTF-8"));
         
         return fileName;
     }
@@ -173,16 +169,7 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
             return;
         
         this.fileName = fileName;
-        byte[] tmp = fileName.getBytes(Charset.forName("UTF-8"));
-        byte[] data = new byte[AVFormatContext54.MAX_FILENAME_LENGTH];
-        for (int i = 0; i < data.length; i++) {
-            if (i < tmp.length)
-                data[i] = tmp[i];
-            else
-                data[i] = 0;
-        }
-        data[data.length - 1] = 0;
-        context.writeField("filename", data);
+        context.filename().setStringAtOffset(0, fileName, Pointer.StringType.C, Charset.forName("UTF-8"));
     }
 
     @Override
@@ -191,7 +178,7 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
             return null;
         
         if (ioContext == null) {
-            Pointer p = (Pointer)context.readField("pb");
+            Pointer<?> p = context.pb();
             ioContext = p == null ? null : IOContextWrapperFactory.getInstance().wrap(p);
         }
         
@@ -204,7 +191,7 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
             return;
         
         this.ioContext = ioContext;
-        context.writeField("pb", ioContext == null ? null : ioContext.getPointer());
+        context.pb(ioContext == null ? null : ioContext.getPointer());
     }
 
     @Override
@@ -213,7 +200,7 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
             return null;
         
         if (outputFormat == null) {
-            Pointer p = (Pointer)context.readField("oformat");
+            Pointer<?> p = context.oformat();
             outputFormat = p == null ? null : OutputFormatWrapperFactory.getInstance().wrap(p);
         }
         
@@ -226,7 +213,7 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
             return;
         
         this.outputFormat = outputFormat;
-        context.writeField("oformat", outputFormat == null ? null : outputFormat.getPointer());
+        context.oformat(outputFormat == null ? null : outputFormat.getPointer());
     }
     
     @Override
@@ -235,7 +222,7 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
             return null;
         
         if (inputFormat == null) {
-            Pointer p = (Pointer)context.readField("iformat");
+            Pointer<?> p = context.iformat();
             inputFormat = p == null ? null : InputFormatWrapperFactory.getInstance().wrap(p);
         }
         
@@ -248,18 +235,18 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
             return 0;
         
         if (duration == null)
-            duration = (Long)context.readField("duration") * 1000 / IAVUtilLibrary.AV_TIME_BASE;
+            duration = context.duration() * 1000 / AVUtilLibrary.AV_TIME_BASE;
         
         return duration;
     }
     
     @Override
-    public Pointer getPrivateData() {
+    public Pointer<?> getPrivateData() {
         if (isClosed())
             return null;
         
         if (privateData == null)
-            privateData = (Pointer)context.readField("priv_data");
+            privateData = context.priv_data();
         
         return privateData;
     }
@@ -269,7 +256,7 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
         if (isClosed())
             return;
         
-        formatLib.av_read_play(context.getPointer());
+        formatLib.av_read_play(getPointer());
     }
     
     @Override
@@ -277,7 +264,7 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
         if (isClosed())
             return;
         
-        formatLib.av_read_pause(context.getPointer());
+        formatLib.av_read_pause(getPointer());
     }
     
     @Override
@@ -285,7 +272,7 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
         if (isClosed())
             return false;
         
-        int result = formatLib.av_read_frame(context.getPointer(), packet.getPointer());
+        int result = formatLib.av_read_frame(getPointer(), packet.getPointer());
         packet.clearWrapperCache();
         
         return result >= 0;
@@ -296,7 +283,7 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
         if (isClosed())
             return;
         
-        int result = formatLib.avformat_write_header(context.getPointer(), null);
+        int result = formatLib.avformat_write_header(getPointer(), null);
         if (result < 0)
             throw new LibavException(result);
     }
@@ -306,7 +293,7 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
         if (isClosed())
             return;
         
-        int res = formatLib.av_write_trailer(context.getPointer());
+        int res = formatLib.av_write_trailer(getPointer());
         if (res != 0)
             throw new LibavException(res);
     }
@@ -316,7 +303,7 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
         if (isClosed())
             return;
         
-        int res = formatLib.av_write_frame(context.getPointer(), packet.getPointer());
+        int res = formatLib.av_write_frame(getPointer(), packet.getPointer());
         if (res != 0)
             throw new LibavException(res);
     }
@@ -326,7 +313,7 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
         if (isClosed())
             return;
         
-        int res = formatLib.av_interleaved_write_frame(context.getPointer(), packet.getPointer());
+        int res = formatLib.av_interleaved_write_frame(getPointer(), packet.getPointer());
         if (res != 0)
             throw new LibavException(res);
     }
@@ -336,8 +323,8 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
         if (isClosed())
             return;
         
-        long tb = IAVUtilLibrary.AV_TIME_BASE / 1000;
-        formatLib.avformat_seek_file(context.getPointer(), -1, minTime * tb, time * tb, maxTime * tb, 0);
+        long tb = AVUtilLibrary.AV_TIME_BASE / 1000;
+        formatLib.avformat_seek_file(getPointer(), -1, minTime * tb, time * tb, maxTime * tb, 0);
     }
     
     private static FormatContextWrapper54 allocateContext() throws LibavException {
@@ -349,38 +336,38 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
     }
     
     public static FormatContextWrapper54 openMedia(String url) throws LibavException {
-        CustomNativeString cnsUrl = new CustomNativeString(url, "UTF-8", 1);
+        Pointer<Byte> purl = Pointer.pointerToString(url, Pointer.StringType.C, Charset.forName("UTF-8")).as(Byte.class);
         
-        PointerByReference avfcByRef = new PointerByReference();
-        int result = formatLib.avformat_open_input(avfcByRef, cnsUrl.getPointer(), null, null);
+        Pointer<Pointer<?>> avfcByRef = Pointer.allocatePointer();
+        int result = formatLib.avformat_open_input(avfcByRef, purl, null, null);
         if (result < 0)
             throw new LibavException(result);
         
-        return new FormatContextWrapper54(new AVFormatContext54(avfcByRef.getValue()));
+        return new FormatContextWrapper54(new AVFormatContext54(avfcByRef.get()));
     }
     
     public static FormatContextWrapper54 createMedia(String url, String outputFormatName) throws LibavException {
-        CustomNativeString cnsUrl = new CustomNativeString(url, "UTF-8", 1);
+        Pointer<Byte> purl = Pointer.pointerToString(url, Pointer.StringType.C, Charset.forName("UTF-8")).as(Byte.class);
         FormatContextWrapper54 result = allocateContext();
         result.outputContext = true;
         
-        CustomNativeString ofn = outputFormatName == null ? null : new CustomNativeString(outputFormatName, "UTF-8", 1);
-        Pointer pOfn = ofn == null ? null : ofn.getPointer();
-        Pointer of = formatLib.av_guess_format(pOfn, cnsUrl.getPointer(), pOfn);
+        Pointer<Byte> ofn = outputFormatName == null ? null : Pointer.pointerToString(outputFormatName, Pointer.StringType.C, Charset.forName("UTF-8")).as(Byte.class);
+        Pointer of = formatLib.av_guess_format(ofn, purl, ofn);
         if (of == null)
             throw new LibavException("unknown format: " + outputFormatName);
         result.setOutputFormat(OutputFormatWrapperFactory.getInstance().wrap(of));
         result.setFileName(url);
         
-        PointerByReference avioc = new PointerByReference(null);
-        if ((result.getOutputFormat().getFlags() & IAVFormatLibrary.AVFMT_NOFILE) == 0) {
+        Pointer<Pointer<?>> avioc = Pointer.allocatePointer();
+        avioc.set(null);
+        if ((result.getOutputFormat().getFlags() & AVFormatLibrary.AVFMT_NOFILE) == 0) {
             result.setIOContext(null);
-            int res = formatLib.avio_open(avioc, cnsUrl.getPointer(), IAVFormatLibrary.AVIO_FLAG_WRITE);
+            int res = formatLib.avio_open(avioc, purl, AVFormatLibrary.AVIO_FLAG_WRITE);
             if (res < 0) {
                 result.close();
                 throw new LibavException(res);
             }
-            result.setIOContext(avioc.getValue() == null ? null : IOContextWrapperFactory.getInstance().wrap(avioc.getValue()));
+            result.setIOContext(avioc.get() == null ? null : IOContextWrapperFactory.getInstance().wrap(avioc.get()));
         }
         
         return result;

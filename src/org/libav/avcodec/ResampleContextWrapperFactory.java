@@ -17,7 +17,7 @@
  */
 package org.libav.avcodec;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 import org.libav.LibavException;
 
 /**
@@ -39,7 +39,7 @@ public class ResampleContextWrapperFactory {
      * @param resampleContext pointer to an AVResampleContext struct
      * @return resample context wrapper
      */
-    public IResampleContextWrapper wrap(Pointer resampleContext) {
+    public IResampleContextWrapper wrap(Pointer<?> resampleContext) {
         return new ResampleContextWrapper(resampleContext);
     }
     

@@ -17,9 +17,8 @@
  */
 package org.libav;
 
-import com.sun.jna.Pointer;
-import java.nio.charset.Charset;
-import org.libav.avutil.bridge.IAVUtilLibrary;
+import org.bridj.Pointer;
+import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.bridge.LibraryManager;
 
 /**
@@ -29,7 +28,7 @@ import org.libav.bridge.LibraryManager;
  */
 public class LibavException extends Exception {
 
-    private static final IAVUtilLibrary lib = LibraryManager.getInstance().getAVUtilLibraryWrapper().getLibrary();
+    private static final AVUtilLibrary lib = LibraryManager.getInstance().getAVUtilLibrary();
     
     public LibavException(int errorCode, Throwable thrwbl) {
         super(getLibavErrorDescription(errorCode) + "(" + errorCode + ")", thrwbl);
@@ -55,18 +54,12 @@ public class LibavException extends Exception {
     }
     
     public static String getLibavErrorDescription(int errorCode) {
-        Pointer ptr = lib.av_malloc(2048);
+        Pointer<Byte> ptr = Pointer.allocateBytes(2048);
         if (ptr == null)
             return "memory allocation error, unable to get the Libav error description";
         
         lib.av_strerror(errorCode, ptr, 2048);
-        byte[] data = ptr.getByteArray(0, 2048);
-        lib.av_free(ptr);
         
-        int len = 0;
-        while (data[len] != 0 && len < data.length)
-            len++;
-        
-        return new String(data, 0, len, Charset.forName("UTF-8"));
+        return ptr.getCString();
     }
 }

@@ -17,15 +17,12 @@
  */
 package org.libav.avcodec;
 
-import com.sun.jna.Pointer;
-import com.sun.jna.ptr.IntByReference;
+import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avcodec.bridge.AVCodecContext53;
-import org.libav.avcodec.bridge.IAVCodecLibrary;
-import org.libav.avutil.bridge.AVRational;
+import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.avutil.bridge.AVSampleFormat;
-import org.libav.avutil.bridge.IAVUtilLibrary;
-import org.libav.bridge.LibavLibraryWrapper;
+import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.bridge.LibraryManager;
 import org.libav.util.Rational;
 
@@ -36,24 +33,23 @@ import org.libav.util.Rational;
  */
 public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
     
-    private static final IAVCodecLibrary codecLib;
+    private static final AVCodecLibrary codecLib;
     
     private static final boolean avcOpen2;
     private static final boolean avcDecodeAudio4;
     private static final boolean avcEncodeAudio2;
     
     static {
-        LibavLibraryWrapper<IAVCodecLibrary> avc = LibraryManager.getInstance().getAVCodecLibraryWrapper();
-        codecLib = avc.getLibrary();
+        codecLib = LibraryManager.getInstance().getAVCodecLibrary();
         
-        avcOpen2 = avc.functionExists("avcodec_open2");
-        avcDecodeAudio4 = avc.functionExists("avcodec_decode_audio4");
-        avcEncodeAudio2 = avc.functionExists("avcodec_encode_audio2");
+        avcOpen2 = codecLib.functionExists("avcodec_open2");
+        avcDecodeAudio4 = codecLib.functionExists("avcodec_decode_audio4");
+        avcEncodeAudio2 = codecLib.functionExists("avcodec_encode_audio2");
     }
     
     private AVCodecContext53 context;
     
-    private IntByReference intByRef;
+    private Pointer<Integer> intByRef;
     private IDecodeAudioFunction decodeAudioFunction;
     private IEncodeAudioFunction encodeAudioFunction;
     
@@ -65,7 +61,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
     public CodecContextWrapper53(AVCodecContext53 context) {
         this.context = context;
         
-        this.intByRef = new IntByReference(0);
+        this.intByRef = Pointer.allocateInt();
         
         if (avcDecodeAudio4)
             this.decodeAudioFunction = new DecodeAudio4();
@@ -79,11 +75,11 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
     }
     
     @Override
-    public Pointer getPointer() {
+    public Pointer<?> getPointer() {
         if (context == null)
             return null;
         
-        return context.getPointer();
+        return Pointer.pointerTo(context);
     }
     
     @Override
@@ -93,9 +89,9 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         
         int result;
         if (avcOpen2)
-            result = codecLib.avcodec_open2(context.getPointer(), codec.getPointer(), null);
+            result = codecLib.avcodec_open2(getPointer(), codec.getPointer(), null);
         else
-            result = codecLib.avcodec_open(context.getPointer(), codec.getPointer());
+            result = codecLib.avcodec_open(getPointer(), codec.getPointer());
         
         if(result < 0)
             throw new LibavException(result);
@@ -108,7 +104,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         if (isClosed())
             return;
         
-        codecLib.avcodec_close(context.getPointer());
+        codecLib.avcodec_close(getPointer());
         codec = null;
     }
     
@@ -119,8 +115,8 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         if (context == null)
             return;
         
-        IAVUtilLibrary lib = LibraryManager.getInstance().getAVUtilLibraryWrapper().getLibrary();
-        lib.av_free(context.getPointer());
+        AVUtilLibrary lib = LibraryManager.getInstance().getAVUtilLibrary();
+        lib.av_free(getPointer());
         context = null;
     }
     
@@ -135,7 +131,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             return null;
         
         if (codedFrame == null) {
-            Pointer p = (Pointer)context.readField("coded_frame");
+            Pointer<?> p = context.coded_frame();
             codedFrame = p == null ? null : FrameWrapperFactory.getInstance().wrap(p);
         }
         
@@ -148,7 +144,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             return 0;
         
         if (codecType == null)
-            codecType = (Integer)context.readField("codec_type");
+            codecType = context.codec_type();
         
         return codecType;
     }
@@ -158,7 +154,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         if (context == null)
             return;
         
-        context.writeField("codec_type", codecType);
+        context.codec_type(codecType);
         this.codecType = codecType;
     }
     
@@ -168,7 +164,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             return 0;
         
         if (codecId == null)
-            codecId = (Integer)context.readField("codec_id");
+            codecId = context.codec_id();
         
         return codecId;
     }
@@ -178,7 +174,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         if (context == null)
             return;
         
-        context.writeField("codec_id", codecId);
+        context.codec_id(codecId);
         this.codecId = codecId;
     }
     
@@ -188,7 +184,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             return 0;
         
         if (flags == null)
-            flags = (Integer)context.readField("flags");
+            flags = context.flags();
         
         return flags;
     }
@@ -198,8 +194,8 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         if (context == null)
             return;
         
+        context.flags(flags);
         this.flags = flags;
-        context.writeField("flags", flags);
     }
     
     @Override
@@ -208,7 +204,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             return 0;
         
         if (width == null)
-            width = (Integer)context.readField("width");
+            width = context.width();
         
         return width;
     }
@@ -218,7 +214,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         if (context == null)
             return;
         
-        context.writeField("width", width);
+        context.width(width);
         this.width = width;
     }
     
@@ -228,7 +224,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             return 0;
         
         if (height == null)
-            height = (Integer)context.readField("height");
+            height = context.height();
         
         return height;
     }
@@ -238,7 +234,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         if (context == null)
             return;
         
-        context.writeField("height", height);
+        context.height(height);
         this.height = height;
     }
     
@@ -248,7 +244,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             return 0;
         
         if (pixelFormat == null)
-            pixelFormat = (Integer)context.readField("pix_fmt");
+            pixelFormat = context.pix_fmt();
         
         return pixelFormat;
     }
@@ -258,7 +254,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         if (context == null)
             return;
         
-        context.writeField("pix_fmt", pixelFormat);
+        context.pix_fmt(pixelFormat);
         this.pixelFormat = pixelFormat;
     }
 
@@ -268,7 +264,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             return 0;
         
         if (bitRate == null)
-            bitRate = (Integer)context.readField("bit_rate");
+            bitRate = context.bit_rate();
         
         return bitRate;
     }
@@ -278,7 +274,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         if (context == null)
             return;
         
-        context.writeField("bit_rate", bitRate);
+        context.bit_rate(bitRate);
         this.bitRate = bitRate;
     }
 
@@ -288,7 +284,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             return null;
         
         if (timeBase == null)
-            timeBase = new Rational((AVRational)context.readField("time_base"));
+            timeBase = new Rational(context.time_base());
         
         return timeBase;
     }
@@ -298,9 +294,8 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         if (context == null)
             return;
         
-        getTimeBase();
-        context.time_base.writeField("num", (int)timeBase.getNumerator());
-        context.time_base.writeField("den", (int)timeBase.getDenominator());
+        context.time_base().num((int)timeBase.getNumerator());
+        context.time_base().den((int)timeBase.getDenominator());
         this.timeBase = timeBase;
     }
 
@@ -310,7 +305,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             return 0;
         
         if (gopSize == null)
-            gopSize = (Integer)context.readField("gop_size");
+            gopSize = context.gop_size();
         
         return gopSize;
     }
@@ -320,7 +315,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         if (context == null)
             return;
         
-        context.writeField("gop_size", gopSize);
+        context.gop_size(gopSize);
         this.gopSize = gopSize;
     }
 
@@ -330,7 +325,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             return 0;
         
         if (maxBFrames == null)
-            maxBFrames = (Integer)context.readField("max_b_frames");
+            maxBFrames = context.max_b_frames();
         
         return maxBFrames;
     }
@@ -340,7 +335,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         if (context == null)
             return;
         
-        context.writeField("max_b_frames", maxBFrames);
+        context.max_b_frames(maxBFrames);
         this.maxBFrames = maxBFrames;
     }
 
@@ -350,7 +345,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             return 0;
         
         if (mbDecision == null)
-            mbDecision = (Integer)context.readField("mb_decision");
+            mbDecision = context.mb_decision();
         
         return mbDecision;
     }
@@ -360,7 +355,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         if (context == null)
             return;
         
-        context.writeField("mb_decision", mbDecision);
+        context.mb_decision(mbDecision);
         this.mbDecision = mbDecision;
     }
 
@@ -370,18 +365,18 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             return 0;
         
         if (channels == null)
-            channels = (Integer)context.readField("channels");
+            channels = context.channels();
         
         return channels;
     }
 
     @Override
-    public void setChannels(int chanels) {
+    public void setChannels(int channels) {
         if (context == null)
             return;
         
-        context.writeField("channels", chanels);
-        this.channels = chanels;
+        context.channels(channels);
+        this.channels = channels;
     }
 
     @Override
@@ -390,7 +385,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             return 0;
         
         if (sampleFormat == null)
-            sampleFormat = (Integer)context.readField("sample_fmt");
+            sampleFormat = context.sample_fmt();
         
         return sampleFormat;
     }
@@ -400,7 +395,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         if (context == null)
             return;
         
-        context.writeField("sample_fmt", sampleFormat);
+        context.sample_fmt(sampleFormat);
         this.sampleFormat = sampleFormat;
     }
 
@@ -410,7 +405,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             return 0;
         
         if (sampleRate == null)
-            sampleRate = (Integer)context.readField("sample_rate");
+            sampleRate = context.sample_rate();
         
         return sampleRate;
     }
@@ -420,7 +415,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         if (context == null)
             return;
         
-        context.writeField("sample_rate", sampleRate);
+        context.sample_rate(sampleRate);
         this.sampleRate = sampleRate;
     }
     
@@ -430,7 +425,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             return 0;
         
         if (frameSize == null)
-            frameSize = (Integer)context.readField("frame_size");
+            frameSize = context.frame_size();
         
         return frameSize;
     }
@@ -440,17 +435,17 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         if (isClosed())
             return false;
         
-        intByRef.setValue(0);
+        intByRef.setInt(0);
         
         int packetSize = packet.getSize();
-        int len = codecLib.avcodec_decode_video2(context.getPointer(), frame.getPointer(), intByRef, packet.getPointer());
+        int len = codecLib.avcodec_decode_video2(getPointer(), frame.getPointer(), intByRef, packet.getPointer());
         if (len < 0)
             throw new LibavException(len);
         
         packetSize -= len;
         packet.setSize(packetSize);
-        packet.setData(packetSize <= 0 ? null : packet.getData().share(len));
-        if (intByRef.getValue() != 0) {
+        packet.setData(packetSize <= 0 ? null : packet.getData().offset(len));
+        if (intByRef.getInt() != 0) {
             frame.clearWrapperCache();
             return true;
         }
@@ -463,7 +458,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         if (isClosed())
             return false;
         
-        int size = codecLib.avcodec_encode_video(context.getPointer(), packet.getData(), packet.getSize(), frame == null ? null : frame.getPointer());
+        int size = codecLib.avcodec_encode_video(getPointer(), packet.getData(), packet.getSize(), frame == null ? null : frame.getPointer());
         if (size < 0)
             throw new LibavException(size);
         else if (size == 0)
@@ -501,19 +496,19 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
     private class DecodeAudio3 implements IDecodeAudioFunction {
         @Override
         public boolean decodeAudioFrame(IPacketWrapper packet, IFrameWrapper frame) throws LibavException {
-            intByRef.setValue(frame.getLineSize()[0]);
+            intByRef.setInt(frame.getLineSize().get(0));
 
             int packetSize = packet.getSize();
-            int len = codecLib.avcodec_decode_audio3(context.getPointer(), frame.getData()[0], intByRef, packet.getPointer());
+            int len = codecLib.avcodec_decode_audio3(getPointer(), frame.getData().get(0).as(Short.class), intByRef, packet.getPointer());
             if (len < 0)
                 throw new LibavException(len);
 
             packetSize -= len;
             packet.setSize(packetSize);
-            packet.setData(packetSize <= 0 ? null : packet.getData().share(len));
-            if (intByRef.getValue() > 0) {
+            packet.setData(packetSize <= 0 ? null : packet.getData().offset(len));
+            if (intByRef.getInt() > 0) {
                 frame.clearWrapperCache();
-                frame.setLineSize(0, intByRef.getValue());
+                frame.getLineSize().set(0, intByRef.getInt());
                 frame.setPacketPts(packet.getPts());
                 frame.setPacketDts(packet.getDts());
                 return true;
@@ -526,19 +521,19 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
     private class DecodeAudio4 implements IDecodeAudioFunction {
         @Override
         public boolean decodeAudioFrame(IPacketWrapper packet, IFrameWrapper frame) throws LibavException {
-            intByRef.setValue(0);
+            intByRef.setInt(0);
             
             frame.getDefaults();
             int packetSize = packet.getSize();
-            int len = codecLib.avcodec_decode_audio4(context.getPointer(), frame.getPointer(), intByRef, packet.getPointer());
+            int len = codecLib.avcodec_decode_audio4(getPointer(), frame.getPointer(), intByRef, packet.getPointer());
             if (len < 0)
                 throw new LibavException(len);
             
             packetSize -= len;
             packet.setSize(packetSize);
-            packet.setData(packetSize <= 0 ? null : packet.getData().share(len));
-            if (intByRef.getValue() != 0) {
-                frame.setLineSize(0, frame.getNbSamples() * getChannels() * AVSampleFormat.getBitsPerSample(getSampleFormat()) / 8);
+            packet.setData(packetSize <= 0 ? null : packet.getData().offset(len));
+            if (intByRef.getInt() != 0) {
+                frame.getLineSize().set(0, frame.getNbSamples() * getChannels() * AVSampleFormat.getBitsPerSample(getSampleFormat()) / 8);
                 return true;
             }
 
@@ -549,7 +544,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
     private class EncodeAudio implements IEncodeAudioFunction {
         @Override
         public boolean encodeAudioFrame(IFrameWrapper frame, IPacketWrapper packet) throws LibavException {
-            int len = codecLib.avcodec_encode_audio(context.getPointer(), packet.getData(), packet.getSize(), frame == null ? null : frame.getData()[0]);
+            int len = codecLib.avcodec_encode_audio(getPointer(), packet.getData(), packet.getSize(), frame == null ? null : frame.getData().get(0).as(Short.class));
             if (len < 0)
                 throw new LibavException(len);
             else if (len == 0)
@@ -564,15 +559,15 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
     private class EncodeAudio2 implements IEncodeAudioFunction {
         @Override
         public boolean encodeAudioFrame(IFrameWrapper frame, IPacketWrapper packet) throws LibavException {
-            intByRef.setValue(0);
+            intByRef.setInt(0);
             
             if (frame != null)
-                frame.setNbSamples(frame.getLineSize()[0] / (getChannels() * AVSampleFormat.getBitsPerSample(getSampleFormat()) / 8));
-            int len = codecLib.avcodec_encode_audio2(context.getPointer(), packet.getPointer(), frame == null ? null : frame.getPointer(), intByRef);
+                frame.setNbSamples(frame.getLineSize().get(0) / (getChannels() * AVSampleFormat.getBitsPerSample(getSampleFormat()) / 8));
+            int len = codecLib.avcodec_encode_audio2(getPointer(), packet.getPointer(), frame == null ? null : frame.getPointer(), intByRef);
             if (len < 0)
                 throw new LibavException(len);
             
-            if (intByRef.getValue() != 0)
+            if (intByRef.getInt() != 0)
                 return true;
             
             return false;

@@ -17,38 +17,37 @@
  */
 package org.libav.avcodec.bridge;
 
-import com.sun.jna.Pointer;
-import com.sun.jna.Structure;
+import org.bridj.Pointer;
+import org.bridj.StructObject;
+import org.bridj.ann.Array;
+import org.bridj.ann.Field;
 
 /**
- * Mirror of the native AVPicture struct for the libavcodec v 54.x.x. For 
+ * Mirror of the native AVPicture struct for the libavcodec v 54.x.x. For
  * details see the Libav documentation.
- * 
+ *
  * @author Ondrej Perutka
  */
-public class AVPicture54 extends Structure {
-    
-    public Pointer[] data = new Pointer[8];
-    public int[] linesize = new int[8];
+public class AVPicture54 extends StructObject {
 
     public AVPicture54() {
         super();
-        initFieldOrder();
-    }
-    
-    public AVPicture54(Pointer p) {
-        super(p);
-        initFieldOrder();
     }
 
-    private void initFieldOrder() {
-        setFieldOrder(new java.lang.String[] { 
-            "data", 
-            "linesize"
-        });
+    public AVPicture54(Pointer pointer) {
+        super(pointer);
     }
 
-    public static class ByReference extends AVPicture54 implements Structure.ByReference { };
-    public static class ByValue extends AVPicture54 implements Structure.ByValue { };
+    @Array({8})
+    @Field(0)
+    public Pointer<Pointer<Byte>> data() {
+        return this.io.getPointerField(this, 0);
+    }
+
+    @Array({8})
+    @Field(1)
+    public Pointer<Integer> linesize() {
+        return this.io.getPointerField(this, 1);
+    }
     
 }

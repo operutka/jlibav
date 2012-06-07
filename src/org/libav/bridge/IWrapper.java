@@ -17,7 +17,7 @@
  */
 package org.libav.bridge;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 
 /**
  * Interface for wrapper classes.
@@ -37,6 +37,6 @@ public interface IWrapper {
      * 
      * @return pointer to the native struct/object
      */
-    public Pointer getPointer();
+    public Pointer<?> getPointer();
     
 }

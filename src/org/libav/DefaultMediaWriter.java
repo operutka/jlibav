@@ -17,21 +17,20 @@
  */
 package org.libav;
 
-import com.sun.jna.Pointer;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
+import org.bridj.Pointer;
 import org.libav.avcodec.CodecWrapperFactory;
 import org.libav.avcodec.ICodecContextWrapper;
 import org.libav.avcodec.IPacketWrapper;
-import org.libav.avcodec.bridge.IAVCodecLibrary;
+import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.avformat.FormatContextWrapperFactory;
 import org.libav.avformat.IFormatContextWrapper;
 import org.libav.avformat.IOutputFormatWrapper;
 import org.libav.avformat.IStreamWrapper;
-import org.libav.avformat.bridge.IAVFormatLibrary;
+import org.libav.avformat.bridge.AVFormatLibrary;
 import org.libav.avutil.bridge.AVMediaType;
-import org.libav.avutil.bridge.IAVUtilLibrary;
 import org.libav.avutil.bridge.PixelFormat;
 import org.libav.bridge.LibraryManager;
 import org.libav.util.Rational;
@@ -155,8 +154,10 @@ public class DefaultMediaWriter implements IMediaWriter {
             cc.setMaxBFrames(2);
         
         IOutputFormatWrapper ofw = formatContext.getOutputFormat();
-        if ((ofw.getFlags() & IAVFormatLibrary.AVFMT_GLOBALHEADER) != 0)
-            cc.setFlags(cc.getFlags() | IAVCodecLibrary.CODEC_FLAG_GLOBAL_HEADER);
+        if ((ofw.getFlags() & AVFormatLibrary.AVFMT_GLOBALHEADER) != 0)
+            cc.setFlags(cc.getFlags() | AVCodecLibrary.CODEC_FLAG_GLOBAL_HEADER);
+        
+        stream.setTimeBase(new Rational(1, 1000));
         
         reloadStreams();
         return vStreams.length - 1;
@@ -188,8 +189,10 @@ public class DefaultMediaWriter implements IMediaWriter {
         cc.setChannels(channelCount);
         
         IOutputFormatWrapper ofw = formatContext.getOutputFormat();
-        if ((ofw.getFlags() & IAVFormatLibrary.AVFMT_GLOBALHEADER) != 0)
-            cc.setFlags(cc.getFlags() | IAVCodecLibrary.CODEC_FLAG_GLOBAL_HEADER);
+        if ((ofw.getFlags() & AVFormatLibrary.AVFMT_GLOBALHEADER) != 0)
+            cc.setFlags(cc.getFlags() | AVCodecLibrary.CODEC_FLAG_GLOBAL_HEADER);
+        
+        stream.setTimeBase(new Rational(1, 1000));
         
         reloadStreams();
         return aStreams.length - 1;
@@ -271,40 +274,24 @@ public class DefaultMediaWriter implements IMediaWriter {
     }
     
     public static String getSdp(IFormatContextWrapper[] contexts) throws LibavException {
-        IAVUtilLibrary utilLib = LibraryManager.getInstance().getAVUtilLibraryWrapper().getLibrary();
-        IAVFormatLibrary formatLib = LibraryManager.getInstance().getAVFormatLibraryWrapper().getLibrary();
-        Pointer data = null;
-        String result = null;
-        int i = 0;
+        AVFormatLibrary formatLib = LibraryManager.getInstance().getAVFormatLibrary();
+        Pointer<Byte> data;
         
-        Pointer[] fcs = new Pointer[contexts.length];
-        for (IFormatContextWrapper fc : contexts) {
-            fc.clearWrapperCache();
-            if (fc.getPrivateData() == null)
+        Pointer<Pointer<?>> fcs = Pointer.allocatePointers(contexts.length);
+        for (int i = 0; i < contexts.length; i++) {
+            contexts[i].clearWrapperCache();
+            if (contexts[i].getPrivateData() == null)
                 throw new LibavException("all headers must be written before creating an SDP");
-            fcs[i++] = fc.getPointer();
+            fcs.set(i, contexts[i].getPointer());
         }
         
-        try {
-            data = utilLib.av_malloc(4096);
-            if (data == null)
-                throw new LibavException("unable to allocate memory to create the SDP");
-            if (formatLib.av_sdp_create(fcs, fcs.length, data, 4096) != 0)
-                throw new LibavException("unable to generate the SDP");
-            
-            byte[] chars = data.getByteArray(0, 4096);
-            int len = 0;
-            for (; len < chars.length; len++) {
-                if (chars[len] == 0)
-                    break;
-            }
-            result = new String(chars, 0, len, Charset.forName("UTF-8"));
-        } finally {
-            if (data != null)
-                utilLib.av_free(data);
-        }
-        
-        return result;
+        data = Pointer.allocateBytes(4096);
+        if (data == null)
+            throw new LibavException("unable to allocate memory to create the SDP");
+        if (formatLib.av_sdp_create(fcs, contexts.length, data, 4096) != 0)
+            throw new LibavException("unable to generate the SDP");
+
+        return data.getStringAtOffset(0, Pointer.StringType.C, Charset.forName("UTF-8"));
     }
     
     public static void createSdpFile(String fileName, DefaultMediaWriter[] mediaWriter) throws LibavException, FileNotFoundException {

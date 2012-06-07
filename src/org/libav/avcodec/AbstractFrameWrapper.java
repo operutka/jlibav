@@ -17,7 +17,7 @@
  */
 package org.libav.avcodec;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 
 /**
  * Abstract wrapper for the AVFrame.
@@ -26,8 +26,8 @@ import com.sun.jna.Pointer;
  */
 public abstract class AbstractFrameWrapper implements IFrameWrapper {
     
-    protected Pointer[] data;
-    protected int[] lineSize;
+    protected Pointer<Pointer<Byte>> data;
+    protected Pointer<Integer> lineSize;
     protected Boolean keyFrame;
     protected Long pts;
     protected Integer repeatPicture;

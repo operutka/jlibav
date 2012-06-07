@@ -17,7 +17,7 @@
  */
 package org.libav.avcodec;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.bridge.IWrapper;
 
@@ -43,6 +43,6 @@ public interface IResampleContextWrapper extends IWrapper {
      * @return number of frames in the output buffer
      * @throws LibavException if the input cannot be resampled
      */
-    int resample(Pointer inputBuffer, Pointer outputBuffer, int frameCount) throws LibavException;
+    int resample(Pointer<Byte> inputBuffer, Pointer<Byte> outputBuffer, int frameCount) throws LibavException;
     
 }

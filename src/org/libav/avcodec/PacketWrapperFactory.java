@@ -17,7 +17,7 @@
  */
 package org.libav.avcodec;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avcodec.bridge.AVPacket;
 
@@ -40,7 +40,7 @@ public class PacketWrapperFactory {
      * @param packet pointer to an AVPacket struct
      * @return packet wrapper
      */
-    public IPacketWrapper wrap(Pointer packet) {
+    public IPacketWrapper wrap(Pointer<?> packet) {
         return wrap(new AVPacket(packet));
     }
     

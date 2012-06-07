@@ -45,8 +45,8 @@ public class Rational extends Number implements Comparable<Rational> {
      * @param r 
      */
     public Rational(AVRational r) {
-        this.num = r.num;
-        this.den = r.den;
+        this.num = r.num();
+        this.den = r.den();
     }
     
     /**

@@ -17,7 +17,7 @@
  */
 package org.libav.avcodec;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 import org.libav.bridge.IWrapper;
 
 /**
@@ -47,16 +47,7 @@ public interface IFrameWrapper extends IWrapper {
      * 
      * @return picture planes
      */
-    Pointer[] getData();
-    
-    /**
-     * Set the data pointer property of the AVFrame at the given position. The 
-     * value may be cached.
-     * 
-     * @param index a position in the data array
-     * @param ptr a pointer
-     */
-    void setData(int index, Pointer ptr);
+    Pointer<Pointer<Byte>> getData();
     
     /**
      * Get length of the array returned by the getData() method.
@@ -74,16 +65,7 @@ public interface IFrameWrapper extends IWrapper {
      * 
      * @return size in bytes for each plane
      */
-    int[] getLineSize();
-    
-    /**
-     * Set the linesize property of the AVFrame at the given position. The 
-     * value may be cached.
-     * 
-     * @param index a position in the linesize array
-     * @param size a size
-     */
-    void setLineSize(int index, int size);
+    Pointer<Integer> getLineSize();
     
     /**
      * Get length of the array returned by the getLineSize() method.

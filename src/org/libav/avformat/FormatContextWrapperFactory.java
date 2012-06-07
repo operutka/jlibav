@@ -17,12 +17,11 @@
  */
 package org.libav.avformat;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avformat.bridge.AVFormatContext53;
 import org.libav.avformat.bridge.AVFormatContext54;
-import org.libav.avformat.bridge.IAVFormatLibrary;
-import org.libav.bridge.LibavLibraryWrapper;
+import org.libav.avformat.bridge.AVFormatLibrary;
 import org.libav.bridge.LibraryManager;
 
 /**
@@ -32,11 +31,11 @@ import org.libav.bridge.LibraryManager;
  */
 public class FormatContextWrapperFactory {
     
-    private static final LibavLibraryWrapper<IAVFormatLibrary> libWrapper;
+    private static final AVFormatLibrary formatLib;
     private static final FormatContextWrapperFactory instance;
     
     static {
-        libWrapper = LibraryManager.getInstance().getAVFormatLibraryWrapper();
+        formatLib = LibraryManager.getInstance().getAVFormatLibrary();
         instance = new FormatContextWrapperFactory();
     }
     
@@ -46,8 +45,8 @@ public class FormatContextWrapperFactory {
      * @param formatContext pointer to an AVFormatContext struct
      * @return format context wrapper
      */
-    public IFormatContextWrapper wrap(Pointer formatContext) {
-        switch (libWrapper.getMajorVersion()) {
+    public IFormatContextWrapper wrap(Pointer<?> formatContext) {
+        switch (formatLib.getMajorVersion()) {
             case 53: return wrap(new AVFormatContext53(formatContext));
             case 54: return wrap(new AVFormatContext54(formatContext));
         }
@@ -83,7 +82,7 @@ public class FormatContextWrapperFactory {
      * @throws LibavException if an error occurs while opening media
      */
     public IFormatContextWrapper openMedia(String url) throws LibavException {
-        switch (libWrapper.getMajorVersion()) {
+        switch (formatLib.getMajorVersion()) {
             case 53: return FormatContextWrapper53.openMedia(url);
             case 54: return FormatContextWrapper54.openMedia(url);
         }
@@ -100,7 +99,7 @@ public class FormatContextWrapperFactory {
      * @throws LibavException if an error occurs while creating media
      */
     public IFormatContextWrapper createMedia(String url, String outputFormatName) throws LibavException {
-        switch (libWrapper.getMajorVersion()) {
+        switch (formatLib.getMajorVersion()) {
             case 53: return FormatContextWrapper53.createMedia(url, outputFormatName);
             case 54: return FormatContextWrapper54.createMedia(url, outputFormatName);
         }

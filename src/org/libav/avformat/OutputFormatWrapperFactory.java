@@ -17,11 +17,10 @@
  */
 package org.libav.avformat;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
+import org.libav.avformat.bridge.AVFormatLibrary;
 import org.libav.avformat.bridge.AVOutputFormat53;
 import org.libav.avformat.bridge.AVOutputFormat54;
-import org.libav.avformat.bridge.IAVFormatLibrary;
-import org.libav.bridge.LibavLibraryWrapper;
 import org.libav.bridge.LibraryManager;
 
 /**
@@ -31,11 +30,11 @@ import org.libav.bridge.LibraryManager;
  */
 public class OutputFormatWrapperFactory {
     
-    private static final LibavLibraryWrapper<IAVFormatLibrary> libWrapper;
+    private static final AVFormatLibrary formatLib;
     private static final OutputFormatWrapperFactory instance;
     
     static {
-        libWrapper = LibraryManager.getInstance().getAVFormatLibraryWrapper();
+        formatLib = LibraryManager.getInstance().getAVFormatLibrary();
         instance = new OutputFormatWrapperFactory();
     }
     
@@ -45,8 +44,8 @@ public class OutputFormatWrapperFactory {
      * @param format pointer to an AVOutputFormat struct
      * @return output format wrapper
      */
-    public IOutputFormatWrapper wrap(Pointer format) {
-        switch (libWrapper.getMajorVersion()) {
+    public IOutputFormatWrapper wrap(Pointer<?> format) {
+        switch (formatLib.getMajorVersion()) {
             case 53: return wrap(new AVOutputFormat53(format));
             case 54: return wrap(new AVOutputFormat54(format));
         }

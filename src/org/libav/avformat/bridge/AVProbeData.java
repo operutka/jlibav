@@ -17,39 +17,57 @@
  */
 package org.libav.avformat.bridge;
 
-import com.sun.jna.Pointer;
-import com.sun.jna.Structure;
+import org.bridj.Pointer;
+import org.bridj.StructObject;
+import org.bridj.ann.Field;
 
 /**
- * Mirror of the native AVProbeData struct for the libavformat v53.x.x and 
+ * Mirror of the native AVProbeData struct for the libavformat v53.x.x and
  * 54.x.x. For details see the Libav documentation.
- * 
+ *
  * @author Ondrej Perutka
  */
-public class AVProbeData extends Structure {
-    
-    public Pointer filename;
-    public Pointer buf;
-    public int buf_size;
+public class AVProbeData extends StructObject {
 
     public AVProbeData() {
         super();
-        initFieldOrder();
     }
 
-    public AVProbeData(Pointer filename, Pointer buf, int buf_size) {
-        super();
-        this.filename = filename;
-        this.buf = buf;
-        this.buf_size = buf_size;
-        initFieldOrder();
+    public AVProbeData(Pointer pointer) {
+        super(pointer);
     }
 
-    private void initFieldOrder() {
-        setFieldOrder(new java.lang.String[]{"filename", "buf", "buf_size"});
+    @Field(0)
+    public Pointer<Byte> filename() {
+        return this.io.getPointerField(this, 0);
     }
 
-    public static class ByReference extends AVProbeData implements Structure.ByReference { }
-    public static class ByValue extends AVProbeData implements Structure.ByValue { }
-        
+    @Field(0)
+    public AVProbeData filename(Pointer<Byte> filename) {
+        this.io.setPointerField(this, 0, filename);
+        return this;
+    }
+
+    @Field(1)
+    public Pointer<Byte> buf() {
+        return this.io.getPointerField(this, 1);
+    }
+
+    @Field(1)
+    public AVProbeData buf(Pointer<Byte> buf) {
+        this.io.setPointerField(this, 1, buf);
+        return this;
+    }
+
+    @Field(2)
+    public int buf_size() {
+        return this.io.getIntField(this, 2);
+    }
+
+    @Field(2)
+    public AVProbeData buf_size(int buf_size) {
+        this.io.setIntField(this, 2, buf_size);
+        return this;
+    }
+    
 }

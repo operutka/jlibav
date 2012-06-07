@@ -17,7 +17,7 @@
  */
 package org.libav.avformat;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 
 /**
  * Abstract wrapper for the AVFormatContext.
@@ -33,7 +33,7 @@ public abstract class AbstractFormatContextWrapper implements IFormatContextWrap
     protected IOutputFormatWrapper outputFormat;
     protected IInputFormatWrapper inputFormat;
     protected Long duration;
-    protected Pointer privateData;
+    protected Pointer<?> privateData;
 
     public AbstractFormatContextWrapper() {
         streams = null;

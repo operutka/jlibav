@@ -17,12 +17,11 @@
  */
 package org.libav.avcodec;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 import org.libav.LibavException;
+import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.avcodec.bridge.AVPacket;
-import org.libav.avcodec.bridge.IAVCodecLibrary;
 import org.libav.bridge.LibraryManager;
-import org.libav.c.bridge.ICLibrary;
 
 /**
  * Wrapper class for the AVPacket.
@@ -31,8 +30,7 @@ import org.libav.c.bridge.ICLibrary;
  */
 public class PacketWrapper extends AbstractPacketWrapper {
 
-    private static final IAVCodecLibrary codecLib = LibraryManager.getInstance().getAVCodecLibraryWrapper().getLibrary();
-    private static final ICLibrary cLib = LibraryManager.getInstance().getCLibrary();
+    private static final AVCodecLibrary codecLib = LibraryManager.getInstance().getAVCodecLibrary();
     
     private AVPacket packet;
     
@@ -46,26 +44,26 @@ public class PacketWrapper extends AbstractPacketWrapper {
     }
     
     @Override
-    public Pointer getPointer() {
-        return packet.getPointer();
+    public Pointer<?> getPointer() {
+        return Pointer.pointerTo(packet);
     }
     
     @Override
     public void init() {
-        codecLib.av_init_packet(packet.getPointer());
+        codecLib.av_init_packet(getPointer());
         clearWrapperCache();
     }
     
     @Override
     public void free() {
-        codecLib.av_free_packet(packet.getPointer());
+        codecLib.av_free_packet(getPointer());
         init();
     }
     
     @Override
     public int getStreamIndex() {
         if (streamIndex == null)
-            streamIndex = (Integer)packet.readField("stream_index");
+            streamIndex = packet.stream_index();
         
         return streamIndex;
     }
@@ -73,13 +71,13 @@ public class PacketWrapper extends AbstractPacketWrapper {
     @Override
     public void setStreamIndex(int streamIndex) {
         this.streamIndex = streamIndex;
-        packet.writeField("stream_index", streamIndex);
+        packet.stream_index(streamIndex);
     }
     
     @Override
     public int getSize() {
         if (size == null)
-            size = (Integer)packet.readField("size");
+            size = packet.size();
         
         return size;
     }
@@ -87,27 +85,27 @@ public class PacketWrapper extends AbstractPacketWrapper {
     @Override
     public void setSize(int size) {
         this.size = size;
-        packet.writeField("size", size);
+        packet.size(size);
     }
     
     @Override
-    public Pointer getData() {
+    public Pointer<Byte> getData() {
         if (data == null)
-            data = (Pointer)packet.readField("data");
+            data = packet.data();
         
         return data;
     }
     
     @Override
-    public void setData(Pointer data) {
+    public void setData(Pointer<Byte> data) {
         this.data = data;
-        packet.writeField("data", data);
+        packet.data(data);
     }
     
     @Override
     public int getFlags() {
         if (flags == null)
-            flags = (Integer)packet.readField("flags");
+            flags = packet.flags();
         
         return flags;
     }
@@ -115,13 +113,13 @@ public class PacketWrapper extends AbstractPacketWrapper {
     @Override
     public void setFlags(int flags) {
         this.flags = flags;
-        packet.writeField("flags", flags);
+        packet.flags(flags);
     }
 
     @Override
     public long getPts() {
         if (pts == null)
-            pts = (Long)packet.readField("pts");
+            pts = packet.pts();
         
         return pts;
     }
@@ -129,13 +127,13 @@ public class PacketWrapper extends AbstractPacketWrapper {
     @Override
     public void setPts(long pts) {
         this.pts = pts;
-        packet.writeField("pts", pts);
+        packet.pts(pts);
     }
 
     @Override
     public long getDts() {
         if (dts == null)
-            dts = (Long)packet.readField("dts");
+            dts = packet.dts();
         
         return dts;
     }
@@ -143,13 +141,13 @@ public class PacketWrapper extends AbstractPacketWrapper {
     @Override
     public void setDts(long dts) {
         this.dts = dts;
-        packet.writeField("dts", dts);
+        packet.dts(dts);
     }
 
     @Override
     public int getDuration() {
         if (duration == null)
-            duration = (Integer)packet.readField("duration");
+            duration = packet.duration();
         
         return duration;
     }
@@ -157,13 +155,13 @@ public class PacketWrapper extends AbstractPacketWrapper {
     @Override
     public void setDuration(int duration) {
         this.duration = duration;
-        packet.writeField("duration", duration);
+        packet.duration(duration);
     }
 
     @Override
     public long getConvergenceDuration() {
         if (convergenceDuration == null)
-            convergenceDuration = (Long)packet.readField("convergence_duration");
+            convergenceDuration = packet.convergence_duration();
         
         return convergenceDuration;
     }
@@ -171,13 +169,13 @@ public class PacketWrapper extends AbstractPacketWrapper {
     @Override
     public void setConvergenceDuration(long convergenceDuration) {
         this.convergenceDuration = convergenceDuration;
-        packet.writeField("convergence_duration", convergenceDuration);
+        packet.convergence_duration(convergenceDuration);
     }
 
     @Override
     public long getPosition() {
         if (position == null)
-            position = (Long)packet.readField("pos");
+            position = packet.pos();
         
         return position;
     }
@@ -185,18 +183,23 @@ public class PacketWrapper extends AbstractPacketWrapper {
     @Override
     public void setPosition(long position) {
         this.position = position;
-        packet.writeField("pos", position);
+        packet.pos(position);
     }
 
     @Override
     public PacketWrapper clone() {
-        AVPacket avp = new AVPacket();
         clearWrapperCache();
-        int res = codecLib.av_new_packet(avp.getPointer(), getSize());
+        
+        PacketWrapper result = new PacketWrapper(new AVPacket());
+        int res = codecLib.av_new_packet(result.getPointer(), getSize());
         if (res != 0)
             throw new RuntimeException(new LibavException(res));
-        PacketWrapper result = new PacketWrapper(avp);
-        cLib.memcpy(result.getData(), getData(), getSize());
+        
+        // FIX: change next call into copyTo(...), after the method is fixed
+        Pointer<Byte> pData = getData();
+        if (pData != null)
+            pData.copyBytesTo(result.getData(), getSize());
+        
         result.setPts(getPts());
         result.setDts(getDts());
         result.setStreamIndex(getStreamIndex());

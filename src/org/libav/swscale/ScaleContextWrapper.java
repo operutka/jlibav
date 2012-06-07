@@ -17,11 +17,11 @@
  */
 package org.libav.swscale;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avcodec.IFrameWrapper;
 import org.libav.bridge.LibraryManager;
-import org.libav.swscale.bridge.ISWScaleLibrary;
+import org.libav.swscale.bridge.SWScaleLibrary;
 
 /**
  * Wrapper for the SWScaleContext.
@@ -30,16 +30,16 @@ import org.libav.swscale.bridge.ISWScaleLibrary;
  */
 public class ScaleContextWrapper implements IScaleContextWrapper {
     
-    private static final ISWScaleLibrary scaleLib = LibraryManager.getInstance().getSWScaleLibraryWrapper().getLibrary();
+    private static final SWScaleLibrary scaleLib = LibraryManager.getInstance().getSWScaleLibrary();
 
-    private Pointer scaleContext;
+    private Pointer<?> scaleContext;
     
     /**
      * Wrap existing SWScaleContext.
      * 
      * @param scaleContext pointer to the valid SWScaleContext
      */
-    private ScaleContextWrapper(Pointer scaleContext) {
+    private ScaleContextWrapper(Pointer<?> scaleContext) {
         this.scaleContext = scaleContext;
     }
     
@@ -57,7 +57,7 @@ public class ScaleContextWrapper implements IScaleContextWrapper {
     }
     
     @Override
-    public Pointer getPointer() {
+    public Pointer<?> getPointer() {
         return scaleContext;
     }
     
@@ -96,8 +96,8 @@ public class ScaleContextWrapper implements IScaleContextWrapper {
         return new ScaleContextWrapper(allocateContext(srcWidth, srcHeight, srcFormat, dstWidth, dstHeight, dstFormat, flags, srcFilter, dstFilter, param));
     }
     
-    private static Pointer allocateContext(int srcWidth, int srcHeight, int srcFormat, int dstWidth, int dstHeight, int dstFormat, int flags, Pointer srcFilter, Pointer dstFilter, Pointer param) throws LibavException {
-        Pointer result = scaleLib.sws_getCachedContext(null, srcWidth, srcHeight, srcFormat, dstWidth, dstHeight, dstFormat, flags, srcFilter, dstFilter, param);
+    private static Pointer<?> allocateContext(int srcWidth, int srcHeight, int srcFormat, int dstWidth, int dstHeight, int dstFormat, int flags, Pointer srcFilter, Pointer dstFilter, Pointer param) throws LibavException {
+        Pointer<?> result = scaleLib.sws_getCachedContext(null, srcWidth, srcHeight, srcFormat, dstWidth, dstHeight, dstFormat, flags, srcFilter, dstFilter, param);
         if (result == null)
             throw new LibavException("unable to create scale context");
         

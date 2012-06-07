@@ -17,20 +17,19 @@
  */
 package org.libav.audio;
 
-import com.sun.jna.Pointer;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import org.bridj.Pointer;
 import org.libav.IEncoder;
 import org.libav.LibavException;
 import org.libav.avcodec.*;
-import org.libav.avcodec.bridge.IAVCodecLibrary;
+import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.avformat.IStreamWrapper;
 import org.libav.avutil.bridge.AVMediaType;
 import org.libav.avutil.bridge.AVSampleFormat;
-import org.libav.avutil.bridge.IAVUtilLibrary;
+import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.bridge.LibraryManager;
-import org.libav.c.bridge.ICLibrary;
 import org.libav.data.IPacketConsumer;
 import org.libav.util.Rational;
 
@@ -41,8 +40,7 @@ import org.libav.util.Rational;
  */
 public class AudioFrameEncoder implements IEncoder {
     
-    private static final IAVUtilLibrary utilLib = LibraryManager.getInstance().getAVUtilLibraryWrapper().getLibrary();
-    private static final ICLibrary cLib = LibraryManager.getInstance().getCLibrary();
+    private static final AVUtilLibrary utilLib = LibraryManager.getInstance().getAVUtilLibrary();
     
     public static final int DEFAULT_OUTPUT_BUFFER_SIZE = 200000;
     
@@ -52,7 +50,7 @@ public class AudioFrameEncoder implements IEncoder {
     private IFrameWrapper tmpFrame;
     private int offset;
     private int outputBufferSize;
-    private Pointer outputBuffer;
+    private Pointer<Byte> outputBuffer;
     private IPacketWrapper packet;
     private Rational ptsTransformBase;
     private long ptsOffset;
@@ -75,11 +73,12 @@ public class AudioFrameEncoder implements IEncoder {
             throw new IllegalArgumentException("not an audio stream");
         
         tmpFrame = FrameWrapperFactory.getInstance().allocFrame();
-        tmpFrame.setData(0, malloc(IAVCodecLibrary.AVCODEC_MAX_AUDIO_FRAME_SIZE + IAVCodecLibrary.FF_INPUT_BUFFER_PADDING_SIZE));
-        tmpFrame.setLineSize(0, 0);
+        tmpFrame.getData().set(0, malloc(AVCodecLibrary.AVCODEC_MAX_AUDIO_FRAME_SIZE + AVCodecLibrary.FF_INPUT_BUFFER_PADDING_SIZE));
+        tmpFrame.getLineSize().set(0, 0);
         outputBufferSize = DEFAULT_OUTPUT_BUFFER_SIZE;
         outputBuffer = malloc(outputBufferSize);
         packet = PacketWrapperFactory.getInstance().alloc();
+        stream.clearWrapperCache();
         ptsTransformBase = stream.getTimeBase().mul(1000).invert();
         ptsOffset = -1;
         
@@ -104,7 +103,7 @@ public class AudioFrameEncoder implements IEncoder {
         if (packet != null)
             packet.free();
         if (tmpFrame != null)
-            utilLib.av_free(tmpFrame.getData()[0]);
+            utilLib.av_free(tmpFrame.getData().get(0));
         
         outputBuffer = null;
         packet = null;
@@ -142,8 +141,8 @@ public class AudioFrameEncoder implements IEncoder {
         this.outputBufferSize = outputBufferSize;
     }
     
-    private Pointer malloc(int size) {
-        Pointer ptr = utilLib.av_malloc(size);
+    private Pointer<Byte> malloc(int size) {
+        Pointer<Byte> ptr = utilLib.av_malloc(size).as(Byte.class);
         if (ptr == null)
             throw new OutOfMemoryError("not enough memory for the audio frame encoder");
         
@@ -179,7 +178,7 @@ public class AudioFrameEncoder implements IEncoder {
         cc.open(CodecWrapperFactory.getInstance().findEncoder(cc.getCodecId()));
         cc.clearWrapperCache();
         
-        tmpFrame.setLineSize(0, cc.getFrameSize() * cc.getChannels() * AVSampleFormat.getBitsPerSample(cc.getSampleFormat()) / 8);
+        tmpFrame.getLineSize().set(0, cc.getFrameSize() * cc.getChannels() * AVSampleFormat.getBitsPerSample(cc.getSampleFormat()) / 8);
         offset = 0;
     }
     
@@ -191,33 +190,34 @@ public class AudioFrameEncoder implements IEncoder {
         result.setData(outputBuffer);
         result.setSize(outputBufferSize);
         
-        int tmp = tmpFrame.getLineSize()[0];
-        tmpFrame.setLineSize(0, offset);
+        int tmp = tmpFrame.getLineSize().get(0);
+        tmpFrame.getLineSize().set(0, offset);
 
         if (!cc.encodeAudioFrame(offset == 0 ? null : tmpFrame, result))
             result = null;
         else
             result.setStreamIndex(stream.getIndex());
         
-        tmpFrame.setLineSize(0, tmp);
+        tmpFrame.getLineSize().set(0, tmp);
 
         return result;
     }
     
     private IPacketWrapper encodeFrame(IFrameWrapper frame) throws LibavException {
-        Pointer data = frame.getData()[0];
-        int tmp, size = frame.getLineSize()[0];
+        Pointer<Byte> data = frame.getData().get(0);
+        int tmp, size = frame.getLineSize().get(0);
         
         while (size > 0) {
-            tmp = tmpFrame.getLineSize()[0] - offset;
+            tmp = tmpFrame.getLineSize().get(0) - offset;
             if (size < tmp)
                 tmp = size;
-            cLib.memcpy(tmpFrame.getData()[0].share(offset), data, tmp);
+            // FIX: change next call into copyTo(...), after the method is fixed
+            data.copyBytesTo(tmpFrame.getData().get(0).offset(offset), tmp);
             offset += tmp;
             size -= tmp;
-            data = data.share(tmp);
+            data = data.offset(tmp);
             
-            if (offset == tmpFrame.getLineSize()[0]) {
+            if (offset == tmpFrame.getLineSize().get(0)) {
                 offset = 0;
                 packet.init();
                 packet.setData(outputBuffer);
@@ -227,11 +227,11 @@ public class AudioFrameEncoder implements IEncoder {
                     return null;
                 
                 packet.setStreamIndex(stream.getIndex());
-                if (frame.getPts() != IAVUtilLibrary.AV_NOPTS_VALUE) {
+                if (frame.getPts() != AVUtilLibrary.AV_NOPTS_VALUE) {
                     if (ptsOffset == -1)
                         ptsOffset = frame.getPts();
                     // FIX: this does not allow to change frame rate neither respects the codec context time base
-                    //System.out.printf("encoding video frame: pts = %d (pts_offset = %d, source_pts = %d)\n", frame.getPts() - ptsOffset, ptsOffset, frame.getPts());
+                    //System.out.printf("encoding audio frame: pts = %d (pts_offset = %d, source_pts = %d)\n", frame.getPts() - ptsOffset, ptsOffset, frame.getPts());
                     packet.setPts(ptsTransformBase.mul(frame.getPts() - ptsOffset).longValue());
                     packet.setDts(packet.getPts());
                 }

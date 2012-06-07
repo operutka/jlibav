@@ -17,38 +17,57 @@
  */
 package org.libav.avformat.bridge;
 
-import com.sun.jna.Structure;
+import org.bridj.Pointer;
+import org.bridj.StructObject;
+import org.bridj.ann.Field;
 
 /**
  * Mirror of the native AVFrac struct from the libavformat v 53.x.x and v54.x.x.
  * For details see the Libav documentation.
- * 
+ *
  * @author Ondrej Perutka
  */
-public class AVFrac extends Structure {
-    
-    public long val;
-    public long num;
-    public long den;
-    
+public class AVFrac extends StructObject {
+
     public AVFrac() {
         super();
-        initFieldOrder();
     }
-    
-    public AVFrac(long val, long num, long den) {
-        super();
-        this.val = val;
-        this.num = num;
-        this.den = den;
-        initFieldOrder();
+
+    public AVFrac(Pointer pointer) {
+        super(pointer);
     }
-    
-    private void initFieldOrder() {
-        setFieldOrder(new java.lang.String[]{"val", "num", "den"});
+
+    @Field(0)
+    public long val() {
+        return this.io.getLongField(this, 0);
     }
-    
-    public static class ByReference extends AVFrac implements Structure.ByReference { }
-    public static class ByValue extends AVFrac implements Structure.ByValue { }
+
+    @Field(0)
+    public AVFrac val(long val) {
+        this.io.setLongField(this, 0, val);
+        return this;
+    }
+
+    @Field(1)
+    public long num() {
+        return this.io.getLongField(this, 1);
+    }
+
+    @Field(1)
+    public AVFrac num(long num) {
+        this.io.setLongField(this, 1, num);
+        return this;
+    }
+
+    @Field(2)
+    public long den() {
+        return this.io.getLongField(this, 2);
+    }
+
+    @Field(2)
+    public AVFrac den(long den) {
+        this.io.setLongField(this, 2, den);
+        return this;
+    }
     
 }

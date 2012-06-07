@@ -17,10 +17,9 @@
  */
 package org.libav.avcodec;
 
-import com.sun.jna.Pointer;
+import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avcodec.bridge.*;
-import org.libav.bridge.LibavLibraryWrapper;
 import org.libav.bridge.LibraryManager;
 
 /**
@@ -30,7 +29,7 @@ import org.libav.bridge.LibraryManager;
  */
 public class CodecWrapperFactory {
     
-    private static final LibavLibraryWrapper<IAVCodecLibrary> libWrapper;
+    private static final AVCodecLibrary codecLib;
     private static final CodecWrapperFactory instance;
     
     public static final int CODEC_ID_NONE;
@@ -363,10 +362,10 @@ public class CodecWrapperFactory {
     public static final int CODEC_ID_FFMETADATA;
     
     static {
-        libWrapper = LibraryManager.getInstance().getAVCodecLibraryWrapper();
+        codecLib = LibraryManager.getInstance().getAVCodecLibrary();
         instance = new CodecWrapperFactory();
         
-        switch (libWrapper.getMajorVersion()) {
+        switch (codecLib.getMajorVersion()) {
             case 53:
                 CODEC_ID_NONE = CodecID53.CODEC_ID_NONE;
                 /// video codecs
@@ -1333,8 +1332,8 @@ public class CodecWrapperFactory {
      * @param codec pointer to an AVCodec struct
      * @return codec wrapper
      */
-    public ICodecWrapper wrap(Pointer codec) {
-        switch (libWrapper.getMajorVersion()) {
+    public ICodecWrapper wrap(Pointer<?> codec) {
+        switch (codecLib.getMajorVersion()) {
             case 53: return wrap(new AVCodec53(codec));
             case 54: return wrap(new AVCodec54(codec));
         }
@@ -1370,7 +1369,7 @@ public class CodecWrapperFactory {
      * @throws LibavException if there is no decoder for the given codec ID
      */
     public ICodecWrapper findDecoder(int codecId) throws LibavException {
-        switch (libWrapper.getMajorVersion()) {
+        switch (codecLib.getMajorVersion()) {
             case 53: return CodecWrapper53.findDecoder(codecId);
             case 54: return CodecWrapper54.findDecoder(codecId);
         }
@@ -1386,7 +1385,7 @@ public class CodecWrapperFactory {
      * @throws LibavException if there is no encoder for the given codec ID
      */
     public ICodecWrapper findEncoder(int codecId) throws LibavException {
-        switch (libWrapper.getMajorVersion()) {
+        switch (codecLib.getMajorVersion()) {
             case 53: return CodecWrapper53.findEncoder(codecId);
             case 54: return CodecWrapper54.findEncoder(codecId);
         }
@@ -1402,7 +1401,7 @@ public class CodecWrapperFactory {
      * @throws LibavException if there is no decoder with the given name
      */
     public ICodecWrapper findDecoderByName(String name) throws LibavException {
-        switch (libWrapper.getMajorVersion()) {
+        switch (codecLib.getMajorVersion()) {
             case 53: return CodecWrapper53.findDecoderByName(name);
             case 54: return CodecWrapper54.findDecoderByName(name);
         }
@@ -1418,7 +1417,7 @@ public class CodecWrapperFactory {
      * @throws LibavException if there is no encoder with the given name
      */
     public ICodecWrapper findEncoderByName(String name) throws LibavException {
-        switch (libWrapper.getMajorVersion()) {
+        switch (codecLib.getMajorVersion()) {
             case 53: return CodecWrapper53.findEncoderByName(name);
             case 54: return CodecWrapper54.findEncoderByName(name);
         }
