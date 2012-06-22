@@ -71,7 +71,7 @@ public class Frame2VideoFrameAdapter implements IFrameConsumer, IVideoFrameProdu
         dstFormat = PixelFormat.PIX_FMT_BGRA;
         if (ByteOrder.BIG_ENDIAN.equals(ByteOrder.nativeOrder()))
             dstFormat = PixelFormat.PIX_FMT_ARGB;
-        scalingAlg = SWScaleLibrary.SWS_BICUBIC;
+        scalingAlg = SWScaleLibrary.SWS_FAST_BILINEAR;
         
         init();
         

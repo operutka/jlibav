@@ -24,11 +24,7 @@ import java.awt.Point;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.image.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JComponent;
-import javax.swing.JRootPane;
-import javax.swing.SwingUtilities;
 import org.libav.video.IVideoFrameConsumer;
 import org.libav.video.VideoFrame;
 
@@ -39,6 +35,26 @@ import org.libav.video.VideoFrame;
  */
 public class VideoPane extends JComponent implements IVideoFrameConsumer {
 
+    /**
+     * Choose the best output mode for current platform.
+     */
+    public static final int OUTPUT_DEFAULT = 0;
+    
+    /**
+     * Output video frames using SWING.
+     */
+    public static final int OUTPUT_SWING = 1;
+    
+    /**
+     * Output video frames using XVideo (if available).
+     */
+    public static final int OUTPUT_XV = 2;
+    
+    /**
+     * Output video frames using DirectDraw (if available).
+     */
+    public static final int OUTPUT_DDRAW = 3;
+    
     private BufferedImage img;
     private int[] imageData;
 
@@ -49,14 +65,12 @@ public class VideoPane extends JComponent implements IVideoFrameConsumer {
     
     private Insets insts;
     
-    private Painter painter;
-    
     /**
      * Create a new video pane.
      */
     public VideoPane() {
-        setDoubleBuffered(false);
         setBackground(Color.black);
+        setOpaque(true);
         img = null;
         imageData = null;
         
@@ -66,8 +80,6 @@ public class VideoPane extends JComponent implements IVideoFrameConsumer {
         height = 0;
         
         insts = null;
-        
-        painter = new Painter();
 
         addComponentListener(new ComponentAdapter() {
             @Override
@@ -76,6 +88,11 @@ public class VideoPane extends JComponent implements IVideoFrameConsumer {
                 repaint();
             }
         });
+    }
+
+    @Override
+    public boolean isOptimizedDrawingEnabled() {
+        return true;
     }
     
     /**
@@ -165,25 +182,7 @@ public class VideoPane extends JComponent implements IVideoFrameConsumer {
         } else
             System.arraycopy(data, 0, imageData, 0, data.length);
         
-        SwingUtilities.invokeLater(painter);
-    }
-    
-    private class Painter implements Runnable {
-        @Override
-        public void run() {
-            JRootPane rp = getRootPane();
-            if (rp == null || !isShowing())
-                return;
-            Point rpLocation = rp.getLocationOnScreen();
-            Point myLocation = getLocationOnScreen();
-
-            // Nimbus L&F somtimes causes ClassCastException
-            try {
-                rp.paintImmediately(myLocation.x - rpLocation.x, myLocation.y - rpLocation.y, getWidth(), getHeight());
-            } catch (Exception ex) {
-                Logger.getLogger(getClass().getName()).log(Level.WARNING, "unable to repaint video pane", ex);
-            }
-        }
+        repaint();
     }
     
 }

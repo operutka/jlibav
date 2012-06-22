@@ -132,7 +132,7 @@ public class SampleInputStream extends InputStream implements IAudioFrameConsume
 
     @Override
     public void processFrame(Object producer, AudioFrame frame) throws LibavException {
-        int len = frame.getFrameSize();
+        int tmp, len = frame.getFrameSize();
         byte[] data = frame.getSamples();
         
         if (len > buffer.length)
@@ -150,8 +150,13 @@ public class SampleInputStream extends InputStream implements IAudioFrameConsume
             if (len > (buffer.length - size) && !blockingFrameProcessing)
                 dropBufferData(len - buffer.length + size);
             
-            for (int i = 0; i < len; i++)
-                buffer[(end + i) % buffer.length] = data[i];
+            tmp = buffer.length - end;
+            if (tmp < len) {
+                System.arraycopy(data, 0, buffer, end, tmp);
+                System.arraycopy(data, tmp, buffer, 0, len - tmp);
+            } else
+                System.arraycopy(data, 0, buffer, end, len);
+            
             end = (end + len) % buffer.length;
             size += len;
             
