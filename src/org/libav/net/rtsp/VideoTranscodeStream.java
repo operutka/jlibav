@@ -18,6 +18,8 @@
 package org.libav.net.rtsp;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import org.libav.IEncoder;
 import org.libav.IMediaEncoder;
 import org.libav.LibavException;
 import org.libav.avcodec.IFrameWrapper;
@@ -38,6 +40,24 @@ public class VideoTranscodeStream extends TranscodeStream implements IFrameConsu
      */
     public VideoTranscodeStream(IStreamWriterFactory streamWriterFactory) throws IOException {
         super(streamWriterFactory);
+    }
+
+    @Override
+    public synchronized UnicastConnectionInfo setupUnicast(String sessionId, InetAddress address, int rtpPort, int rtcpPort) throws IOException {
+        UnicastConnectionInfo result = super.setupUnicast(sessionId, address, rtpPort, rtcpPort);
+        
+        if (!isStandalone()) {
+            try {
+                IMediaEncoder me = mediaEncoders.get(sessionId);
+                IEncoder enc = me.getVideoStreamEncoder(0);
+                IAggregateMediaStream ams = (IAggregateMediaStream)getParentStream();
+                enc.setTimestampGenerator(ams.createTimestampGenerator(sessionId));
+            } catch (Exception ex) {
+                throw new IOException(ex);
+            }
+        }
+        
+        return result;
     }
     
     @Override

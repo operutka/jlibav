@@ -350,17 +350,13 @@ public class DefaultMediaReader implements IMediaReader {
     
     private void sendPacket(IPacketWrapper packet) throws LibavException {
         Set<IPacketConsumer> pc = packetConsumers.get(packet.getStreamIndex());
-        IPacketWrapper pw;
         
         if (packet.getDts() > 0)
             position = timeBases[packet.getStreamIndex()].mul(packet.getDts()).longValue();
         
         synchronized (pc) {
-            for (IPacketConsumer c : pc) {
-                pw = packet.clone();
-                c.processPacket(this, pw);
-                pw.free();
-            }
+            for (IPacketConsumer c : pc)
+                c.processPacket(this, packet);
         }
         packet.free();
     }

@@ -17,6 +17,8 @@
  */
 package org.libav.net.rtsp;
 
+import org.libav.ITimestampGenerator;
+
 /**
  * Aggregate media stream interface.
  * 
@@ -62,6 +64,14 @@ public interface IAggregateMediaStream extends IMediaStream {
      * @param l a stream change listener
      */
     void removeStreamChangeListener(IStreamChangeListener l);
+    
+    /**
+     * Create timestamp generator for a stream from the given session.
+     * 
+     * @param sessionId a session id
+     * @return timestamp generator
+     */
+    ITimestampGenerator createTimestampGenerator(String sessionId);
     
     /**
      * Stream change listener interface.

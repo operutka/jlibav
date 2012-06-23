@@ -81,7 +81,7 @@ public class TranscodeSample {
             
             mw.writeHeader(); // write file header
             boolean hasNext = true;
-            int count = 5000;
+            int count = 10000;
             while (hasNext && count-- > 0) {
                 try {
                     hasNext = mr.readNextPacket();

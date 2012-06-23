@@ -188,25 +188,18 @@ public class PacketWrapper extends AbstractPacketWrapper {
 
     @Override
     public PacketWrapper clone() {
-        clearWrapperCache();
-        
         PacketWrapper result = new PacketWrapper(new AVPacket());
         int res = codecLib.av_new_packet(result.getPointer(), getSize());
         if (res != 0)
             throw new RuntimeException(new LibavException(res));
         
-        // FIX: change next call into copyTo(...), after the method is fixed
-        Pointer<Byte> pData = getData();
+        Pointer<Byte> pData = result.getData();
+        getPointer().copyTo(result.getPointer());
+        result.setData(pData);
+        
+        pData = getData();
         if (pData != null)
             pData.copyTo(result.getData(), getSize());
-        
-        result.setPts(getPts());
-        result.setDts(getDts());
-        result.setStreamIndex(getStreamIndex());
-        result.setFlags(getFlags());
-        result.setDuration(getDuration());
-        result.setConvergenceDuration(getConvergenceDuration());
-        result.setPosition(getPosition());
         
         return result;
     }

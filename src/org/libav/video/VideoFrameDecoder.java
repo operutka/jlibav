@@ -108,8 +108,6 @@ public class VideoFrameDecoder implements IDecoder {
                 sendFrame(transformPts(frame));
         }
         packet.setData(tmp);
-
-        packet.free();
     }
     
     @Override

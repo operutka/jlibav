@@ -21,7 +21,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import org.bridj.Pointer;
+import org.libav.CopyTimestampGenerator;
 import org.libav.IEncoder;
+import org.libav.ITimestampGenerator;
 import org.libav.LibavException;
 import org.libav.avcodec.*;
 import org.libav.avcodec.bridge.AVCodecLibrary;
@@ -54,7 +56,7 @@ public class VideoFrameEncoder implements IEncoder {
     private Pointer<Byte> outputBuffer;
     private IPacketWrapper packet;
     private Rational ptsTransformBase;
-    private long ptsOffset;
+    private ITimestampGenerator timestampGenerator;
     
     private final Set<IPacketConsumer> consumers;
     
@@ -80,7 +82,7 @@ public class VideoFrameEncoder implements IEncoder {
         outputBuffer = malloc(outputBufferSize);
         packet = PacketWrapperFactory.getInstance().alloc();
         ptsTransformBase = stream.getTimeBase().mul(1000).invert();
-        ptsOffset = -1;
+        timestampGenerator = new CopyTimestampGenerator();
         
         consumers = Collections.synchronizedSet(new HashSet<IPacketConsumer>());
     }
@@ -93,6 +95,16 @@ public class VideoFrameEncoder implements IEncoder {
     @Override
     public IStreamWrapper getStream() {
         return stream;
+    }
+
+    @Override
+    public ITimestampGenerator getTimestampGenerator() {
+        return timestampGenerator;
+    }
+
+    @Override
+    public void setTimestampGenerator(ITimestampGenerator timestampGenerator) {
+        this.timestampGenerator = timestampGenerator;
     }
     
     @Override
@@ -153,9 +165,14 @@ public class VideoFrameEncoder implements IEncoder {
         if (cc.isClosed())
             openCodecContext();
         
-        IPacketWrapper p = encodeFrame(frame);
-        if (p != null)
-            sendPacket(p);
+        IPacketWrapper p;
+        long pts;
+        
+        while ((pts = timestampGenerator.nextFrame(frame.getPts())) >= 0) {
+            p = encodeFrame(frame, pts);
+            if (p != null)
+                sendPacket(p);
+        }
     }
     
     @Override
@@ -166,7 +183,7 @@ public class VideoFrameEncoder implements IEncoder {
             openCodecContext();
         
         IPacketWrapper p;
-        while ((p = encodeFrame(null)) != null)
+        while ((p = encodeFrame(null, timestampGenerator.getLastTimestamp())) != null)
             sendPacket(p);
     }
     
@@ -176,7 +193,7 @@ public class VideoFrameEncoder implements IEncoder {
         
     }
     
-    private IPacketWrapper encodeFrame(IFrameWrapper frame) throws LibavException {
+    private IPacketWrapper encodeFrame(IFrameWrapper frame, long pts) throws LibavException {
         packet.init();
         
         if (rawFormat) {
@@ -198,27 +215,18 @@ public class VideoFrameEncoder implements IEncoder {
             IFrameWrapper codedFrame = cc.getCodedFrame();
             if (codedFrame.isKeyFrame())
                 packet.setFlags(packet.getFlags() | AVCodecLibrary.AV_PKT_FLAG_KEY);
-            if (frame.getPts() != AVUtilLibrary.AV_NOPTS_VALUE) {
-                if (ptsOffset == -1)
-                    ptsOffset = frame.getPts();
-                // FIX: this does not allow to change frame rate neither respects the codec context time base
-                //System.out.printf("encoding video frame: pts = %d (pts_offset = %d, source_pts = %d)\n", frame.getPts() - ptsOffset, ptsOffset, frame.getPts());
-                packet.setPts(ptsTransformBase.mul(frame.getPts() - ptsOffset).longValue());
-                packet.setDts(packet.getPts());
-            }
+             //System.out.printf("encoding video frame: pts = %d (pts_offset = %d, source_pts = %d)\n", pts, timestampGenerator.getOffset(), frame.getPts());
+            packet.setPts(ptsTransformBase.mul(pts).longValue());
+            packet.setDts(packet.getPts());
         }
         
         return packet;
     }
     
     private void sendPacket(IPacketWrapper packet) throws LibavException {
-        IPacketWrapper tmp;
         synchronized (consumers) {
-            for (IPacketConsumer c : consumers) {
-                tmp = packet.clone();
-                c.processPacket(this, tmp);
-                tmp.free();
-            }
+            for (IPacketConsumer c : consumers)
+                c.processPacket(this, packet);
         }
     }
 

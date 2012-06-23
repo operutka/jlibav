@@ -46,7 +46,6 @@ import org.libav.avcodec.ICodecContextWrapper;
 import org.libav.avutil.bridge.AVSampleFormat;
 import org.libav.data.IFrameConsumer;
 import org.libav.util.swing.VideoPane;
-import org.libav.video.Frame2VideoFrameAdapter;
 
 /**
  * Sample multimedia player.
@@ -60,7 +59,6 @@ public class PlaybackSample extends javax.swing.JFrame {
     private SampleInputStream sis;
     private AudioInputStream audioStream;
     private PlaybackMixer audioMixer;
-    private Frame2VideoFrameAdapter scaler;
     private Frame2AudioFrameAdapter resampler;
     
     private boolean liveStream;
@@ -81,7 +79,6 @@ public class PlaybackSample extends javax.swing.JFrame {
         audioMixer = null;
         sis = null;
         audioStream = null;
-        scaler = null;
         resampler = null;
         
         liveStream = false;
@@ -134,9 +131,6 @@ public class PlaybackSample extends javax.swing.JFrame {
             // set the video pane as a video frame consumer for the first video
             // stream if there is at least one video stream
             if (mr.getVideoStreamCount() > 0) {
-                if (scaler != null)
-                    scaler.dispose();
-                scaler = null;
                 videoPane.setVisible(true);
                 videoPane.clear();
                 player.setVideoStreamDecodingEnabled(0, true);
@@ -207,23 +201,10 @@ public class PlaybackSample extends javax.swing.JFrame {
 
         try {
             ICodecContextWrapper cc = player.getVideoStreamDecoder(0).getCodecContext();
-            int w = videoPane.getWidth();
-            int h = videoPane.getHeight();
-            double r1 = (double)cc.getWidth() / cc.getHeight();
-            double r2 = (double)w / h;
-            if (r1 > r2)
-                h = (int)(w / r1);
-            else
-                w = (int)(h * r1);
-
-            if (scaler == null) {
-                scaler = new Frame2VideoFrameAdapter(cc.getWidth(), cc.getHeight(), cc.getPixelFormat(), w, h);
-                scaler.addVideoFrameConsumer(videoPane);
-            } else
-                scaler.setDestinationImageFormat(w, h);
+            videoPane.setSourceImageFormat(cc.getWidth(), cc.getHeight(), cc.getPixelFormat());
         } catch (LibavException ex) { }
         
-        return scaler;
+        return videoPane;
     }
     
     private class OpenUrlListener implements ActionListener {

@@ -125,8 +125,6 @@ public class AudioFrameDecoder implements IDecoder {
                 sendFrame(transformPts(audioFrame));
         }
         packet.setData(tmp);
-
-        packet.free();
     }
 
     @Override

@@ -30,6 +30,20 @@ import org.libav.data.IPacketProducer;
 public interface IEncoder extends IFrameConsumer, IPacketProducer {
     
     /**
+     * Get timestamp generator.
+     * 
+     * @return timestamp generator
+     */
+    ITimestampGenerator getTimestampGenerator();
+    
+    /**
+     * Set timestamp generator.
+     * 
+     * @param timestampGenerator a timestamp generator
+     */
+    void setTimestampGenerator(ITimestampGenerator timestampGenerator);
+    
+    /**
      * Get encoding codec context.
      * 
      * You may use the codec context to affect the quality of the stream

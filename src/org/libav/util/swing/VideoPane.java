@@ -24,16 +24,25 @@ import java.awt.Point;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.image.*;
+import java.nio.ByteOrder;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JComponent;
-import org.libav.video.IVideoFrameConsumer;
-import org.libav.video.VideoFrame;
+import org.bridj.Pointer;
+import org.libav.LibavException;
+import org.libav.avcodec.FrameWrapperFactory;
+import org.libav.avcodec.IFrameWrapper;
+import org.libav.avutil.bridge.PixelFormat;
+import org.libav.data.IFrameConsumer;
+import org.libav.swscale.ScaleContextWrapper;
+import org.libav.swscale.bridge.SWScaleLibrary;
 
 /**
  * SWING component for video rendering.
  * 
  * @author Ondrej Perutka
  */
-public class VideoPane extends JComponent implements IVideoFrameConsumer {
+public class VideoPane extends JComponent implements IFrameConsumer {
 
     /**
      * Choose the best output mode for current platform.
@@ -55,13 +64,21 @@ public class VideoPane extends JComponent implements IVideoFrameConsumer {
      */
     public static final int OUTPUT_DDRAW = 3;
     
+    private ScaleContextWrapper scaleContext;
+    private IFrameWrapper rgbFrame;
+    private Pointer<Byte> rgbFrameData;
     private BufferedImage img;
     private int[] imageData;
 
     private int x;
     private int y;
-    private int width;
-    private int height;
+    private int srcWidth;
+    private int srcHeight;
+    private int srcPixelFormat;
+    private int dstWidth;
+    private int dstHeight;
+    private int dstPixelFormat;
+    private int scalingAlgorithm;
     
     private Insets insts;
     
@@ -71,28 +88,45 @@ public class VideoPane extends JComponent implements IVideoFrameConsumer {
     public VideoPane() {
         setBackground(Color.black);
         setOpaque(true);
+        
+        scaleContext = null;
+        rgbFrame = null;
+        rgbFrameData = null;
         img = null;
         imageData = null;
         
         x = 0;
         y = 0;
-        width = 0;
-        height = 0;
+        srcWidth = 0;
+        srcHeight = 0;
+        srcPixelFormat = PixelFormat.PIX_FMT_YUV420P;
+        scalingAlgorithm = SWScaleLibrary.SWS_FAST_BILINEAR;
+        dstWidth = 0;
+        dstHeight = 0;
+        dstPixelFormat = PixelFormat.PIX_FMT_BGRA;
+        if (ByteOrder.BIG_ENDIAN.equals(ByteOrder.nativeOrder()))
+            dstPixelFormat = PixelFormat.PIX_FMT_ARGB;
         
         insts = null;
 
-        addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent ce) {
-                calculateImgRect();
-                repaint();
-            }
-        });
+        addComponentListener(new ResizeHandler());
     }
 
     @Override
     public boolean isOptimizedDrawingEnabled() {
         return true;
+    }
+
+    @Override
+    public synchronized void paintComponent(Graphics grphcs) {
+        Color prev = grphcs.getColor();
+        
+        grphcs.setColor(getBackground());
+        grphcs.fillRect(0, 0, getWidth(), getHeight());
+        grphcs.setColor(prev);
+        
+        if (scaleContext != null)
+            grphcs.drawImage(img, x, y, dstWidth, dstHeight, this);
     }
     
     /**
@@ -119,7 +153,7 @@ public class VideoPane extends JComponent implements IVideoFrameConsumer {
      * @return width of the last frame
      */
     public int getFrameWidth() {
-        return width > 0 ? width : getWidth();
+        return dstWidth > 0 ? dstWidth : getWidth();
     }
     
     /**
@@ -128,61 +162,158 @@ public class VideoPane extends JComponent implements IVideoFrameConsumer {
      * @return height of the last frame
      */
     public int getFrameHeight() {
-        return height > 0 ? height : getHeight();
+        return dstHeight > 0 ? dstHeight : getHeight();
     }
-
-    @Override
-    public void paintComponent(Graphics grphcs) {
-        Color prev = grphcs.getColor();
-        
-        grphcs.setColor(getBackground());
-        grphcs.fillRect(0, 0, getWidth(), getHeight());
-        grphcs.setColor(prev);
-        
-        if (img != null)
-            grphcs.drawImage(img, x, y, width, height, this);
+    
+    /**
+     * Get expected source frame width (default value is 0).
+     * 
+     * @return expected source frame width
+     */
+    public int getSourceWidth() {
+        return srcWidth;
     }
-
-    private void calculateImgRect() {
-        if (img == null)
+    
+    /**
+     * Get expected source frame height (default value is 0).
+     * 
+     * @return expected source frame height
+     */
+    public int getSourceHeight() {
+        return srcHeight;
+    }
+    
+    /**
+     * Get expected source frame pixel format.
+     * 
+     * @return expected source frame pixel format
+     */
+    public int getSourcePixelFormat() {
+        return srcPixelFormat;
+    }
+    
+    /**
+     * Get ID of the selected scaling algorithm (default selection is 
+     * FAST_BILINEAR).
+     * 
+     * @return ID of the selected scaling algorithm
+     */
+    public int getScalingAlgorithm() {
+        return scalingAlgorithm;
+    }
+    
+    /**
+     * Set expected format of source images.
+     * 
+     * @param width a width
+     * @param height a height
+     * @param pixelFormat a pixel format
+     */
+    public synchronized void setSourceImageFormat(int width, int height, int pixelFormat) {
+        if (width <= 0 || height <= 0)
+            throw new IllegalArgumentException("illegal frame size");
+        
+        srcWidth = width;
+        srcHeight = height;
+        srcPixelFormat = pixelFormat;
+        
+        resetScaleContext();
+    }
+    
+    /**
+     * Set scaling algorithm.
+     * 
+     * @param scalingAlgorithm a scaling algorithm
+     */
+    public synchronized void setScalingAlgorithm(int scalingAlgorithm) {
+        this.scalingAlgorithm = scalingAlgorithm;
+        resetScaleContext();
+    }
+    
+    private synchronized void resetScaleContext() {
+        disposeScaleContext();
+        
+        if (srcWidth <= 0 || srcHeight <= 0)
             return;
         
         insts = getInsets(insts);
         int w = getWidth() - insts.left - insts.right;
         int h = getHeight() - insts.top - insts.bottom;
-        double r = Math.min((double)w / img.getWidth(), (double)h / img.getHeight());
+        double r = Math.min((double)w / srcWidth, (double)h / srcHeight);
         
-        x = insts.left + (int)((w - img.getWidth() * r) / 2);
-        y = insts.top + (int)((h - img.getHeight() * r) / 2);
-        width = (int)(img.getWidth() * r);
-        height = (int)(img.getHeight() * r);
+        x = insts.left + (int)((w - srcWidth * r) / 2);
+        y = insts.top + (int)((h - srcHeight * r) / 2);
+        dstWidth = (int)(srcWidth * r);
+        dstHeight = (int)(srcHeight * r);
+        
+        try {
+            scaleContext = ScaleContextWrapper.createContext(srcWidth, srcHeight, srcPixelFormat, dstWidth, dstHeight, dstPixelFormat, scalingAlgorithm);
+            rgbFrame = FrameWrapperFactory.getInstance().allocPicture(dstPixelFormat, dstWidth, dstHeight);
+            rgbFrameData = rgbFrame.getData().get();
+        } catch (LibavException ex) {
+            Logger.getLogger(VideoPane.class.getName()).log(Level.SEVERE, "unable initialize video pane scaling context", ex);
+            if (scaleContext != null)
+                scaleContext.free();
+            scaleContext = null;
+            return;
+        }
+        
+        imageData = new int[dstWidth * dstHeight];
+        DataBuffer db = new DataBufferInt(imageData, imageData.length);
+        int[] masks = new int[] { 0x00ff0000, 0x0000ff00, 0x000000ff };
+        SampleModel sm = new SinglePixelPackedSampleModel(DataBuffer.TYPE_INT, dstWidth, dstHeight, masks);
+        WritableRaster wr = Raster.createWritableRaster(sm, db, new Point());
+        img = new BufferedImage(new DirectColorModel(24, 0x00ff0000, 0x0000ff00, 0x000000ff), wr, false, null);
+    }
+    
+    private synchronized void disposeScaleContext() {
+        if (scaleContext != null)
+            scaleContext.free();
+        if (rgbFrame != null)
+            rgbFrame.free();
+        
+        scaleContext = null;
+    }
+    
+    /**
+     * Dispose all resources held by this object.
+     */
+    public void dispose() {
+        disposeScaleContext();
     }
 
     /**
      * Clear the component with the background color.
      */
-    public void clear() {
-        img = null;
+    public synchronized void clear() {
+        if (scaleContext != null) {
+            for (int i = 0; i < imageData.length; i++)
+                imageData[i] = 0;
+        }
+        
         repaint();
     }
     
     @Override
-    public void processFrame(Object producer, VideoFrame frame) {
-        int[] data = frame.getData();
-
-        if (img == null || img.getWidth() != frame.getWidth() || img.getHeight() != frame.getHeight()) {
-            imageData = new int[data.length];
-            System.arraycopy(data, 0, imageData, 0, data.length);
-            DataBuffer db = new DataBufferInt(imageData, imageData.length);
-            int[] masks = new int[] { 0x00ff0000, 0x0000ff00, 0x000000ff };
-            SampleModel sm = new SinglePixelPackedSampleModel(DataBuffer.TYPE_INT, frame.getWidth(), frame.getHeight(), masks);
-            WritableRaster wr = Raster.createWritableRaster(sm, db, new Point());
-            img = new BufferedImage(new DirectColorModel(24, 0x00ff0000, 0x0000ff00, 0x000000ff), wr, false, null);
-            calculateImgRect();
-        } else
-            System.arraycopy(data, 0, imageData, 0, data.length);
+    public synchronized void processFrame(Object producer, IFrameWrapper frame) {
+        if (scaleContext == null)
+            return;
         
-        repaint();
+        try {
+            scaleContext.scale(frame, rgbFrame, 0, srcHeight);
+            rgbFrameData.getIntsAtOffset(0, imageData, 0, imageData.length);
+            repaint();
+        } catch (LibavException ex) {
+            Logger.getLogger(VideoPane.class.getName()).log(Level.WARNING, "video pane has uninitielized source image format", ex);
+        }
+    }
+    
+    private class ResizeHandler extends ComponentAdapter {
+        @Override
+        public void componentResized(ComponentEvent e) {
+            resetScaleContext();
+            repaint();
+        }
     }
     
 }

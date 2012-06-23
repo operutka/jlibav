@@ -21,7 +21,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import org.bridj.Pointer;
+import org.libav.CopyTimestampGenerator;
 import org.libav.IEncoder;
+import org.libav.ITimestampGenerator;
 import org.libav.LibavException;
 import org.libav.avcodec.*;
 import org.libav.avcodec.bridge.AVCodecLibrary;
@@ -53,7 +55,7 @@ public class AudioFrameEncoder implements IEncoder {
     private Pointer<Byte> outputBuffer;
     private IPacketWrapper packet;
     private Rational ptsTransformBase;
-    private long ptsOffset;
+    private ITimestampGenerator timestampGenerator;
     
     private final Set<IPacketConsumer> consumers;
 
@@ -80,7 +82,7 @@ public class AudioFrameEncoder implements IEncoder {
         packet = PacketWrapperFactory.getInstance().alloc();
         stream.clearWrapperCache();
         ptsTransformBase = stream.getTimeBase().mul(1000).invert();
-        ptsOffset = -1;
+        timestampGenerator = new CopyTimestampGenerator();
         
         consumers = Collections.synchronizedSet(new HashSet<IPacketConsumer>());
     }
@@ -93,6 +95,16 @@ public class AudioFrameEncoder implements IEncoder {
     @Override
     public IStreamWrapper getStream() {
         return stream;
+    }
+
+    @Override
+    public ITimestampGenerator getTimestampGenerator() {
+        return timestampGenerator;
+    }
+
+    @Override
+    public void setTimestampGenerator(ITimestampGenerator timestampGenerator) {
+        this.timestampGenerator = timestampGenerator;
     }
     
     @Override
@@ -156,9 +168,14 @@ public class AudioFrameEncoder implements IEncoder {
         if (cc.isClosed())
             openCodecContext();
         
-        IPacketWrapper p = encodeFrame(frame);
-        if (p != null)
-            sendPacket(p);
+        IPacketWrapper p;
+        long pts;
+        
+        while ((pts = timestampGenerator.nextFrame(frame.getPts())) >= 0) {
+            p = encodeFrame(frame, pts);
+            if (p != null)
+                sendPacket(p);
+        }
     }
     
     @Override
@@ -195,15 +212,18 @@ public class AudioFrameEncoder implements IEncoder {
 
         if (!cc.encodeAudioFrame(offset == 0 ? null : tmpFrame, result))
             result = null;
-        else
+        else {
             result.setStreamIndex(stream.getIndex());
+            result.setPts(ptsTransformBase.mul(timestampGenerator.getLastTimestamp()).longValue());
+            result.setDts(result.getPts());
+        }
         
         tmpFrame.getLineSize().set(0, tmp);
 
         return result;
     }
     
-    private IPacketWrapper encodeFrame(IFrameWrapper frame) throws LibavException {
+    private IPacketWrapper encodeFrame(IFrameWrapper frame, long pts) throws LibavException {
         Pointer<Byte> data = frame.getData().get(0);
         int tmp, size = frame.getLineSize().get(0);
         
@@ -211,6 +231,7 @@ public class AudioFrameEncoder implements IEncoder {
             tmp = tmpFrame.getLineSize().get(0) - offset;
             if (size < tmp)
                 tmp = size;
+            // FIX: use native fill method to fill frame properly (with extended data etc.)
             data.copyTo(tmpFrame.getData().get(0).offset(offset), tmp);
             offset += tmp;
             size -= tmp;
@@ -226,14 +247,9 @@ public class AudioFrameEncoder implements IEncoder {
                     return null;
                 
                 packet.setStreamIndex(stream.getIndex());
-                if (frame.getPts() != AVUtilLibrary.AV_NOPTS_VALUE) {
-                    if (ptsOffset == -1)
-                        ptsOffset = frame.getPts();
-                    // FIX: this does not allow to change frame rate neither respects the codec context time base
-                    //System.out.printf("encoding audio frame: pts = %d (pts_offset = %d, source_pts = %d)\n", frame.getPts() - ptsOffset, ptsOffset, frame.getPts());
-                    packet.setPts(ptsTransformBase.mul(frame.getPts() - ptsOffset).longValue());
-                    packet.setDts(packet.getPts());
-                }
+                //System.out.printf("encoding audio frame: pts = %d (pts_offset = %d, source_pts = %d)\n", pts, timestampGenerator.getOffset(), frame.getPts());
+                packet.setPts(ptsTransformBase.mul(pts).longValue());
+                packet.setDts(packet.getPts());
                 return packet;
             }
         }
@@ -242,13 +258,9 @@ public class AudioFrameEncoder implements IEncoder {
     }
     
     private void sendPacket(IPacketWrapper packet) throws LibavException {
-        IPacketWrapper tmp;
         synchronized (consumers) {
-            for (IPacketConsumer c : consumers) {
-                tmp = packet.clone();
-                c.processPacket(this, tmp);
-                tmp.free();
-            }
+            for (IPacketConsumer c : consumers)
+                c.processPacket(this, packet);
         }
     }
 

@@ -22,6 +22,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.*;
+import org.libav.ITimestampGenerator;
 import org.libav.net.sdp.Attribute;
 import org.libav.net.sdp.Connection;
 import org.libav.net.sdp.SessionDescription;
@@ -36,6 +37,7 @@ public class SimpleAggregateMediaStream extends AbstractMediaStream implements I
     
     private final List<ISingleMediaStream> mediaStreams;
     private final Set<IStreamChangeListener> streamChangeListeners;
+    private TimestampGeneratorFactory tsGeneratorFactory;
     private long maxId;
 
     /**
@@ -44,6 +46,7 @@ public class SimpleAggregateMediaStream extends AbstractMediaStream implements I
     public SimpleAggregateMediaStream() {
         this.mediaStreams = Collections.synchronizedList(new ArrayList<ISingleMediaStream>());
         this.streamChangeListeners = Collections.synchronizedSet(new HashSet<IStreamChangeListener>());
+        this.tsGeneratorFactory = new TimestampGeneratorFactory();
         this.maxId = 0;
     }
 
@@ -87,6 +90,7 @@ public class SimpleAggregateMediaStream extends AbstractMediaStream implements I
             for (ISingleMediaStream ms : mediaStreams)
                 ms.teardown(sessionId);
         }
+        tsGeneratorFactory.dropSession(sessionId);
     }
     
     /**
@@ -171,6 +175,11 @@ public class SimpleAggregateMediaStream extends AbstractMediaStream implements I
     @Override
     public boolean isStandalone() {
         return true;
+    }
+
+    @Override
+    public ITimestampGenerator createTimestampGenerator(String sessionId) {
+        return tsGeneratorFactory.createTimestampGenerator(sessionId);
     }
     
     @Override
