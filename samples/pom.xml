@@ -3,12 +3,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.jlibav</groupId>
-  <artifactId>jlibav-project</artifactId>
+  <artifactId>samples</artifactId>
   <version>0.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
-    <module>jlibav</module>
-    <module>samples</module>
+    <module>playback-sample</module>
+    <module>rtsp-sample</module>
+    <module>transcode-sample</module>
   </modules>
 </project>
