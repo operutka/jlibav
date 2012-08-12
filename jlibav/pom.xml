@@ -3,28 +3,53 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.jlibav</groupId>
+  <parent>
+    <groupId>com.google.code.jlibav</groupId>
+    <artifactId>jlibav-project</artifactId>
+    <version>0.2-SNAPSHOT</version>
+  </parent>
+
+  <groupId>com.google.code.jlibav</groupId>
   <artifactId>jlibav</artifactId>
   <version>0.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>jlibav</name>
-  <url>http://maven.apache.org</url>
+  <description>Java wrapper for Libav</description>
+  <url>https://code.google.com/p/jlibav/</url>
+  
+  <licenses>
+    <license>
+      <name>GNU Lesser General Public License, Version 3.0</name>
+      <url>http://www.gnu.org/licenses/lgpl-3.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  
+  <scm>
+    <connection>scm:git:https://code.google.com/p/jlibav/</connection>
+    <developerConnection>scm:git:https://code.google.com/p/jlibav/</developerConnection>
+    <url>https://code.google.com/p/jlibav/</url>
+  </scm>
+  
+  <developers>
+    <developer>
+      <id>ondrej</id>
+      <name>Ondrej Perutka</name>
+      <email>perutka.ondrej@gmail.com</email>
+    </developer>
+  </developers>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
+  <!-- the following repository will be removed after BridJ 0.6.2 release -->
   <repositories>
     <repository>
       <id>sonatype</id>
       <name>Sonatype OSS Snapshots Repository</name>
       <url>http://oss.sonatype.org/content/groups/public</url>
-    </repository>
-    <repository>
-      <id>nativelibs4java-repo</id>
-      <name>NativeLibs4Java Old Snapshots Repository</name>
-      <url>http://nativelibs4java.sourceforge.net/maven</url>
     </repository>
   </repositories>
 
@@ -43,8 +68,72 @@
   </dependencies>
   
   <build>
+    <defaultGoal>package</defaultGoal>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.5.1</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.1.2</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.8.1</version>
+        <executions>
+          <execution>
+            <id>generate-javadocs</id>
+            <phase>site</phase>
+            <goals>
+              <goal>javadoc</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>generate-javadocs-jar</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <links>
+            <link>http://docs.oracle.com/javase/6/docs/api/</link>
+            <link>http://nativelibs4java.sourceforge.net/bridj/api/development/</link>
+          </links>
+          <version>true</version>
+          <show>protected</show>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
+        <configuration>
+          <archive>
+            <addMavenDescriptor>false</addMavenDescriptor>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
         <version>2.3</version>
         <executions>
@@ -61,16 +150,6 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>2.4</version>
-        <configuration>
-          <archive>
-            <addMavenDescriptor>false</addMavenDescriptor>
-          </archive>
-        </configuration>
       </plugin>
     </plugins>
     <resources>
