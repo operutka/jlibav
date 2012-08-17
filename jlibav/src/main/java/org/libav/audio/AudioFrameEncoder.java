@@ -50,6 +50,9 @@ public class AudioFrameEncoder implements IEncoder {
     private ICodecContextWrapper cc;
     
     private IFrameWrapper tmpFrame;
+    private long frameDuration;
+    private Rational byteDuration;
+    private long flushFramePts;
     private int offset;
     private int outputBufferSize;
     private Pointer<Byte> outputBuffer;
@@ -77,6 +80,8 @@ public class AudioFrameEncoder implements IEncoder {
         tmpFrame = FrameWrapperFactory.getInstance().allocFrame();
         tmpFrame.getData().set(0, malloc(AVCodecLibrary.AVCODEC_MAX_AUDIO_FRAME_SIZE + AVCodecLibrary.FF_INPUT_BUFFER_PADDING_SIZE));
         tmpFrame.getLineSize().set(0, 0);
+        frameDuration = 0;
+        flushFramePts = 0;
         outputBufferSize = DEFAULT_OUTPUT_BUFFER_SIZE;
         outputBuffer = malloc(outputBufferSize);
         packet = PacketWrapperFactory.getInstance().alloc();
@@ -168,14 +173,9 @@ public class AudioFrameEncoder implements IEncoder {
         if (cc.isClosed())
             openCodecContext();
         
-        IPacketWrapper p;
         long pts;
-        
-        while ((pts = timestampGenerator.nextFrame(frame.getPts())) >= 0) {
-            p = encodeFrame(frame, pts);
-            if (p != null)
-                sendPacket(p);
-        }
+        while ((pts = timestampGenerator.nextFrame(frame.getPts())) >= 0)
+            encodeFrame(frame, pts);
     }
     
     @Override
@@ -185,47 +185,55 @@ public class AudioFrameEncoder implements IEncoder {
         if (cc.isClosed())
             openCodecContext();
         
-        IPacketWrapper p;
-        while ((p = flushFrame()) != null)
-            sendPacket(p);
+        boolean flush = true;
+        while (flush)
+            flush = flushFrame();
     }
     
     private void openCodecContext() throws LibavException {
         cc.clearWrapperCache();
-        cc.open(CodecWrapperFactory.getInstance().findEncoder(cc.getCodecId()));
+        ICodecWrapper codec = CodecWrapperFactory.getInstance().findEncoder(cc.getCodecId());
+        cc.open(codec);
         cc.clearWrapperCache();
         
-        tmpFrame.getLineSize().set(0, cc.getFrameSize() * cc.getChannels() * AVSampleFormat.getBitsPerSample(cc.getSampleFormat()) / 8);
+        int frameSize = cc.getFrameSize();
+        if ((codec.getCapabilities() & AVCodecLibrary.CODEC_CAP_VARIABLE_FRAME_SIZE) == AVCodecLibrary.CODEC_CAP_VARIABLE_FRAME_SIZE)
+            frameSize = 8192;
+        tmpFrame.getLineSize().set(0, frameSize * cc.getChannels() * AVSampleFormat.getBitsPerSample(cc.getSampleFormat()) / 8);
+        frameDuration = 1000 * frameSize / cc.getSampleRate();
+        byteDuration = new Rational(frameDuration, tmpFrame.getLineSize().get(0));
         offset = 0;
     }
     
-    private IPacketWrapper flushFrame() throws LibavException {
-        IPacketWrapper result = packet;
+    private boolean flushFrame() throws LibavException {
+        packet.init();
+        packet.setData(outputBuffer);
+        packet.setSize(outputBufferSize);
         
+        int oldFrameSize = tmpFrame.getLineSize().get(0);
+        int frameSize = offset;
         offset = 0;
-        result.init();
-        result.setData(outputBuffer);
-        result.setSize(outputBufferSize);
-        
-        int tmp = tmpFrame.getLineSize().get(0);
-        tmpFrame.getLineSize().set(0, offset);
+        tmpFrame.getLineSize().set(0, frameSize);
 
-        if (!cc.encodeAudioFrame(offset == 0 ? null : tmpFrame, result))
-            result = null;
-        else {
-            result.setStreamIndex(stream.getIndex());
-            result.setPts(ptsTransformBase.mul(timestampGenerator.getLastTimestamp()).longValue());
-            result.setDts(result.getPts());
+        boolean result;
+        if (result = cc.encodeAudioFrame(frameSize == 0 ? null : tmpFrame, packet)) {
+            packet.clearWrapperCache();
+            packet.setStreamIndex(stream.getIndex());
+            packet.setPts(ptsTransformBase.mul(flushFramePts).longValue());
+            packet.setDts(packet.getPts());
+            sendPacket(packet);
+            flushFramePts += frameDuration;
         }
         
-        tmpFrame.getLineSize().set(0, tmp);
-
+        tmpFrame.getLineSize().set(0, oldFrameSize);
+        
         return result;
     }
     
-    private IPacketWrapper encodeFrame(IFrameWrapper frame, long pts) throws LibavException {
+    private void encodeFrame(IFrameWrapper frame, long pts) throws LibavException {
         Pointer<Byte> data = frame.getData().get(0);
         int tmp, size = frame.getLineSize().get(0);
+        pts -= byteDuration.mul(offset).longValue();
         
         while (size > 0) {
             tmp = tmpFrame.getLineSize().get(0) - offset;
@@ -243,18 +251,18 @@ public class AudioFrameEncoder implements IEncoder {
                 packet.setData(outputBuffer);
                 packet.setSize(outputBufferSize);
                 
-                if (!cc.encodeAudioFrame(tmpFrame, packet))
-                    return null;
-                
-                packet.setStreamIndex(stream.getIndex());
-                //System.out.printf("encoding audio frame: pts = %d (pts_offset = %d, source_pts = %d)\n", pts, timestampGenerator.getOffset(), frame.getPts());
-                packet.setPts(ptsTransformBase.mul(pts).longValue());
-                packet.setDts(packet.getPts());
-                return packet;
+                if (cc.encodeAudioFrame(tmpFrame, packet)) {
+                    packet.clearWrapperCache();
+                    //System.out.printf("encoding audio frame: pts = %d (pts_offset = %d, source_pts = %d)\n", pts, timestampGenerator.getOffset(), frame.getPts());
+                    packet.setStreamIndex(stream.getIndex());
+                    packet.setPts(ptsTransformBase.mul(pts).longValue());
+                    packet.setDts(packet.getPts());
+                    sendPacket(packet);
+                    pts += frameDuration;
+                    flushFramePts = pts;
+                }
             }
         }
-        
-        return null;
     }
     
     private void sendPacket(IPacketWrapper packet) throws LibavException {

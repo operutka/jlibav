@@ -32,8 +32,8 @@ import org.libav.video.FrameScaler;
 public class TranscodeSample {
     
     public static void main(String[] args) {
-        String srcUrl = "/media/D/tucnaci.avi"; // some source multimedia file/stream
-        String dstUrl = "/media/D/pokus.mkv"; // destination file name
+        String srcUrl = "/media/D/foo.avi"; // some source multimedia file/stream
+        String dstUrl = "/media/D/bar.mkv"; // destination file name
         int videoCodecId = CodecWrapperFactory.CODEC_ID_MPEG4; // output video codec
         int audioCodecId = CodecWrapperFactory.CODEC_ID_MP2; // output audio codec
         
@@ -86,14 +86,14 @@ public class TranscodeSample {
                 try {
                     hasNext = mr.readNextPacket();
                 } catch (LibavException ex) {
-                    Logger.getLogger(TranscodeSample.class.getName()).log(Level.WARNING, "nejaky spatny paket", ex);
+                    Logger.getLogger(TranscodeSample.class.getName()).log(Level.WARNING, "wrong packet", ex);
                 }
             }
             md.flush();
             me.flush();
             mw.writeTrailer(); // write file trailer
         } catch (Exception ex) {
-            Logger.getLogger(TranscodeSample.class.getName()).log(Level.SEVERE, "neco se nepovedlo", ex);
+            Logger.getLogger(TranscodeSample.class.getName()).log(Level.SEVERE, "oooops", ex);
         } finally {
             try {
                 if (md != null)
@@ -103,7 +103,7 @@ public class TranscodeSample {
                 if (scaler != null)
                     scaler.dispose();
             } catch (Exception ex) {
-                Logger.getLogger(TranscodeSample.class.getName()).log(Level.SEVERE, "nejde to zavrit", ex);
+                Logger.getLogger(TranscodeSample.class.getName()).log(Level.SEVERE, "cannot close that", ex);
             }
         }
     }
