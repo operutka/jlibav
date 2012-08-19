@@ -21,6 +21,8 @@ import org.bridj.Pointer;
 import org.libav.avcodec.CodecContextWrapperFactory;
 import org.libav.avcodec.ICodecContextWrapper;
 import org.libav.avformat.bridge.AVStream53;
+import org.libav.avutil.DictionaryWrapperFactory;
+import org.libav.avutil.IDictionaryWrapper;
 import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.bridge.LibraryManager;
 import org.libav.util.Rational;
@@ -149,6 +151,34 @@ public class StreamWrapper53 extends AbstractStreamWrapper {
             duration = stream.duration();
         
         return duration;
+    }
+
+    @Override
+    public IDictionaryWrapper getMetadata() {
+        if (stream == null)
+            return null;
+        
+        if (metadata == null) {
+            DictionaryWrapperFactory dwf = DictionaryWrapperFactory.getInstance();
+            if (stream.metadata() == null) {
+                metadata = dwf.allocate();
+                stream.metadata(metadata.getPointer());
+            } else
+                metadata = dwf.wrap(stream.metadata());
+        }
+        
+        return metadata;
+    }
+
+    @Override
+    public int getDisposition() {
+        if (stream == null)
+            return 0;
+        
+        if (disposition == null)
+            disposition = stream.disposition();
+        
+        return disposition;
     }
     
 }

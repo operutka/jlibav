@@ -18,11 +18,14 @@
 package org.libav.avformat;
 
 import java.nio.charset.Charset;
+import java.util.Date;
 import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avcodec.IPacketWrapper;
 import org.libav.avformat.bridge.AVFormatContext54;
 import org.libav.avformat.bridge.AVFormatLibrary;
+import org.libav.avutil.DictionaryWrapperFactory;
+import org.libav.avutil.IDictionaryWrapper;
 import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.bridge.LibraryManager;
 
@@ -34,9 +37,11 @@ import org.libav.bridge.LibraryManager;
 public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
     
     private static final AVFormatLibrary formatLib;
+    private static final AVUtilLibrary utilLib;
     
     static {
         formatLib = LibraryManager.getInstance().getAVFormatLibrary();
+        utilLib = LibraryManager.getInstance().getAVUtilLibrary();
     }
     
     private AVFormatContext54 context;
@@ -153,6 +158,102 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
     }
 
     @Override
+    public IChapterWrapper[] getChapters() {
+        if (isClosed())
+            return null;
+        
+        if (chapters != null)
+            return chapters;
+        
+        getChapterCount();
+        Pointer<Pointer<?>> pChapters = context.chapters();
+        if (pChapters == null && chapterCount != 0)
+            return null;
+        
+        Pointer<?> pChapter;
+        chapters = new IChapterWrapper[chapterCount];
+        for (int i = 0; i < chapterCount; i++) {
+            pChapter = pChapters.get(i);
+            chapters[i] = pChapter == null ? null : ChapterWrapperFactory.getInstance().wrap(pChapter);
+        }
+        
+        return chapters;
+    }
+
+    @Override
+    public int getChapterCount() {
+        if (isClosed())
+            return 0;
+        
+        if (chapterCount == null)
+            chapterCount = context.nb_chapters();
+        
+        return chapterCount;
+    }
+
+    @Override
+    public boolean addChapter(IChapterWrapper chapter) {
+        if (isClosed())
+            return false;
+        
+        Pointer<?> pChapter = chapter.getPointer();
+        
+        IChapterWrapper[] tmp = getChapters();
+        if (tmp == null)
+            return false;
+        
+        for (int i = 0; i < tmp.length; i++) {
+            if (pChapter.equals(tmp[i].getPointer()))
+                return false;
+            else if (chapter.getId() == tmp[i].getId())
+                return false;
+        }
+        
+        Pointer<Pointer<?>> pNewChapters = (Pointer)utilLib.av_malloc(Pointer.SIZE * (tmp.length + 1)).as(Pointer.class);
+        for (int i = 0; i < tmp.length; i++)
+            pNewChapters.set(i, tmp[i].getPointer());
+        pNewChapters.set(tmp.length, pChapter);
+        
+        Pointer<Pointer<?>> pChapters = context.chapters();
+        context.chapters(pNewChapters);
+        utilLib.av_free(pChapters);
+        
+        chapters = null;
+        chapterCount = null;
+        
+        return true;
+    }
+
+    @Override
+    public IChapterWrapper removeChapter(int id) {
+        if (isClosed())
+            return null;
+        
+        IChapterWrapper[] tmp = getChapters();
+        if (tmp == null)
+            return null;
+        
+        int i = 0;
+        for (; i < tmp.length; i++) {
+            if (tmp[i].getId() == id)
+                break;
+        }
+        
+        if (i == tmp.length)
+            return null;
+        
+        IChapterWrapper result = tmp[i];
+        Pointer<Pointer<?>> pChapters = context.chapters();
+        for (; i < (tmp.length - 1); i++)
+            pChapters.set(i, pChapters.get(i + 1));
+        
+        chapters = null;
+        chapterCount = null;
+        
+        return result;
+    }
+
+    @Override
     public String getFileName() {
         if (isClosed())
             return null;
@@ -249,6 +350,45 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
             privateData = context.priv_data();
         
         return privateData;
+    }
+
+    @Override
+    public Date getRealStartTime() {
+        if (isClosed())
+            return null;
+        
+        if (realStartTime == null) {
+            long rst = context.start_time_realtime() >>> 1;
+            realStartTime = new Date(rst / 500);
+        }
+        
+        return realStartTime;
+    }
+
+    @Override
+    public void setRealStartTime(Date realStartTime) {
+        if (isClosed())
+            return;
+        
+        context.start_time_realtime(realStartTime.getTime() * 1000);
+        this.realStartTime = realStartTime;
+    }
+
+    @Override
+    public IDictionaryWrapper getMetadata() {
+        if (isClosed())
+            return null;
+        
+        if (metadata == null) {
+            DictionaryWrapperFactory dwf = DictionaryWrapperFactory.getInstance();
+            if (context.metadata() == null) {
+                metadata = dwf.allocate();
+                context.metadata(metadata.getPointer());
+            } else
+                metadata = dwf.wrap(context.metadata());
+        }
+        
+        return metadata;
     }
     
     @Override

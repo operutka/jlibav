@@ -55,6 +55,18 @@ public final class AVFormatLibrary implements ILibrary {
     public static final int AVFMT_NOBINSEARCH = 0x2000;
     public static final int AVFMT_NOGENSEARCH = 0x4000;
     public static final int AVFMT_NO_BYTE_SEEK = 0x8000;
+    
+    public static final int AV_DISPOSITION_DEFAULT = 0x0001;
+    public static final int AV_DISPOSITION_DUB = 0x0002;
+    public static final int AV_DISPOSITION_ORIGINAL = 0x0004;
+    public static final int AV_DISPOSITION_COMMENT = 0x0008;
+    public static final int AV_DISPOSITION_LYRICS = 0x0010;
+    public static final int AV_DISPOSITION_KARAOKE = 0x0020;
+    public static final int AV_DISPOSITION_FORCED = 0x0040;
+    public static final int AV_DISPOSITION_HEARING_IMPAIRED = 0x0080;
+    public static final int AV_DISPOSITION_VISUAL_IMPAIRED = 0x0100;
+    public static final int AV_DISPOSITION_CLEAN_EFFECTS = 0x0200;
+    public static final int AV_DISPOSITION_ATTACHED_PIC = 0x0400;
 
     public static final String LIB_NAME = BridJ.getNativeLibraryName(Lib.class);
     public static final int MIN_MAJOR_VERSION = 53;

@@ -18,6 +18,7 @@
 package org.libav.avformat;
 
 import org.libav.avcodec.ICodecContextWrapper;
+import org.libav.avutil.IDictionaryWrapper;
 import org.libav.bridge.IWrapper;
 import org.libav.util.Rational;
 
@@ -121,5 +122,27 @@ public interface IStreamWrapper extends IWrapper {
      * @return stream duration
      */
     long getDuration();
+    
+    /**
+     * Get the disposition property from the AVStream.
+     * 
+     * WARNING:
+     * The returned value may be cached. Call the clearWrapperCahce() if you
+     * think the value have been changed.
+     * 
+     * @return stream disposition
+     */
+    int getDisposition();
+    
+    /**
+     * Get the metadata property from the AVStream.
+     * 
+     * WARNING:
+     * The returned value may be cached. Call the clearWrapperCahce() if you
+     * think the value have been changed.
+     * 
+     * @return stream metadata
+     */
+    IDictionaryWrapper getMetadata();
     
 }

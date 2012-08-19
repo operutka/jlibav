@@ -17,7 +17,9 @@
  */
 package org.libav.avformat;
 
+import java.util.Date;
 import org.bridj.Pointer;
+import org.libav.avutil.IDictionaryWrapper;
 
 /**
  * Abstract wrapper for the AVFormatContext.
@@ -28,34 +30,46 @@ public abstract class AbstractFormatContextWrapper implements IFormatContextWrap
     
     protected IStreamWrapper[] streams;
     protected Integer streamCount;
+    protected IChapterWrapper[] chapters;
+    protected Integer chapterCount;
     protected String fileName;
     protected IIOContextWrapper ioContext;
     protected IOutputFormatWrapper outputFormat;
     protected IInputFormatWrapper inputFormat;
     protected Long duration;
     protected Pointer<?> privateData;
+    protected Date realStartTime;
+    protected IDictionaryWrapper metadata;
 
     public AbstractFormatContextWrapper() {
         streams = null;
         streamCount = null;
+        chapters = null;
+        chapterCount = null;
         fileName = null;
         ioContext = null;
         outputFormat = null;
         inputFormat = null;
         duration = null;
         privateData = null;
+        realStartTime = null;
+        metadata = null;
     }
 
     @Override
     public void clearWrapperCache() {
         streams = null;
         streamCount = null;
+        chapters = null;
+        chapterCount = null;
         fileName = null;
         ioContext = null;
         outputFormat = null;
         inputFormat = null;
         duration = null;
         privateData = null;
+        realStartTime = null;
+        metadata = null;
     }
     
 }

@@ -24,6 +24,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.nio.ByteOrder;
+import java.text.DateFormat;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -43,6 +45,10 @@ import org.libav.audio.Frame2AudioFrameAdapter;
 import org.libav.audio.PlaybackMixer;
 import org.libav.audio.SampleInputStream;
 import org.libav.avcodec.ICodecContextWrapper;
+import org.libav.avformat.IChapterWrapper;
+import org.libav.avformat.IFormatContextWrapper;
+import org.libav.avformat.IStreamWrapper;
+import org.libav.avutil.IDictionaryWrapper;
 import org.libav.avutil.bridge.AVSampleFormat;
 import org.libav.data.IFrameConsumer;
 import org.libav.util.swing.VideoPane;
@@ -127,6 +133,7 @@ public class PlaybackSample extends javax.swing.JFrame {
                 return;
             player = new DefaultMediaPlayer(url); // create a new media player
             IMediaReader mr = player.getMediaReader();
+            dumpMedia(mr);
             
             // set the video pane as a video frame consumer for the first video
             // stream if there is at least one video stream
@@ -189,6 +196,44 @@ public class PlaybackSample extends javax.swing.JFrame {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, "unable to open media", ex);
             buttonPlay.setEnabled(false);
             buttonStop.setEnabled(false);
+        }
+    }
+    
+    private void dumpMedia(IMediaReader mr) {
+        IFormatContextWrapper fc = mr.getFormatContext();
+        System.out.println("Media info:");
+        System.out.printf("capture timestamp = %s\n", DateFormat.getDateTimeInstance().format(fc.getRealStartTime()));
+        System.out.println("metadata:");
+        List<IDictionaryWrapper.Pair> metadata = fc.getMetadata().toList();
+        for (IDictionaryWrapper.Pair pair : metadata)
+            System.out.printf("\t%-15s = \"%s\"\n", pair.getKey(), pair.getValue());
+        IChapterWrapper[] chapters = fc.getChapters();
+        System.out.println("chapters:");
+        for (IChapterWrapper chapter : chapters) {
+            System.out.printf("\tchapter[%d]:\n", chapter.getId());
+            System.out.printf("\t\t.start = %d\n", chapter.getStart());
+            System.out.printf("\t\t.end = %d\n", chapter.getEnd());
+            System.out.println("\t\t.metadata:");
+            metadata = chapter.getMetadata().toList();
+            for (IDictionaryWrapper.Pair pair : metadata)
+                System.out.printf("\t\t\t%-15s = \"%s\"\n", pair.getKey(), pair.getValue());
+        }
+        dumpStreams(mr);
+    }
+    
+    private void dumpStreams(IMediaReader mr) {
+        IStreamWrapper stream;
+        ICodecContextWrapper cc;
+        for (int i = 0; i < mr.getStreamCount(); i++) {
+            stream = mr.getStream(i);
+            cc = stream.getCodecContext();
+            List<IDictionaryWrapper.Pair> metadata = stream.getMetadata().toList();
+            System.out.printf("stream[%02d]:\n", i);
+            System.out.printf("\t.codec.codec_type = 0x%08x\n", cc.getCodecType());
+            System.out.printf("\t.disposition = 0x%08x\n", stream.getDisposition());
+            System.out.println("\t.metadata:");
+            for (IDictionaryWrapper.Pair pair : metadata)
+                System.out.printf("\t\t%-15s = \"%s\"\n", pair.getKey(), pair.getValue());
         }
     }
     

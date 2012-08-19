@@ -17,9 +17,11 @@
  */
 package org.libav.avformat;
 
+import java.util.Date;
 import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avcodec.IPacketWrapper;
+import org.libav.avutil.IDictionaryWrapper;
 import org.libav.bridge.IWrapper;
 
 /**
@@ -94,6 +96,47 @@ public interface IFormatContextWrapper extends IWrapper {
      */
     IStreamWrapper newStream() throws LibavException;
 
+    /**
+     * Get chapters.
+     * 
+     * WARNING:
+     * The returned value may be cached. Call the clearWrapperCahce() if you
+     * think the composition of the streams have been changed.
+     * 
+     * @return array of chapters
+     */
+    IChapterWrapper[] getChapters();
+    
+    /**
+     * Get number of chapters. 
+     * 
+     * WARNING:
+     * The returned value may be cached. Call the clearWrapperCahce() if you
+     * think the composition of the streams have been changed.
+     * 
+     * @return number of chapters
+     */
+    int getChapterCount();
+    
+    /**
+     * Add given chapter and clear cached array of chapters. This method returns 
+     * false if there is already the same chapter instance or a chapter with 
+     * the same id, otherwise it returns true. 
+     * 
+     * @param chapter a chapter
+     * @return true on success, false otherwise
+     */
+    boolean addChapter(IChapterWrapper chapter);
+    
+    /**
+     * Remove a chapter with the given chapter ID, return it and clear cached
+     * array of chapters.
+     * 
+     * @param id a chapter ID
+     * @return removed chapter or null if there is no chapter with the given ID
+     */
+    IChapterWrapper removeChapter(int id);
+    
     /**
      * Get the filename property from the AVFormatContext.
      * 
@@ -183,6 +226,36 @@ public interface IFormatContextWrapper extends IWrapper {
      * @return format context private data
      */
     Pointer<?> getPrivateData();
+    
+    /**
+     * Get the start_time_realtime property from the AVFormatContext.
+     * 
+     * WARNING:
+     * The returned value may be cached. Call the clearWrapperCahce() if you
+     * think the value have been changed.
+     * 
+     * @return format context metadata
+     */
+    Date getRealStartTime();
+    
+    /**
+     * Set the start_time_realtime property of the AVFormatContext. The value 
+     * may be cached.
+     * 
+     * @param realStartTime a real start time
+     */
+    void setRealStartTime(Date realStartTime);
+    
+    /**
+     * Get the metadata property from the AVFormatContext.
+     * 
+     * WARNING:
+     * The returned value may be cached. Call the clearWrapperCahce() if you
+     * think the value have been changed.
+     * 
+     * @return format context metadata
+     */
+    IDictionaryWrapper getMetadata();
     
     /**
      * Notify the stream server the application is able to receive data.

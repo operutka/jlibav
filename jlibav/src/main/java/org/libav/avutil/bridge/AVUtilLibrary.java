@@ -38,6 +38,13 @@ public final class AVUtilLibrary implements ILibrary {
     
     public static final long AV_NOPTS_VALUE = 0x8000000000000000l;
     public static final int AV_TIME_BASE = 1000000;
+    
+    public static final int AV_DICT_MATCH_CASE = 1;
+    public static final int AV_DICT_IGNORE_SUFFIX = 2;
+    public static final int AV_DICT_DONT_STRDUP_KEY = 4;
+    public static final int AV_DICT_DONT_STRDUP_VAL = 8;
+    public static final int AV_DICT_DONT_OVERWRITE = 16;
+    public static final int AV_DICT_APPEND = 32;
 
     public static final String LIB_NAME = BridJ.getNativeLibraryName(Lib.class);
     public static final int MIN_MAJOR_VERSION = 51;
@@ -177,6 +184,63 @@ public final class AVUtilLibrary implements ILibrary {
         return Lib.av_strerror(errNum, errBuf, errbufSize);
     }
     
+    /**
+     * Get a dictionary entry with matching key.
+     * 
+     * @param m
+     * @param key
+     * @param prev Set to the previous matching element to find the next. If 
+     * set to null the first matching element is returned.
+     * @param flags Allows case as well as suffix-insensitive comparisons.
+     * @return Found entry or null, changing key or value leads to undefined 
+     * behavior.
+     */
+    public Pointer<?> av_dict_get(Pointer<?> m, Pointer<Byte> key, Pointer<?> prev, int flags) {
+        return Lib.av_dict_get(m, key, prev, flags);
+    }
+    
+    /**
+     * Set the given entry in *pm, overwriting an existing entry.
+     * 
+     * @param pm pointer to a pointer to a dictionary struct. If pm is null 
+     * a dictionary struct is allocated and put in pm.
+     * @param key entry key to add to pm (will be av_strduped depending 
+     * on flags)
+     * @param value entry value to add to pm (will be av_strduped depending 
+     * on flags). Passing a NULL value will cause an existing entry to be 
+     * deleted.
+     * @param flags
+     * @return &gt;= 0 on success otherwise an error code &lt;0
+     */
+    public int av_dict_set(Pointer<Pointer<?>> pm, Pointer<Byte> key, Pointer<Byte> value, int flags) {
+        return Lib.av_dict_set(pm, key, value, flags);
+    }
+    
+    /**
+     * Copy entries from one AVDictionary struct into another.
+     * 
+     * NOTE:
+     * Metadata is read using the AV_DICT_IGNORE_SUFFIX flag.
+     * 
+     * @param dst pointer to a pointer to a AVDictionary struct. If dst is null, 
+     * this function will allocate a struct for you and put it in dst.
+     * @param src pointer to source AVDictionary struct
+     * @param flags flags to use when setting entries in dst
+     */
+    public void av_dict_copy(Pointer<Pointer<?>> dst, Pointer<?> src, int flags) {
+        Lib.av_dict_copy(dst, src, flags);
+    }
+    
+    /**
+     * Free all the memory allocated for an AVDictionary struct and all keys 
+     * and values.
+     * 
+     * @param m 
+     */
+    public void av_dict_free(Pointer<Pointer<?>> m) {
+        Lib.av_dict_free(m);
+    }
+    
     @Library("avutil")
     private static class Lib {
         static {
@@ -191,6 +255,10 @@ public final class AVUtilLibrary implements ILibrary {
 	public static native void av_free(Pointer<?> ptr);
 	public static native void av_freep(Pointer<?> ptr);
 	public static native int av_strerror(int errnum, Pointer<Byte> errbuf, @Ptr long errbuf_size);
+        public static native Pointer<?> av_dict_get(Pointer<?> m, Pointer<Byte> key, Pointer<?> prev, int flags);
+        public static native int av_dict_set(Pointer<Pointer<?>> pm, Pointer<Byte> key, Pointer<Byte> value, int flags);
+        public static native void av_dict_copy(Pointer<Pointer<?>> dst, Pointer<?> src, int flags);
+        public static native void av_dict_free(Pointer<Pointer<?>> m);
     }
     
 }

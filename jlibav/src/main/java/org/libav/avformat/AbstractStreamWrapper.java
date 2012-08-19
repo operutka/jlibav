@@ -18,6 +18,7 @@
 package org.libav.avformat;
 
 import org.libav.avcodec.ICodecContextWrapper;
+import org.libav.avutil.IDictionaryWrapper;
 import org.libav.util.Rational;
 
 /**
@@ -33,6 +34,8 @@ public abstract class AbstractStreamWrapper implements IStreamWrapper {
     protected Rational frameRate;
     protected Long frameCount;
     protected Long duration;
+    protected IDictionaryWrapper metadata;
+    protected Integer disposition;
 
     public AbstractStreamWrapper() {
         codecContext = null;
@@ -41,6 +44,8 @@ public abstract class AbstractStreamWrapper implements IStreamWrapper {
         frameRate = null;
         frameCount = null;
         duration = null;
+        metadata = null;
+        disposition = null;
     }
 
     @Override
@@ -51,6 +56,8 @@ public abstract class AbstractStreamWrapper implements IStreamWrapper {
         frameRate = null;
         frameCount = null;
         duration = null;
+        metadata = null;
+        disposition = null;
     }
     
 }
