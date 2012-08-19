@@ -2,3 +2,4 @@
 /samples/playback-sample/target/
 /samples/rtsp-sample/target/
 /samples/transcode-sample/target/
+nbactions-ide.xml
