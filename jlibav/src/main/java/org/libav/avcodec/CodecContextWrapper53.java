@@ -544,7 +544,11 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
     private class EncodeAudio implements IEncodeAudioFunction {
         @Override
         public boolean encodeAudioFrame(IFrameWrapper frame, IPacketWrapper packet) throws LibavException {
-            int len = codecLib.avcodec_encode_audio(getPointer(), packet.getData(), packet.getSize(), frame == null ? null : frame.getData().get(0).as(Short.class));
+            int bufSize = packet.getSize();
+            if (getFrameSize() <= 1) // if it is an PCM encoder
+                bufSize = frame == null ? 0 : frame.getLineSize().get(0);
+            
+            int len = codecLib.avcodec_encode_audio(getPointer(), packet.getData(), bufSize, frame == null ? null : frame.getData().get(0).as(Short.class));
             if (len < 0)
                 throw new LibavException(len);
             else if (len == 0)

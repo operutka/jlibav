@@ -199,6 +199,8 @@ public class AudioFrameEncoder implements IEncoder {
         int frameSize = cc.getFrameSize();
         if ((codec.getCapabilities() & AVCodecLibrary.CODEC_CAP_VARIABLE_FRAME_SIZE) == AVCodecLibrary.CODEC_CAP_VARIABLE_FRAME_SIZE)
             frameSize = 8192;
+        if (frameSize <= 1) // keep compatibility with older PCM encoders
+            frameSize = 8192;
         tmpFrame.getLineSize().set(0, frameSize * cc.getChannels() * AVSampleFormat.getBitsPerSample(cc.getSampleFormat()) / 8);
         frameDuration = 1000 * frameSize / cc.getSampleRate();
         byteDuration = new Rational(frameDuration, tmpFrame.getLineSize().get(0));
