@@ -163,7 +163,7 @@ public class AudioFrameDecoder implements IDecoder {
             frame.setPts(sTimeBase.mul(frame.getPacketDts()).longValue());
         else {
             frame.setPts(pts);
-            pts += frame.getLineSize().get(0) * 8000 / (cc.getChannels() * cc.getSampleRate() * AVSampleFormat.getBitsPerSample(cc.getSampleFormat()));
+            pts += frame.getLineSize().get(0) * 1000 / (cc.getChannels() * cc.getSampleRate() * AVSampleFormat.getBytesPerSample(cc.getSampleFormat()));
         }
         
         return frame;

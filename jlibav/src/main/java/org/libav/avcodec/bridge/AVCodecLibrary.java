@@ -697,6 +697,26 @@ public final class AVCodecLibrary implements ILibrary {
         Lib.audio_resample_close(s);
     }
     
+    /**
+     * Fill audio frame data and linesize.
+     * 
+     * AVFrame extended_data channel pointers are allocated if necessary for 
+     * planar audio.
+     * 
+     * @param frame an AVFrame, frame->nb_samples must be set prior to calling 
+     * the function. This function fills in frame->data, frame->extended_data, 
+     * frame->linesize[0]
+     * @param nb_channels channel count
+     * @param sample_fmt sample format
+     * @param buf buffer to use for frame data
+     * @param buf_size size of buffer
+     * @param align plane size sample alignment (0 = default)
+     * @return 0 on success, negative error code on failure
+     */
+    public int avcodec_fill_audio_frame(Pointer<?> frame, int nb_channels, int sample_fmt, Pointer<Byte> buf, int buf_size, int align) {
+        return Lib.avcodec_fill_audio_frame(frame, nb_channels, sample_fmt, buf, buf_size, align);
+    }
+    
     @Library("avcodec")
     private static class Lib {
         static {
@@ -739,6 +759,8 @@ public final class AVCodecLibrary implements ILibrary {
         public static native Pointer<?> av_audio_resample_init(int output_channels, int input_channels, int output_rate, int input_rate, int sample_fmt_out, int sample_fmt_in, int filter_length, int log2_phase_count, int linear, double cutoff);
         public static native int audio_resample(Pointer<?> s, Pointer<Byte> output, Pointer<Byte> input, int nb_samples);
         public static native void audio_resample_close(Pointer<?> s);
+        @Optional
+        public static native int avcodec_fill_audio_frame(Pointer<?> frame, int nb_channels, int sample_fmt, Pointer<Byte> buf, int buf_size, int align);
     }
     
 }

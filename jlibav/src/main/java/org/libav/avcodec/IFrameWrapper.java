@@ -18,6 +18,7 @@
 package org.libav.avcodec;
 
 import org.bridj.Pointer;
+import org.libav.LibavException;
 import org.libav.bridge.IWrapper;
 
 /**
@@ -37,6 +38,18 @@ public interface IFrameWrapper extends IWrapper {
      * Set the fields of the underlaying AVFrame to default values.
      */
     void getDefaults();
+    
+    /**
+     * Fill audio frame data and linesize. AVFrame extended_data channel 
+     * pointers are allocated if necessary for planar audio.
+     * 
+     * @param sampleCount number of samples to be filled into the frame
+     * @param channelCount number of channels
+     * @param sampleFormat sample format
+     * @param buffer audio data buffer
+     * @param bufferSize size of the buffer
+     */
+    void fillAudioFrame(int sampleCount, int channelCount, int sampleFormat, Pointer<Byte> buffer, int bufferSize) throws LibavException;
     
     /**
      * Get the data property from the AVFrame.

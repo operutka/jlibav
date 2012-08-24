@@ -533,7 +533,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             packet.setSize(packetSize);
             packet.setData(packetSize <= 0 ? null : packet.getData().offset(len));
             if (intByRef.getInt() != 0) {
-                frame.getLineSize().set(0, frame.getNbSamples() * getChannels() * AVSampleFormat.getBitsPerSample(getSampleFormat()) / 8);
+                frame.getLineSize().set(0, frame.getNbSamples() * getChannels() * AVSampleFormat.getBytesPerSample(getSampleFormat()));
                 return true;
             }
 
@@ -565,8 +565,6 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         public boolean encodeAudioFrame(IFrameWrapper frame, IPacketWrapper packet) throws LibavException {
             intByRef.setInt(0);
             
-            if (frame != null)
-                frame.setNbSamples(frame.getLineSize().get(0) / (getChannels() * AVSampleFormat.getBitsPerSample(getSampleFormat()) / 8));
             int len = codecLib.avcodec_encode_audio2(getPointer(), packet.getPointer(), frame == null ? null : frame.getPointer(), intByRef);
             if (len < 0)
                 throw new LibavException(len);

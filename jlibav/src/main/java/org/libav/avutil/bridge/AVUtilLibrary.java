@@ -25,6 +25,7 @@ import org.bridj.BridJ;
 import org.bridj.NativeLibrary;
 import org.bridj.Pointer;
 import org.bridj.ann.Library;
+import org.bridj.ann.Optional;
 import org.bridj.ann.Ptr;
 import org.libav.bridge.ILibrary;
 
@@ -241,6 +242,16 @@ public final class AVUtilLibrary implements ILibrary {
         Lib.av_dict_free(m);
     }
     
+    /**
+     * Return number of bytes per sample.
+     * 
+     * @param sample_fmt a smaple format
+     * @return number of bytes per sample or zero if unknown for the given sample format
+     */
+    public int av_get_bytes_per_sample(int sample_fmt) {
+        return Lib.av_get_bytes_per_sample(sample_fmt);
+    }
+    
     @Library("avutil")
     private static class Lib {
         static {
@@ -259,6 +270,7 @@ public final class AVUtilLibrary implements ILibrary {
         public static native int av_dict_set(Pointer<Pointer<?>> pm, Pointer<Byte> key, Pointer<Byte> value, int flags);
         public static native void av_dict_copy(Pointer<Pointer<?>> dst, Pointer<?> src, int flags);
         public static native void av_dict_free(Pointer<Pointer<?>> m);
+        public static native int av_get_bytes_per_sample(int sample_fmt);
     }
     
 }

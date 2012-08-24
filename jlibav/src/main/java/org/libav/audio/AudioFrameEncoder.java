@@ -48,15 +48,21 @@ public class AudioFrameEncoder implements IEncoder {
     
     private IStreamWrapper stream;
     private ICodecContextWrapper cc;
+    private boolean smallLastFrame;
     
     private IFrameWrapper tmpFrame;
+    private Pointer<Byte> frameData;
+    private int frameSize;
+    private int frameSampleCount;
     private long frameDuration;
     private Rational byteDuration;
+    
+    private Pointer<Byte> outputBuffer;
+    private int outputBufferSize;
+    private IPacketWrapper packet;
+    
     private long flushFramePts;
     private int offset;
-    private int outputBufferSize;
-    private Pointer<Byte> outputBuffer;
-    private IPacketWrapper packet;
     private Rational ptsTransformBase;
     private ITimestampGenerator timestampGenerator;
     
@@ -77,14 +83,20 @@ public class AudioFrameEncoder implements IEncoder {
         if (cc.getCodecType() != AVMediaType.AVMEDIA_TYPE_AUDIO)
             throw new IllegalArgumentException("not an audio stream");
         
+        smallLastFrame = false;
+        
         tmpFrame = FrameWrapperFactory.getInstance().allocFrame();
-        tmpFrame.getData().set(0, malloc(AVCodecLibrary.AVCODEC_MAX_AUDIO_FRAME_SIZE + AVCodecLibrary.FF_INPUT_BUFFER_PADDING_SIZE));
-        tmpFrame.getLineSize().set(0, 0);
+        frameData = malloc(AVCodecLibrary.AVCODEC_MAX_AUDIO_FRAME_SIZE + AVCodecLibrary.FF_INPUT_BUFFER_PADDING_SIZE);
+        frameSize = 0;
+        frameSampleCount = 0;
         frameDuration = 0;
-        flushFramePts = 0;
+        byteDuration = null;
+        
         outputBufferSize = DEFAULT_OUTPUT_BUFFER_SIZE;
         outputBuffer = malloc(outputBufferSize);
         packet = PacketWrapperFactory.getInstance().alloc();
+        
+        flushFramePts = 0;
         stream.clearWrapperCache();
         ptsTransformBase = stream.getTimeBase().mul(1000).invert();
         timestampGenerator = new CopyTimestampGenerator();
@@ -196,14 +208,15 @@ public class AudioFrameEncoder implements IEncoder {
         cc.open(codec);
         cc.clearWrapperCache();
         
-        int frameSize = cc.getFrameSize();
+        smallLastFrame = (codec.getCapabilities() & AVCodecLibrary.CODEC_CAP_SMALL_LAST_FRAME) == AVCodecLibrary.CODEC_CAP_SMALL_LAST_FRAME;
+        frameSampleCount = cc.getFrameSize();
         if ((codec.getCapabilities() & AVCodecLibrary.CODEC_CAP_VARIABLE_FRAME_SIZE) == AVCodecLibrary.CODEC_CAP_VARIABLE_FRAME_SIZE)
-            frameSize = 8192;
-        if (frameSize <= 1) // keep compatibility with older PCM encoders
-            frameSize = 8192;
-        tmpFrame.getLineSize().set(0, frameSize * cc.getChannels() * AVSampleFormat.getBitsPerSample(cc.getSampleFormat()) / 8);
-        frameDuration = 1000 * frameSize / cc.getSampleRate();
-        byteDuration = new Rational(frameDuration, tmpFrame.getLineSize().get(0));
+            frameSampleCount = 8192;
+        if (frameSampleCount <= 1) // keep compatibility with older PCM encoders
+            frameSampleCount = 8192;
+        frameSize = frameSampleCount * cc.getChannels() * AVSampleFormat.getBytesPerSample(cc.getSampleFormat());
+        frameDuration = 1000 * frameSampleCount / cc.getSampleRate();
+        byteDuration = new Rational(frameDuration, frameSize);
         offset = 0;
     }
     
@@ -212,13 +225,19 @@ public class AudioFrameEncoder implements IEncoder {
         packet.setData(outputBuffer);
         packet.setSize(outputBufferSize);
         
-        int oldFrameSize = tmpFrame.getLineSize().get(0);
-        int frameSize = offset;
+        int sampleCount = offset / (cc.getChannels() * AVSampleFormat.getBytesPerSample(cc.getSampleFormat()));
+        if (sampleCount > 0) {
+            if (sampleCount < frameSampleCount && !smallLastFrame) {
+                sampleCount = frameSampleCount;
+                frameData.clearBytesAtOffset(offset, frameSize - offset, (byte)0);
+                offset = frameSize;
+            }
+            tmpFrame.fillAudioFrame(sampleCount, cc.getChannels(), cc.getSampleFormat(), frameData, offset);
+        }
         offset = 0;
-        tmpFrame.getLineSize().set(0, frameSize);
 
         boolean result;
-        if (result = cc.encodeAudioFrame(frameSize == 0 ? null : tmpFrame, packet)) {
+        if (result = cc.encodeAudioFrame(sampleCount == 0 ? null : tmpFrame, packet)) {
             packet.clearWrapperCache();
             packet.setStreamIndex(stream.getIndex());
             packet.setPts(ptsTransformBase.mul(flushFramePts).longValue());
@@ -226,8 +245,6 @@ public class AudioFrameEncoder implements IEncoder {
             sendPacket(packet);
             flushFramePts += frameDuration;
         }
-        
-        tmpFrame.getLineSize().set(0, oldFrameSize);
         
         return result;
     }
@@ -238,17 +255,18 @@ public class AudioFrameEncoder implements IEncoder {
         pts -= byteDuration.mul(offset).longValue();
         
         while (size > 0) {
-            tmp = tmpFrame.getLineSize().get(0) - offset;
+            tmp = frameSize - offset;
             if (size < tmp)
                 tmp = size;
-            // FIX: use native fill method to fill frame properly (with extended data etc.)
-            data.copyTo(tmpFrame.getData().get(0).offset(offset), tmp);
+            data.copyTo(frameData.offset(offset), tmp);
             offset += tmp;
             size -= tmp;
             data = data.offset(tmp);
             
-            if (offset == tmpFrame.getLineSize().get(0)) {
+            if (offset == frameSize) {
                 offset = 0;
+                tmpFrame.fillAudioFrame(frameSampleCount, cc.getChannels(), cc.getSampleFormat(), frameData, frameSize);
+                
                 packet.init();
                 packet.setData(outputBuffer);
                 packet.setSize(outputBufferSize);

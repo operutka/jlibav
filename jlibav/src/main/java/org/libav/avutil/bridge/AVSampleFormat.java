@@ -17,6 +17,8 @@
  */
 package org.libav.avutil.bridge;
 
+import org.libav.bridge.LibraryManager;
+
 /**
  * Mirror of the native AVSampleFormat enum. For details see the Libav 
  * documentation.
@@ -24,6 +26,8 @@ package org.libav.avutil.bridge;
  * @author Ondrej Perutka
  */
 public class AVSampleFormat {
+    
+    public static final AVUtilLibrary utilLib = LibraryManager.getInstance().getAVUtilLibrary();
     
     public static final int AV_SAMPLE_FMT_NONE = -1;
     public static final int AV_SAMPLE_FMT_U8 = 0;
@@ -33,15 +37,12 @@ public class AVSampleFormat {
     public static final int AV_SAMPLE_FMT_DBL = 4;
     public static final int AV_SAMPLE_FMT_NB = 5;
     
+    public static int getBytesPerSample(int sampleFormat) {
+        return utilLib.av_get_bytes_per_sample(sampleFormat);
+    }
+    
     public static int getBitsPerSample(int sampleFormat) {
-        switch (sampleFormat) {
-            case AV_SAMPLE_FMT_DBL: return 64;
-            case AV_SAMPLE_FMT_FLT:
-            case AV_SAMPLE_FMT_S32: return 32;
-            case AV_SAMPLE_FMT_S16: return 16;
-            case AV_SAMPLE_FMT_U8: return 8;
-            default: return -1;
-        }
+        return utilLib.av_get_bytes_per_sample(sampleFormat) * 8;
     }
     
     public static boolean isSigned(int sampleFormat) {

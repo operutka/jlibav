@@ -33,10 +33,18 @@ public class FrameWrapper54 extends AbstractFrameWrapper {
     
     private static final AVCodecLibrary codecLib;
     private static final AVUtilLibrary utilLib;
+    private static final int fillFrameAlignment;
     
     static {
         codecLib = LibraryManager.getInstance().getAVCodecLibrary();
         utilLib = LibraryManager.getInstance().getAVUtilLibrary();
+        
+        if (utilLib.getMajorVersion() > 51 ||
+                (utilLib.getMajorVersion() == 51 && utilLib.getMinorVersion() > 27) ||
+                (utilLib.getMajorVersion() == 51 && utilLib.getMinorVersion() == 27 && utilLib.getMicroVersion() >= 2))
+            fillFrameAlignment = 0;
+        else
+            fillFrameAlignment = 1;
     }
     
     private AVFrame54 frame;
@@ -83,6 +91,17 @@ public class FrameWrapper54 extends AbstractFrameWrapper {
         
         codecLib.avcodec_get_frame_defaults(getPointer());
         clearWrapperCache();
+    }
+
+    @Override
+    public void fillAudioFrame(int sampleCount, int channelCount, int sampleFormat, Pointer<Byte> buffer, int bufferSize) throws LibavException {
+        if (frame == null)
+            return;
+        
+        setNbSamples(sampleCount);
+        int res = codecLib.avcodec_fill_audio_frame(getPointer(), channelCount, sampleFormat, buffer, bufferSize, fillFrameAlignment);
+        if (res != 0)
+            throw new LibavException(res);
     }
     
     @Override
