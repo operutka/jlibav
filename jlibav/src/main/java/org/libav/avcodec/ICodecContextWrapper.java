@@ -295,9 +295,28 @@ public interface ICodecContextWrapper extends IWrapper {
      * Set the channels property of the AVCodecContext. The value may be 
      * cached.
      * 
-     * @param chanels a number of audio channels
+     * @param channels a number of audio channels
      */
-    void setChannels(int chanels);
+    void setChannels(int channels);
+    
+    /**
+     * Get the channel_layout property from the AVCodecContext.
+     * 
+     * WARNING:
+     * The returned value may be cached. Call the clearWrapperCahce() if you
+     * think the value have been changed.
+     * 
+     * @return channel layout
+     */
+    long getChannelLayout();
+    
+    /**
+     * Set the channel_layout property of the AVCodecContext. The value may be 
+     * cached.
+     * 
+     * @param channels a channel layout
+     */
+    void setChannelLayout(long channelLayout);
 
     /**
      * Get the sample_fmt property from the AVCodecContext.

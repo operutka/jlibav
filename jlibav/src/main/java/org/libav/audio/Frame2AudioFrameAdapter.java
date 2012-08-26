@@ -23,9 +23,10 @@ import java.util.Set;
 import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avcodec.IFrameWrapper;
-import org.libav.avcodec.IResampleContextWrapper;
-import org.libav.avcodec.ResampleContextWrapperFactory;
 import org.libav.avcodec.bridge.AVCodecLibrary;
+import org.libav.avresample.AudioResampleContextWrapperFactory;
+import org.libav.avresample.IAudioResampleContextWrapper;
+import org.libav.avutil.bridge.AVChannelLayout;
 import org.libav.avutil.bridge.AVSampleFormat;
 import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.bridge.LibraryManager;
@@ -40,45 +41,51 @@ public class Frame2AudioFrameAdapter implements IFrameConsumer, IAudioFrameProdu
 
     private static final AVUtilLibrary utilLib = LibraryManager.getInstance().getAVUtilLibrary();
     
+    private long inputChannelLayout;
     private int inputChannelCount;
     private int inputSampleRate;
     private int inputSampleFormat;
-    private int inputBitsPerSample;
+    private int inputBytesPerSample;
     
+    private long outputChannelLayout;
     private int outputChannelCount;
     private int outputSampleRate;
     private int outputSampleFormat;
-    private int outputBitsPerSample;
+    private int outputBytesPerSample;
     
-    private IResampleContextWrapper resampleContext;
-    private Pointer<Byte> resampleBuffer;
+    private IAudioResampleContextWrapper resampleContext;
+    private Pointer<Pointer<?>> resampleBuffer;
+    private int bufferSize;
     
     private final Set<IAudioFrameConsumer> consumers;
 
     /**
      * Create a new frame to audio frame adapter and set resampling parameters.
      * 
-     * @param inputChanelCount a number of channels of the input frames
-     * @param outputChanelCount a number of channels of the output frames
+     * @param inputChannelLayout an input channel layout
+     * @param outputChannelLayout an output channel layout
      * @param inputSampleRate a sample rate of the input frames
      * @param outputSampleRate a sample rate of the output frames
      * @param inputSampleFormat a sample format of the input frames
      * @param outputSampleFormat a sample format of the output frames
      * @throws LibavException if an error occurs
      */
-    public Frame2AudioFrameAdapter(int inputChanelCount, int outputChanelCount, int inputSampleRate, int outputSampleRate, int inputSampleFormat, int outputSampleFormat) throws LibavException {
-        this.inputChannelCount = inputChanelCount;
+    public Frame2AudioFrameAdapter(long inputChannelLayout, long outputChannelLayout, int inputSampleRate, int outputSampleRate, int inputSampleFormat, int outputSampleFormat) throws LibavException {
+        this.inputChannelLayout = inputChannelLayout;
+        this.inputChannelCount = AVChannelLayout.getChannelCount(inputChannelLayout);
         this.inputSampleRate = inputSampleRate;
         this.inputSampleFormat = inputSampleFormat;
-        this.inputBitsPerSample = AVSampleFormat.getBitsPerSample(inputSampleFormat);
+        this.inputBytesPerSample = AVSampleFormat.getBytesPerSample(inputSampleFormat);
         
-        this.outputChannelCount = outputChanelCount;
+        this.outputChannelLayout = outputChannelLayout;
+        this.outputChannelCount = AVChannelLayout.getChannelCount(outputChannelLayout);
         this.outputSampleRate = outputSampleRate;
         this.outputSampleFormat = outputSampleFormat;
-        this.outputBitsPerSample = AVSampleFormat.getBitsPerSample(outputSampleFormat);
+        this.outputBytesPerSample = AVSampleFormat.getBytesPerSample(outputSampleFormat);
         
         resampleContext = null;
         resampleBuffer = null;
+        bufferSize = AVCodecLibrary.AVCODEC_MAX_AUDIO_FRAME_SIZE + AVCodecLibrary.FF_INPUT_BUFFER_PADDING_SIZE;
         
         init();
         
@@ -87,44 +94,53 @@ public class Frame2AudioFrameAdapter implements IFrameConsumer, IAudioFrameProdu
     
     private void init() throws LibavException {
         if (resampleContext != null)
-            resampleContext.close();
+            resampleContext.free();
         if (resampleBuffer != null)
             utilLib.av_free(resampleBuffer);
         
         resampleContext = null;
         resampleBuffer = null;
         
-        if (inputChannelCount != outputChannelCount || inputSampleFormat != outputSampleFormat || inputSampleRate != outputSampleRate) {
-            resampleContext = ResampleContextWrapperFactory.getInstance().alloc(inputChannelCount, outputChannelCount, inputSampleRate, outputSampleRate, inputSampleFormat, outputSampleFormat, 16, 10, 0, 0.8);
-            resampleBuffer = utilLib.av_malloc(AVCodecLibrary.AVCODEC_MAX_AUDIO_FRAME_SIZE + AVCodecLibrary.FF_INPUT_BUFFER_PADDING_SIZE).as(Byte.class);
+        if (inputChannelLayout != outputChannelLayout || inputSampleFormat != outputSampleFormat || inputSampleRate != outputSampleRate) {
+            resampleContext = AudioResampleContextWrapperFactory.getInstance().allocate();
+            resampleContext.setInputChannelLayout(inputChannelLayout);
+            resampleContext.setInputSampleFormat(inputSampleFormat);
+            resampleContext.setInputSampleRate(inputSampleRate);
+            resampleContext.setOutputChannelLayout(outputChannelLayout);
+            resampleContext.setOutputSampleFormat(outputSampleFormat);
+            resampleContext.setOutputSampleRate(outputSampleRate);
+            resampleContext.open();
+            resampleBuffer = Pointer.allocatePointer();
+            resampleBuffer.set(utilLib.av_malloc(bufferSize));
         }
     }
     
     /**
      * Set format of input samples.
      * 
-     * @param chanelCount a number of channels
+     * @param channelLayout a channel layout
      * @param sampleRate a sample rate
      * @param sampleFormat a sample format
      * @throws LibavException if an error occurs
      */
-    public synchronized void setInputFormat(int chanelCount, int sampleRate, int sampleFormat) throws LibavException {
-        if (inputChannelCount != chanelCount || inputSampleRate != sampleRate || inputSampleFormat != sampleFormat) {
-            inputChannelCount = chanelCount;
+    public synchronized void setInputFormat(long channelLayout, int sampleRate, int sampleFormat) throws LibavException {
+        if (inputChannelLayout != channelLayout || inputSampleRate != sampleRate || inputSampleFormat != sampleFormat) {
+            inputChannelLayout = channelLayout;
+            inputChannelCount = AVChannelLayout.getChannelCount(channelLayout);
             inputSampleRate = sampleRate;
             inputSampleFormat = sampleFormat;
-            inputBitsPerSample = AVSampleFormat.getBitsPerSample(sampleFormat);
+            inputBytesPerSample = AVSampleFormat.getBytesPerSample(sampleFormat);
             init();
         }
     }
 
     /**
-     * Get expected number of channels of the input frames.
+     * Get expected input channel layout.
      * 
-     * @return expected number of channels of the input frames
+     * @return expected input channel layout
      */
-    public int getInputChannelCount() {
-        return inputChannelCount;
+    public long getInputChannelLayout() {
+        return inputChannelLayout;
     }
 
     /**
@@ -148,28 +164,29 @@ public class Frame2AudioFrameAdapter implements IFrameConsumer, IAudioFrameProdu
     /**
      * Set format of output samples.
      * 
-     * @param chanelCount a number of channels
+     * @param channelLayout a channel layout
      * @param sampleRate a sample rate
      * @param sampleFormat a sample format
      * @throws LibavException if an error occurs
      */
-    public synchronized void setOutputFormat(int chanelCount, int sampleRate, int sampleFormat) throws LibavException {
-        if (outputChannelCount != chanelCount || outputSampleRate != sampleRate || outputSampleFormat != sampleFormat) {
-            outputChannelCount = chanelCount;
+    public synchronized void setOutputFormat(long channelLayout, int sampleRate, int sampleFormat) throws LibavException {
+        if (outputChannelLayout != channelLayout || outputSampleRate != sampleRate || outputSampleFormat != sampleFormat) {
+            outputChannelLayout = channelLayout;
+            outputChannelCount = AVChannelLayout.getChannelCount(channelLayout);
             outputSampleRate = sampleRate;
             outputSampleFormat = sampleFormat;
-            outputBitsPerSample = AVSampleFormat.getBitsPerSample(sampleFormat);
+            outputBytesPerSample = AVSampleFormat.getBitsPerSample(sampleFormat);
             init();
         }
     }
 
     /**
-     * Get number of channels of the output frames.
+     * Get output channel layout.
      * 
-     * @return number of channels of the output frames
+     * @return output channel layout
      */
-    public int getOutputChannelCount() {
-        return outputChannelCount;
+    public long getOutputChannelLayout() {
+        return outputChannelLayout;
     }
 
     /**
@@ -195,9 +212,12 @@ public class Frame2AudioFrameAdapter implements IFrameConsumer, IAudioFrameProdu
      */
     public synchronized void dispose() {
         if (resampleContext != null)
-            resampleContext.close();
+            resampleContext.free();
+        if (resampleBuffer != null)
+            utilLib.av_free(resampleBuffer);
         
         resampleContext = null;
+        resampleBuffer = null;
     }
 
     @Override
@@ -205,9 +225,13 @@ public class Frame2AudioFrameAdapter implements IFrameConsumer, IAudioFrameProdu
         if (resampleContext == null)
             sendAudioFrame(frame.getData().get(0), frame.getLineSize().get(0));
         else {
-            int fc = frame.getLineSize().get(0) / (inputChannelCount * inputBitsPerSample / 8);
-            fc = resampleContext.resample(frame.getData().get(0), resampleBuffer, fc);
-            sendAudioFrame(resampleBuffer, fc * outputChannelCount * outputBitsPerSample / 8);
+            int inPlaneSize = frame.getLineSize().get(0);
+            int inSampleCount = inPlaneSize / (inputChannelCount * inputBytesPerSample);
+            int outSampleCount = bufferSize / (outputChannelCount * outputBytesPerSample);
+            outSampleCount = resampleContext.convert(resampleBuffer, bufferSize, outSampleCount, 
+                    (Pointer)frame.getData(), inPlaneSize, inSampleCount);
+            
+            sendAudioFrame(resampleBuffer.get().as(Byte.class), outSampleCount * outputChannelCount * outputBytesPerSample);
         }
     }
     

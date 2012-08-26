@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import org.bridj.BridJ;
 import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.avformat.bridge.AVFormatLibrary;
+import org.libav.avresample.bridge.AVResampleLibrary;
 import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.swscale.bridge.SWScaleLibrary;
 
@@ -42,6 +43,7 @@ public class LibraryManager {
     private final AVCodecLibrary avCodec;
     private final AVFormatLibrary avFormat;
     private final SWScaleLibrary swScale;
+    private AVResampleLibrary avResample;
     
     private LibraryManager() throws IOException {
         BridJ.addLibraryPath(System.getProperty(PKEY_LIBPATH, DEFAULT_LIBPATH));
@@ -62,10 +64,20 @@ public class LibraryManager {
         for (int i = SWScaleLibrary.MIN_MAJOR_VERSION; i <= SWScaleLibrary.MAX_MAJOR_VERSION; i++)
             BridJ.addNativeLibraryAlias(SWScaleLibrary.LIB_NAME, SWScaleLibrary.LIB_NAME + "-" + i);
         
+        BridJ.addNativeLibraryAlias(AVResampleLibrary.LIB_NAME, AVResampleLibrary.LIB_NAME);
+        for (int i = AVResampleLibrary.MIN_MAJOR_VERSION; i <= AVResampleLibrary.MAX_MAJOR_VERSION; i++)
+            BridJ.addNativeLibraryAlias(AVResampleLibrary.LIB_NAME, AVResampleLibrary.LIB_NAME + "-" + i);
+        
         avUtil = new AVUtilLibrary();
         avCodec = new AVCodecLibrary();
         avFormat = new AVFormatLibrary();
         swScale = new SWScaleLibrary();
+        
+        try {
+            avResample = new AVResampleLibrary();
+        } catch (IOException ex) {
+            avResample = null;
+        }
         
         avFormat.av_register_all();
         if (avFormat.functionExists("avformat_network_init"))
@@ -107,6 +119,15 @@ public class LibraryManager {
      */
     public SWScaleLibrary getSWScaleLibrary() {
         return swScale;
+    }
+    
+    /**
+     * Get avresample library wrapper.
+     * 
+     * @return avresample library wrapper
+     */
+    public AVResampleLibrary getAVResampleLibrary() {
+        return avResample;
     }
     
     /**

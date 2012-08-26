@@ -32,7 +32,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.LineUnavailableException;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.event.ChangeEvent;
@@ -149,7 +148,7 @@ public class PlaybackSample extends javax.swing.JFrame {
             // audio stream
             if (mr.getAudioStreamCount() > 0) {
                 ICodecContextWrapper cc = player.getAudioStreamDecoder(0).getCodecContext();
-                sis = new SampleInputStream(cc.getSampleRate() * AVSampleFormat.getBitsPerSample(cc.getSampleFormat()) * cc.getChannels() / 8, true);
+                sis = new SampleInputStream(cc.getSampleRate() * AVSampleFormat.getBytesPerSample(cc.getSampleFormat()) * cc.getChannels(), true);
                 AudioFormat.Encoding senc = null;
                 if (AVSampleFormat.isSigned(cc.getSampleFormat()))
                     senc = AudioFormat.Encoding.PCM_SIGNED;
@@ -157,13 +156,13 @@ public class PlaybackSample extends javax.swing.JFrame {
                     senc = AudioFormat.Encoding.PCM_UNSIGNED;
                 audioStream = new AudioInputStream(sis, new AudioFormat(senc, 
                         cc.getSampleRate(), AVSampleFormat.getBitsPerSample(cc.getSampleFormat()), cc.getChannels(), 
-                        AVSampleFormat.getBitsPerSample(cc.getSampleFormat()) * cc.getChannels() / 8, cc.getSampleRate(), 
+                        AVSampleFormat.getBytesPerSample(cc.getSampleFormat()) * cc.getChannels(), cc.getSampleRate(), 
                         ByteOrder.BIG_ENDIAN.equals(ByteOrder.nativeOrder())), -1);
                 if (resampler != null)
                     resampler.dispose();
-                resampler = new Frame2AudioFrameAdapter(cc.getChannels(), cc.getChannels(), cc.getSampleRate(), cc.getSampleRate(), cc.getSampleFormat(), cc.getSampleFormat());
                 
                 try {
+                    resampler = new Frame2AudioFrameAdapter(cc.getChannels(), cc.getChannels(), cc.getSampleRate(), cc.getSampleRate(), cc.getSampleFormat(), cc.getSampleFormat());
                     player.getAudioStreamDecoder(0).addFrameConsumer(resampler);
                     player.setAudioStreamDecodingEnabled(0, true);
                     audioMixer = PlaybackMixer.getMixer(audioStream.getFormat());
@@ -171,7 +170,7 @@ public class PlaybackSample extends javax.swing.JFrame {
                     audioMixer.addInputStream(audioStream);
                     audioMixer.setStreamVolume(audioStream, getVolume());
                     audioMixer.play();
-                } catch (LineUnavailableException ex) {
+                } catch (Exception ex) {
                     Logger.getLogger(PlaybackSample.class.getName()).log(Level.WARNING, "unable to play audio", ex);
                 }
             }

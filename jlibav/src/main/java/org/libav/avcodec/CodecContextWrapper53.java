@@ -380,6 +380,26 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
     }
 
     @Override
+    public long getChannelLayout() {
+        if (context == null)
+            return 0;
+        
+        if (channelLayout == null)
+            channelLayout = context.channel_layout();
+        
+        return channelLayout;
+    }
+
+    @Override
+    public void setChannelLayout(long channelLayout) {
+        if (context == null)
+            return;
+        
+        context.channel_layout(channelLayout);
+        this.channelLayout = channelLayout;
+    }
+
+    @Override
     public int getSampleFormat() {
         if (context == null)
             return 0;

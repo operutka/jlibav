@@ -40,6 +40,7 @@ public abstract class AbstractCodecContextWrapper implements ICodecContextWrappe
     protected Integer maxBFrames;
     protected Integer mbDecision;
     protected Integer channels;
+    protected Long channelLayout;
     protected Integer sampleRate;
     protected Integer sampleFormat;
     protected Integer frameSize;
@@ -59,6 +60,7 @@ public abstract class AbstractCodecContextWrapper implements ICodecContextWrappe
         maxBFrames = null;
         mbDecision = null;
         channels = null;
+        channelLayout = null;
         sampleRate = null;
         sampleFormat = null;
         frameSize = null;
@@ -79,6 +81,7 @@ public abstract class AbstractCodecContextWrapper implements ICodecContextWrappe
         maxBFrames = null;
         mbDecision = null;
         channels = null;
+        channelLayout = null;
         sampleRate = null;
         sampleFormat = null;
         frameSize = null;
