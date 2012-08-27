@@ -46,7 +46,6 @@ public class LibraryManager {
     private final ICLibrary cLib;
     
     private LibraryManager() {
-        System.setProperty("jna.library.path", "libav");
         System.setProperty("jna.nosys", "true");
         String avUtilLibPath = getLibPath("avutil");
         String avCodecLibPath = getLibPath("avcodec");
@@ -76,7 +75,7 @@ public class LibraryManager {
         if (result != null)
             return result.getAbsolutePath();
         
-        String jnaLibPath = System.getProperty("jna.library.path");
+        String jnaLibPath = System.getProperty("jna.library.path", "libav");
         if (jnaLibPath != null)
             result = findLibInDir(new File(jnaLibPath), libName);
         if (result != null)
