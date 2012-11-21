@@ -20,6 +20,7 @@ package org.libav.audio;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -176,11 +177,11 @@ public class MixingSampleInputStream extends InputStream {
     }
 
     @Override
-    public synchronized void mark(int i) {
+    public void mark(int i) {
     }
 
     @Override
-    public synchronized void reset() throws IOException {
+    public void reset() throws IOException {
     }
 
     @Override
@@ -203,14 +204,13 @@ public class MixingSampleInputStream extends InputStream {
     }
 
     @Override
-    public synchronized int read(byte[] b, int off, int len) throws IOException {
+    public int read(byte[] b, int off, int len) throws IOException {
         int fcount = len / frameSize;
         int result, vol;
         
         if (samples == null || samples.length != (fcount * sampleCount))
             samples = new int[fcount * sampleCount];
-        for (int i = 0; i < samples.length; i++)
-            samples[i] = 0;
+        Arrays.fill(samples, 0);
         
         len = fcount * frameSize;
         for (InputStreamInfo isi : streams.values()) {
@@ -219,12 +219,10 @@ public class MixingSampleInputStream extends InputStream {
                 continue;
             result /= sampleSize;
             vol = (int)(isi.getVolume() * 100);
-            for (int i = 0; i < result; i++)
-                samples[i] += sc.getSample(b, off + (i * sampleSize)) * vol / 100;
+            sc.getSamples(b, off, samples, result, vol);
         }
         
-        for (int i = 0; i < samples.length; i++)
-            sc.getBytes(samples[i], b, off + (i * sampleSize));
+        sc.getBytes(samples, b, off);
         
         return len;
     }
@@ -252,8 +250,8 @@ public class MixingSampleInputStream extends InputStream {
     }
     
     private static interface SampleConverter {
-        int getSample(byte[] data, int off);
-        void getBytes(int sample, byte[] data, int off);
+        void getSamples(byte[] data, int offset, int[] samples, int count, int volume);
+        void getBytes(int[] samples, byte[] data, int dataOffset);
     }
     
     private static class Int16LEConverter implements SampleConverter {
@@ -266,16 +264,26 @@ public class MixingSampleInputStream extends InputStream {
         }
         
         @Override
-        public int getSample(byte[] data, int off) {
-            return ((int)data[off + 1] << 8) | (data[off] & 0xff);
+        public void getSamples(byte[] data, int offset, int[] samples, int count, int volume) {
+            for (int i = 0; i < count; i++) {
+                samples[i] = data[offset++] & 0xff;
+                samples[i] |= data[offset++] << 8;
+                samples[i] *= volume;
+                samples[i] /= 100;
+            }
         }
         
         @Override
-        public void getBytes(int sample, byte[] data, int off) {
-            if (sample > max) sample = max;
-            else if (sample < min) sample = min;
-            data[off] = (byte)sample;
-            data[off + 1] = (byte)(sample >> 8);
+        public void getBytes(int[] samples, byte[] data, int dataOffset) {
+            int sample;
+            
+            for (int i = 0; i < samples.length; i++) {
+                sample = samples[i];
+                if (sample > max) sample = max;
+                else if (sample < min) sample = min;
+                data[dataOffset++] = (byte)sample;
+                data[dataOffset++] = (byte)(sample >> 8);
+            }
         }
     }
     
@@ -287,18 +295,28 @@ public class MixingSampleInputStream extends InputStream {
             min = -1 << 15;
             max = (1 << 15) - 1;
         }
-        
+
         @Override
-        public int getSample(byte[] data, int off) {
-            return ((int)data[off] << 8) | (data[off + 1] & 0xff);
+        public void getSamples(byte[] data, int offset, int[] samples, int count, int volume) {
+            for (int i = 0; i < count; i++) {
+                samples[i] = data[offset++] << 8;
+                samples[i] |= data[offset++] & 0xff;
+                samples[i] *= volume;
+                samples[i] /= 100;
+            }
         }
 
         @Override
-        public void getBytes(int sample, byte[] data, int off) {
-            if (sample > max) sample = max;
-            else if (sample < min) sample = min;
-            data[off] = (byte)(sample >> 8);
-            data[off + 1] = (byte)sample;
+        public void getBytes(int[] samples, byte[] data, int dataOffset) {
+            int sample;
+            
+            for (int i = 0; i < samples.length; i++) {
+                sample = samples[i];
+                if (sample > max) sample = max;
+                else if (sample < min) sample = min;
+                data[dataOffset++] = (byte)(sample >> 8);
+                data[dataOffset++] = (byte)sample;
+            }
         }
     }
     
@@ -309,8 +327,13 @@ public class MixingSampleInputStream extends InputStream {
         }
         
         @Override
-        public int getSample(byte[] data, int off) {
-            return ((data[off + 1] & 0xff) << 8) | (data[off] & 0xff);
+        public void getSamples(byte[] data, int offset, int[] samples, int count, int volume) {
+            for (int i = 0; i < count; i++) {
+                samples[i] = data[offset++] & 0xff;
+                samples[i] |= (data[offset++] & 0xff) << 8;
+                samples[i] *= volume;
+                samples[i] /= 100;
+            }
         }
     }
     
@@ -319,10 +342,15 @@ public class MixingSampleInputStream extends InputStream {
             min = 0;
             max = (1 << 16) - 1;
         }
-        
+
         @Override
-        public int getSample(byte[] data, int off) {
-            return ((data[off] & 0xff) << 8) | (data[off + 1] & 0xff);
+        public void getSamples(byte[] data, int offset, int[] samples, int count, int volume) {
+            for (int i = 0; i < count; i++) {
+                samples[i] = (data[offset++] & 0xff) << 8;
+                samples[i] |= data[offset++] & 0xff;
+                samples[i] *= volume;
+                samples[i] /= 100;
+            }
         }
     }
     
@@ -334,19 +362,30 @@ public class MixingSampleInputStream extends InputStream {
             min = -1 << 23;
             max = (1 << 23) - 1;
         }
-        
+
         @Override
-        public int getSample(byte[] data, int off) {
-            return ((int)data[off + 2] << 16) | ((data[off + 1] & 0xff) << 8) | (data[off] & 0xff);
+        public void getSamples(byte[] data, int offset, int[] samples, int count, int volume) {
+            for (int i = 0; i < count; i++) {
+                samples[i] = data[offset++] & 0xff;
+                samples[i] |= (data[offset++] & 0xff) << 8;
+                samples[i] |= data[offset++] << 16;
+                samples[i] *= volume;
+                samples[i] /= 100;
+            }
         }
-        
+
         @Override
-        public void getBytes(int sample, byte[] data, int off) {
-            if (sample > max) sample = max;
-            else if (sample < min) sample = min;
-            data[off] = (byte)sample;
-            data[off + 1] = (byte)(sample >> 8);
-            data[off + 2] = (byte)(sample >> 16);
+        public void getBytes(int[] samples, byte[] data, int dataOffset) {
+            int sample;
+            
+            for (int i = 0; i < samples.length; i++) {
+                sample = samples[i];
+                if (sample > max) sample = max;
+                else if (sample < min) sample = min;
+                data[dataOffset++] = (byte)sample;
+                data[dataOffset++] = (byte)(sample >> 8);
+                data[dataOffset++] = (byte)(sample >> 16);
+            }
         }
     }
     
@@ -358,19 +397,30 @@ public class MixingSampleInputStream extends InputStream {
             min = -1 << 23;
             max = (1 << 23) - 1;
         }
-        
+
         @Override
-        public int getSample(byte[] data, int off) {
-            return ((int)data[off] << 16) | ((data[off + 1] & 0xff) << 8) | (data[off + 2] & 0xff);
+        public void getSamples(byte[] data, int offset, int[] samples, int count, int volume) {
+            for (int i = 0; i < count; i++) {
+                samples[i] = data[offset++] << 16;
+                samples[i] |= (data[offset++] & 0xff) << 8;
+                samples[i] |= data[offset++] & 0xff;
+                samples[i] *= volume;
+                samples[i] /= 100;
+            }
         }
-        
+
         @Override
-        public void getBytes(int sample, byte[] data, int off) {
-            if (sample > max) sample = max;
-            else if (sample < min) sample = min;
-            data[off] = (byte)(sample >> 16);
-            data[off + 1] = (byte)(sample >> 8);
-            data[off + 2] = (byte)sample;
+        public void getBytes(int[] samples, byte[] data, int dataOffset) {
+            int sample;
+            
+            for (int i = 0; i < samples.length; i++) {
+                sample = samples[i];
+                if (sample > max) sample = max;
+                else if (sample < min) sample = min;
+                data[dataOffset++] = (byte)(sample >> 16);
+                data[dataOffset++] = (byte)(sample >> 8);
+                data[dataOffset++] = (byte)sample;
+            }
         }
     }
     
@@ -379,10 +429,16 @@ public class MixingSampleInputStream extends InputStream {
             min = 0;
             max = (1 << 24) - 1;
         }
-        
+
         @Override
-        public int getSample(byte[] data, int off) {
-            return ((data[off + 2] & 0xff) << 16) | ((data[off + 1] & 0xff) << 8) | (data[off] & 0xff);
+        public void getSamples(byte[] data, int offset, int[] samples, int count, int volume) {
+            for (int i = 0; i < count; i++) {
+                samples[i] = data[offset++] & 0xff;
+                samples[i] |= (data[offset++] & 0xff) << 8;
+                samples[i] |= (data[offset++] & 0xff) << 16;
+                samples[i] *= volume;
+                samples[i] /= 100;
+            }
         }
     }
     
@@ -391,10 +447,16 @@ public class MixingSampleInputStream extends InputStream {
             min = 0;
             max = (1 << 24) - 1;
         }
-        
+
         @Override
-        public int getSample(byte[] data, int off) {
-            return ((data[off] & 0xff) << 16) | ((data[off + 1] & 0xff) << 8) | (data[off + 2] & 0xff);
+        public void getSamples(byte[] data, int offset, int[] samples, int count, int volume) {
+            for (int i = 0; i < count; i++) {
+                samples[i] = (data[offset++] & 0xff) << 16;
+                samples[i] |= (data[offset++] & 0xff) << 8;
+                samples[i] |= data[offset++] & 0xff;
+                samples[i] *= volume;
+                samples[i] /= 100;
+            }
         }
     }
 

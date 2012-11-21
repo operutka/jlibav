@@ -73,7 +73,7 @@ public class SampleInputStream extends InputStream implements IAudioFrameConsume
         this.end = 0;
         this.size = 0;
         this.blockingFrameProcessing = blockingFrameProcessing;
-        this.emptySpace = new Semaphore(bufferSize, true);
+        this.emptySpace = new Semaphore(bufferSize);
         
         this.eof = false;
     }
@@ -195,21 +195,21 @@ public class SampleInputStream extends InputStream implements IAudioFrameConsume
     public int read() throws IOException {
         synchronized (buffer) {
             while (true) {
-                if (eof && size < 1)
-                    return -1;
-                else if (size < 1) {
-                    try {
-                        buffer.wait();
-                    } catch (InterruptedException ex) {
-                        throw new IOException("interrupted while waiting for data", ex);
-                    }
-                } else {
+                if (size > 0) {
                     byte result = buffer[front];
                     front = (front + 1) % buffer.length;
                     size--;
                     if (blockingFrameProcessing)
                         emptySpace.release();
                     return result;
+                } else if (eof)
+                    return -1;
+                else {
+                    try {
+                        buffer.wait();
+                    } catch (InterruptedException ex) {
+                        throw new IOException("interrupted while waiting for data", ex);
+                    }
                 }
             }
         }
@@ -232,27 +232,29 @@ public class SampleInputStream extends InputStream implements IAudioFrameConsume
         synchronized (buffer) {
             int rest = len;
             while (rest > 0) {
-                if (eof && size < 1 && rest == len)
-                    return -1;
-                else if (eof && size < 1)
-                    return len - rest;
-                else if (size < 1) {
-                    try {
-                        buffer.wait();
-                    } catch (InterruptedException ex) {
-                        throw new IOException("interrupted while waiting for data", ex);
-                    }
-                } else {
-                    int readLen = rest < size ? rest : size;
-                    for (int i = 0; i < readLen; i++)
-                        bytes[off + i] = buffer[(front + i) % buffer.length];
+                if (size > 0) {
+                    int readLen = buffer.length - front;
+                    if (readLen > rest)
+                        readLen = rest;
+                    if (readLen > size)
+                        readLen = size;
+                    System.arraycopy(buffer, front, bytes, off, readLen);
                     off += readLen;
                     rest -= readLen;
                     front = (front + readLen) % buffer.length;
                     size -= readLen;
                     if (blockingFrameProcessing)
                         emptySpace.release(readLen);
-                }
+                } else if (!eof) {
+                    try {
+                        buffer.wait();
+                    } catch (InterruptedException ex) {
+                        throw new IOException("interrupted while waiting for data", ex);
+                    }
+                } else if (rest == len)
+                    return -1;
+                else
+                    return len - rest;
             }
             
             return len;

@@ -48,6 +48,7 @@ import org.libav.avformat.IChapterWrapper;
 import org.libav.avformat.IFormatContextWrapper;
 import org.libav.avformat.IStreamWrapper;
 import org.libav.avutil.IDictionaryWrapper;
+import org.libav.avutil.bridge.AVChannelLayout;
 import org.libav.avutil.bridge.AVSampleFormat;
 import org.libav.data.IFrameConsumer;
 import org.libav.util.swing.VideoPane;
@@ -117,7 +118,7 @@ public class PlaybackSample extends javax.swing.JFrame {
      * 
      * @param url a URL
      */
-    private void open(String url) {
+    public void open(String url) {
         try {
             if (player != null) // close the player
                 player.close();
@@ -148,21 +149,21 @@ public class PlaybackSample extends javax.swing.JFrame {
             // audio stream
             if (mr.getAudioStreamCount() > 0) {
                 ICodecContextWrapper cc = player.getAudioStreamDecoder(0).getCodecContext();
-                sis = new SampleInputStream(cc.getSampleRate() * AVSampleFormat.getBytesPerSample(cc.getSampleFormat()) * cc.getChannels(), true);
+                sis = new SampleInputStream(cc.getSampleRate() * AVSampleFormat.getBytesPerSample(cc.getSampleFormat()) * 2, true);
                 AudioFormat.Encoding senc = null;
                 if (AVSampleFormat.isSigned(cc.getSampleFormat()))
                     senc = AudioFormat.Encoding.PCM_SIGNED;
                 else if (AVSampleFormat.isUnsigned(cc.getSampleFormat()))
                     senc = AudioFormat.Encoding.PCM_UNSIGNED;
                 audioStream = new AudioInputStream(sis, new AudioFormat(senc, 
-                        cc.getSampleRate(), AVSampleFormat.getBitsPerSample(cc.getSampleFormat()), cc.getChannels(), 
-                        AVSampleFormat.getBytesPerSample(cc.getSampleFormat()) * cc.getChannels(), cc.getSampleRate(), 
+                        cc.getSampleRate(), AVSampleFormat.getBitsPerSample(cc.getSampleFormat()), 2, 
+                        AVSampleFormat.getBytesPerSample(cc.getSampleFormat()) * 2, cc.getSampleRate(), 
                         ByteOrder.BIG_ENDIAN.equals(ByteOrder.nativeOrder())), -1);
                 if (resampler != null)
                     resampler.dispose();
                 
                 try {
-                    resampler = new Frame2AudioFrameAdapter(cc.getChannels(), cc.getChannels(), cc.getSampleRate(), cc.getSampleRate(), cc.getSampleFormat(), cc.getSampleFormat());
+                    resampler = new Frame2AudioFrameAdapter(cc.getChannelLayout(), AVChannelLayout.AV_CH_LAYOUT_STEREO, cc.getSampleRate(), cc.getSampleRate(), cc.getSampleFormat(), cc.getSampleFormat());
                     player.getAudioStreamDecoder(0).addFrameConsumer(resampler);
                     player.setAudioStreamDecodingEnabled(0, true);
                     audioMixer = PlaybackMixer.getMixer(audioStream.getFormat());
@@ -449,6 +450,9 @@ public class PlaybackSample extends javax.swing.JFrame {
 
         PlaybackSample vt = new PlaybackSample();
         vt.setVisible(true);
+        
+        if (args.length == 1)
+            vt.open(args[0]);
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonOpen;
