@@ -24,7 +24,8 @@ import org.libav.avcodec.IPacketWrapper;
 import org.libav.avcodec.PacketWrapperFactory;
 
 /**
- * Packet pool.
+ * Packet pool. Allows to reuse old packets to avoid pointless memory 
+ * allocations.
  * 
  * @author Ondrej Perutka
  */
@@ -33,11 +34,19 @@ public class PacketPool {
     private PacketWrapperFactory packetFactory;
     private Deque<PooledPacket> recycle;
     
+    /**
+     * Create a new packet pool instance.
+     */
     public PacketPool() {
         recycle = new ArrayDeque<PooledPacket>();
         packetFactory = PacketWrapperFactory.getInstance();
     }
     
+    /**
+     * Get an empty packet (packet with a null data pointer).
+     * 
+     * @return packet wrapper
+     */
     public IPacketWrapper getEmptyPacket() {
         IPacketWrapper result;
         
@@ -54,6 +63,12 @@ public class PacketPool {
         return result;
     }
     
+    /**
+     * Clone existing packet.
+     * 
+     * @param packet a packet to be clonned
+     * @return packet clone
+     */
     public IPacketWrapper clonePacket(IPacketWrapper packet) {
         PooledPacket result = getPacket();
         int growBy = packet.getSize() - result.getSize();
