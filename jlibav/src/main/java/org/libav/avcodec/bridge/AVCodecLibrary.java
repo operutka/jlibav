@@ -26,6 +26,7 @@ import org.bridj.NativeLibrary;
 import org.bridj.Pointer;
 import org.bridj.ann.Library;
 import org.bridj.ann.Optional;
+import org.bridj.ann.Ptr;
 import org.libav.bridge.ILibrary;
 
 /**
@@ -294,6 +295,28 @@ public final class AVCodecLibrary implements ILibrary {
      */
     public void av_free_packet(Pointer<?> pkt) {
         Lib.av_free_packet(pkt);
+    }
+    
+    /**
+     * Increase packet size, correctly zeroing padding.
+     * 
+     * @param pkt packet
+     * @param grow_by number of bytes by which to increase the size of 
+     * the packet
+     * @return 0 on success
+     */
+    public int av_grow_packet(Pointer<?> pkt, int grow_by) {
+        return Lib.av_grow_packet(pkt.getPeer(), grow_by);
+    }
+    
+    /**
+     * Reduce packet size, correctly zeroing padding.
+     * 
+     * @param pkt packet
+     * @param size new size
+     */
+    public void av_shrink_packet(Pointer<?> pkt, int size) {
+        Lib.av_shrink_packet(pkt.getPeer(), size);
     }
     
     /**
@@ -735,6 +758,8 @@ public final class AVCodecLibrary implements ILibrary {
         public static native void av_init_packet(Pointer<?> pkt);
         public static native int av_new_packet(Pointer<?> pkt, int size);
         public static native void av_free_packet(Pointer<?> pkt);
+        public static native int av_grow_packet(@Ptr long pkt, int grow_by);
+        public static native void av_shrink_packet(@Ptr long pkt, int size);
         @Optional
 	public static native int avcodec_open(Pointer<?> avctx, Pointer<?> codec);
         @Optional

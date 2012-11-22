@@ -35,9 +35,24 @@ public interface IPacketWrapper extends IWrapper, Cloneable {
     void init();
     
     /**
-     * Release data data held by the packet and call init().
+     * Release data held by the packet.
      */
     void free();
+    
+    /**
+     * Grow packet size by the given constant.
+     * 
+     * @param growBy number of bytes to grow by
+     */
+    void grow(int growBy);
+    
+    /**
+     * Shrink packet to the given size. (This method does nothing if the packet
+     * is smaller than the given size.)
+     * 
+     * @param size a new size
+     */
+    void shrink(int size);
 
     /**
      * Get the stream_index property from the AVPacket.

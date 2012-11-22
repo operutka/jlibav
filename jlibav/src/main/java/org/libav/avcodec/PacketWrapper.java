@@ -57,7 +57,23 @@ public class PacketWrapper extends AbstractPacketWrapper {
     @Override
     public void free() {
         codecLib.av_free_packet(getPointer());
-        init();
+        clearWrapperCache();
+    }
+
+    @Override
+    public void grow(int growBy) {
+        int result = codecLib.av_grow_packet(getPointer(), growBy);
+        if (result != 0)
+            throw new RuntimeException(new LibavException(result));
+        data = null;
+        size = null;
+    }
+
+    @Override
+    public void shrink(int size) {
+        codecLib.av_shrink_packet(getPointer(), size);
+        this.data = null;
+        this.size = null;
     }
     
     @Override

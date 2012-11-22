@@ -61,7 +61,7 @@ public class DefaultMediaReader implements IMediaReader {
     public DefaultMediaReader(String url) throws LibavException {
         formatContext = FormatContextWrapperFactory.getInstance().openMedia(url);
         
-        packetReader = new BufferedPacketReader(formatContext, 100);
+        packetReader = new BufferedPacketReader(formatContext, 50);
         
         formatContext.findStreamInfo();
         streams = formatContext.getStreams();
@@ -269,8 +269,12 @@ public class DefaultMediaReader implements IMediaReader {
                 pw = packetReader.nextPacket();
                 if (pw == null)
                     return false;
-                else if (pw.getStreamIndex() != streamIndex && isStreamBufferingEnabled(pw.getStreamIndex()))
-                    streamBuffers.get(pw.getStreamIndex()).put(pw);
+                else if (pw.getStreamIndex() != streamIndex) {
+                    if (isStreamBufferingEnabled(pw.getStreamIndex()))
+                        streamBuffers.get(pw.getStreamIndex()).put(pw);
+                    else
+                        pw.free();
+                }
             }
         }
         

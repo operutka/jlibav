@@ -17,7 +17,7 @@
  */
 package org.libav.data;
 
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.ReentrantLock;
 import org.libav.avcodec.IPacketWrapper;
 import org.libav.avcodec.PacketWrapperFactory;
 import org.libav.avformat.IFormatContextWrapper;
@@ -32,13 +32,14 @@ public class BufferedPacketReader {
     
     private IFormatContextWrapper formatContext;
     private IPacketWrapper packet;
+    private PacketPool packetPool;
     
     private final Buffer<IPacketWrapper> buffer;
     private boolean eof;
     
     private ReaderThread readerThread;
     private Thread t;
-    private Semaphore threadControlMutex;
+    private ReentrantLock lock;
 
     /**
      * Create a new pcket reader.
@@ -49,13 +50,14 @@ public class BufferedPacketReader {
     public BufferedPacketReader(IFormatContextWrapper formatContext, int bufferSize) {
         this.formatContext = formatContext;
         packet = PacketWrapperFactory.getInstance().alloc();
+        packetPool = new PacketPool();
         
         buffer = new Buffer<IPacketWrapper>(bufferSize);
         eof = false;
         
         readerThread = null;
         t = null;
-        threadControlMutex = new Semaphore(1);
+        lock = new ReentrantLock();
     }
     
     private void start() {
@@ -84,7 +86,7 @@ public class BufferedPacketReader {
      */
     public void dropBuffer() {
         try {
-            threadControlMutex.acquire();
+            lock.lockInterruptibly();
         } catch (InterruptedException ex) {
             throw new RuntimeException(ex);
         }
@@ -92,7 +94,7 @@ public class BufferedPacketReader {
         try {
             stop();
         } catch (InterruptedException ex) {
-            threadControlMutex.release();
+            lock.unlock();
             throw new RuntimeException(ex);
         }
         
@@ -105,7 +107,7 @@ public class BufferedPacketReader {
             }
         }
         
-        threadControlMutex.release();
+        lock.unlock();
     }
     
     /**
@@ -122,7 +124,7 @@ public class BufferedPacketReader {
         dropBuffer();
         
         try {
-            threadControlMutex.acquire();
+            lock.lockInterruptibly();
         } catch (InterruptedException ex) {
             throw new RuntimeException(ex);
         }
@@ -132,7 +134,7 @@ public class BufferedPacketReader {
         
         packet = null;
         
-        threadControlMutex.release();
+        lock.unlock();
     }
     
     /**
@@ -152,14 +154,14 @@ public class BufferedPacketReader {
     public IPacketWrapper nextPacket() {
         IPacketWrapper pw;
         try {
-            threadControlMutex.acquire();
+            lock.lockInterruptibly();
         } catch (InterruptedException ex) {
             throw new RuntimeException(ex);
         }
         
         synchronized (buffer) {
             if ((eof && buffer.getItemCount() == 0) || isClosed()) {
-                threadControlMutex.release();
+                lock.unlock();
                 return null;
             }
             if (t == null)
@@ -168,12 +170,12 @@ public class BufferedPacketReader {
             try {
                 pw = buffer.waitGet();
             } catch (InterruptedException ex) {
-                threadControlMutex.release();
+                lock.unlock();
                 throw new RuntimeException(ex);
             }
         }
         
-        threadControlMutex.release();
+        lock.unlock();
         return pw;
     }
     
@@ -208,7 +210,7 @@ public class BufferedPacketReader {
             
             while (!stop) {
                 if (formatContext.readNextPacket(packet))
-                    pw = packet.clone();
+                    pw = packetPool.clonePacket(packet);
                 else
                     pw = null;
                 packet.free();

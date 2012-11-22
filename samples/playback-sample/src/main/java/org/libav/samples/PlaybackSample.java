@@ -163,7 +163,9 @@ public class PlaybackSample extends javax.swing.JFrame {
                     resampler.dispose();
                 
                 try {
-                    resampler = new Frame2AudioFrameAdapter(cc.getChannelLayout(), AVChannelLayout.AV_CH_LAYOUT_STEREO, cc.getSampleRate(), cc.getSampleRate(), cc.getSampleFormat(), cc.getSampleFormat());
+                    resampler = new Frame2AudioFrameAdapter(
+                            cc.getChannelLayout() == 0 ? AVChannelLayout.getDefaultChannelLayout(cc.getChannels()) : cc.getChannelLayout(), 
+                            AVChannelLayout.AV_CH_LAYOUT_STEREO, cc.getSampleRate(), cc.getSampleRate(), cc.getSampleFormat(), cc.getSampleFormat());
                     player.getAudioStreamDecoder(0).addFrameConsumer(resampler);
                     player.setAudioStreamDecodingEnabled(0, true);
                     audioMixer = PlaybackMixer.getMixer(audioStream.getFormat());
