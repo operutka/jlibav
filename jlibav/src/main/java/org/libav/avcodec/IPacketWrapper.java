@@ -224,6 +224,44 @@ public interface IPacketWrapper extends IWrapper, Cloneable {
      * @param position 
      */
     void setPosition(long position);
+    
+    /**
+     * Get the side_data property from the AVPacket.
+     * 
+     * WARNING:
+     * The returned value may be cached. Call the clearWrapperCahce() if you
+     * think the value have been changed.
+     * 
+     * @return packet side data pointer
+     */
+    Pointer<?> getSideData();
+
+    /**
+     * Set the side_data property of the AVPacket. The value may be 
+     * cached.
+     * 
+     * @param sideData side data pointer
+     */
+    void setSideData(Pointer<?> sideData);
+
+    /**
+     * Get the side_data_elems property from the AVPacket.
+     * 
+     * WARNING:
+     * The returned value may be cached. Call the clearWrapperCahce() if you
+     * think the value have been changed.
+     * 
+     * @return number of side data elements
+     */
+    int getSideDataElems();
+
+    /**
+     * Set the side_data_elems property of the AVPacket. The value may be 
+     * cached.
+     * 
+     * @param sideDataElems number of side data elements
+     */
+    void setSideDataElems(int sideDataElems);
 
     /**
      * Make a clonned instance of this packet. (It also duplicates packet data.)

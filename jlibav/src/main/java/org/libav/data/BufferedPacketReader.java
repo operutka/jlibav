@@ -133,6 +133,7 @@ public class BufferedPacketReader {
             packet.free();
         
         packet = null;
+        packetPool.dispose();
         
         lock.unlock();
     }

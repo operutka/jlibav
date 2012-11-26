@@ -35,6 +35,8 @@ public abstract class AbstractPacketWrapper implements IPacketWrapper {
     protected Integer duration;
     protected Long convergenceDuration;
     protected Long position;
+    protected Pointer<?> sideData;
+    protected Integer sideDataElems;
     
     public AbstractPacketWrapper() {
         streamIndex = null;
@@ -46,6 +48,8 @@ public abstract class AbstractPacketWrapper implements IPacketWrapper {
         duration = null;
         convergenceDuration = null;
         position = null;
+        sideData = null;
+        sideDataElems = null;
     }
 
     @Override
@@ -59,6 +63,8 @@ public abstract class AbstractPacketWrapper implements IPacketWrapper {
         duration = null;
         convergenceDuration = null;
         position = null;
+        sideData = null;
+        sideDataElems = null;
     }
     
     @Override

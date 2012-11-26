@@ -53,10 +53,12 @@ public interface PixelFormat {
     public static final int PIX_FMT_RGB4_BYTE = 24;
     public static final int PIX_FMT_NV12 = 25;
     public static final int PIX_FMT_NV21 = 26;
+    
     public static final int PIX_FMT_ARGB = 27;
     public static final int PIX_FMT_RGBA = 28;
     public static final int PIX_FMT_ABGR = 29;
     public static final int PIX_FMT_BGRA = 30;
+    
     public static final int PIX_FMT_GRAY16BE = 31;
     public static final int PIX_FMT_GRAY16LE = 32;
     public static final int PIX_FMT_YUV440P = 33;
@@ -69,17 +71,21 @@ public interface PixelFormat {
     public static final int PIX_FMT_VDPAU_VC1 = 40;
     public static final int PIX_FMT_RGB48BE = 41;
     public static final int PIX_FMT_RGB48LE = 42;
+    
     public static final int PIX_FMT_RGB565BE = 43;
     public static final int PIX_FMT_RGB565LE = 44;
     public static final int PIX_FMT_RGB555BE = 45;
     public static final int PIX_FMT_RGB555LE = 46;
+    
     public static final int PIX_FMT_BGR565BE = 47;
     public static final int PIX_FMT_BGR565LE = 48;
     public static final int PIX_FMT_BGR555BE = 49;
     public static final int PIX_FMT_BGR555LE = 50;
+    
     public static final int PIX_FMT_VAAPI_MOCO = 51;
     public static final int PIX_FMT_VAAPI_IDCT = 52;
     public static final int PIX_FMT_VAAPI_VLD = 53;
+    
     public static final int PIX_FMT_YUV420P16LE = 54;
     public static final int PIX_FMT_YUV420P16BE = 55;
     public static final int PIX_FMT_YUV422P16LE = 56;
@@ -88,6 +94,7 @@ public interface PixelFormat {
     public static final int PIX_FMT_YUV444P16BE = 59;
     public static final int PIX_FMT_VDPAU_MPEG4 = 60;
     public static final int PIX_FMT_DXVA2_VLD = 61;
+    
     public static final int PIX_FMT_RGB444LE = 62;
     public static final int PIX_FMT_RGB444BE = 63;
     public static final int PIX_FMT_BGR444LE = 64;
@@ -105,6 +112,36 @@ public interface PixelFormat {
     public static final int PIX_FMT_YUV444P9LE = 76;
     public static final int PIX_FMT_YUV444P10BE = 77;
     public static final int PIX_FMT_YUV444P10LE = 78;
-    public static final int PIX_FMT_NB = 79;
+    public static final int PIX_FMT_YUV422P9BE = 79;
+    public static final int PIX_FMT_YUV422P9LE = 80;
+    public static final int PIX_FMT_VDA_VLD = 81;
+    public static final int PIX_FMT_GBRP = 82;
+    public static final int PIX_FMT_GBRP9BE = 83;
+    public static final int PIX_FMT_GBRP9LE = 84;
+    public static final int PIX_FMT_GBRP10BE = 85;
+    public static final int PIX_FMT_GBRP10LE = 86;
+    public static final int PIX_FMT_GBRP16BE = 87;
+    public static final int PIX_FMT_GBRP16LE = 88;
+    public static final int PIX_FMT_YUVA422P = 89;
+    public static final int PIX_FMT_YUVA444P = 90;
+    public static final int PIX_FMT_YUVA420P9BE = 91;
+    public static final int PIX_FMT_YUVA420P9LE = 92;
+    public static final int PIX_FMT_YUVA422P9BE = 93;
+    public static final int PIX_FMT_YUVA422P9LE = 94;
+    public static final int PIX_FMT_YUVA444P9BE = 95;
+    public static final int PIX_FMT_YUVA444P9LE = 96;
+    public static final int PIX_FMT_YUVA420P10BE = 97;
+    public static final int PIX_FMT_YUVA420P10LE = 98;
+    public static final int PIX_FMT_YUVA422P10BE = 99;
+    public static final int PIX_FMT_YUVA422P10LE = 100;
+    public static final int PIX_FMT_YUVA444P10BE = 101;
+    public static final int PIX_FMT_YUVA444P10LE = 102;
+    public static final int PIX_FMT_YUVA420P16BE = 103;
+    public static final int PIX_FMT_YUVA420P16LE = 104;
+    public static final int PIX_FMT_YUVA422P16BE = 105;
+    public static final int PIX_FMT_YUVA422P16LE = 106;
+    public static final int PIX_FMT_YUVA444P16BE = 107;
+    public static final int PIX_FMT_YUVA444P16LE = 108;
+    public static final int PIX_FMT_NB = 109;
     
 }

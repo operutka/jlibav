@@ -49,7 +49,7 @@ public final class AVUtilLibrary implements ILibrary {
 
     public static final String LIB_NAME = BridJ.getNativeLibraryName(Lib.class);
     public static final int MIN_MAJOR_VERSION = 51;
-    public static final int MAX_MAJOR_VERSION = 51;
+    public static final int MAX_MAJOR_VERSION = 52;
     
     private int majorVersion;
     private int minorVersion;
@@ -560,6 +560,7 @@ public final class AVUtilLibrary implements ILibrary {
         public static native int av_dict_set(Pointer<Pointer<?>> pm, Pointer<Byte> key, Pointer<Byte> value, int flags);
         public static native void av_dict_copy(Pointer<Pointer<?>> dst, Pointer<?> src, int flags);
         public static native void av_dict_free(Pointer<Pointer<?>> m);
+        
         public static native int av_get_bytes_per_sample(int sample_fmt);
         
         @Optional

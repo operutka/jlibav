@@ -100,7 +100,7 @@ public class VideoPane extends JComponent implements IFrameConsumer {
         srcWidth = 0;
         srcHeight = 0;
         srcPixelFormat = PixelFormat.PIX_FMT_YUV420P;
-        scalingAlgorithm = SWScaleLibrary.SWS_FAST_BILINEAR;
+        scalingAlgorithm = SWScaleLibrary.SWS_BICUBIC;
         dstWidth = 0;
         dstHeight = 0;
         dstPixelFormat = PixelFormat.PIX_FMT_BGRA;

@@ -30,6 +30,7 @@ import org.libav.avformat.IFormatContextWrapper;
 import org.libav.avformat.IOutputFormatWrapper;
 import org.libav.avformat.IStreamWrapper;
 import org.libav.avformat.bridge.AVFormatLibrary;
+import org.libav.avutil.bridge.AVChannelLayout;
 import org.libav.avutil.bridge.AVMediaType;
 import org.libav.avutil.bridge.PixelFormat;
 import org.libav.bridge.LibraryManager;
@@ -187,6 +188,7 @@ public class DefaultMediaWriter implements IMediaWriter {
         cc.setSampleRate(sampleRate);
         cc.setSampleFormat(sampleFormat);
         cc.setChannels(channelCount);
+        cc.setChannelLayout(AVChannelLayout.getDefaultChannelLayout(channelCount));
         
         IOutputFormatWrapper ofw = formatContext.getOutputFormat();
         if ((ofw.getFlags() & AVFormatLibrary.AVFMT_GLOBALHEADER) != 0)

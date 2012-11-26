@@ -43,6 +43,14 @@ public class PacketPool {
     }
     
     /**
+     * Release all resources held by this pool.
+     */
+    public synchronized void dispose() {
+        while (!recycle.isEmpty())
+            recycle.poll().dispose();
+    }
+    
+    /**
      * Get an empty packet (packet with a null data pointer).
      * 
      * @return packet wrapper
@@ -83,6 +91,9 @@ public class PacketPool {
         if (pData != null)
             pData.copyTo(result.getData(), packet.getSize());
         
+        result.setSideData(null);
+        result.setSideDataElems(0);
+        
         result.clearWrapperCache();
         
         return result;
@@ -112,6 +123,20 @@ public class PacketPool {
         public PooledPacket(IPacketWrapper internal) {
             this.internal = internal;
             this.bufferSize = internal.getSize();
+        }
+
+        @Override
+        protected void finalize() throws Throwable {
+            dispose();
+            super.finalize();
+        }
+        
+        public synchronized void dispose() {
+            if (internal == null)
+                return;
+            
+            internal.free();
+            internal = null;
         }
 
         @Override
@@ -224,6 +249,26 @@ public class PacketPool {
         @Override
         public void setPosition(long position) {
             internal.setPosition(position);
+        }
+
+        @Override
+        public Pointer<?> getSideData() {
+            return internal.getSideData();
+        }
+
+        @Override
+        public void setSideData(Pointer<?> sideData) {
+            internal.setSideData(sideData);
+        }
+
+        @Override
+        public int getSideDataElems() {
+            return internal.getSideDataElems();
+        }
+
+        @Override
+        public void setSideDataElems(int sideDataElems) {
+            internal.setSideDataElems(sideDataElems);
         }
 
         @Override

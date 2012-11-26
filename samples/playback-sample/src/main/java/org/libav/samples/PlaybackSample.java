@@ -36,10 +36,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import org.libav.DefaultMediaPlayer;
-import org.libav.IMediaPlayer;
-import org.libav.IMediaReader;
-import org.libav.LibavException;
+import org.libav.*;
 import org.libav.audio.Frame2AudioFrameAdapter;
 import org.libav.audio.PlaybackMixer;
 import org.libav.audio.SampleInputStream;
@@ -47,9 +44,11 @@ import org.libav.avcodec.ICodecContextWrapper;
 import org.libav.avformat.IChapterWrapper;
 import org.libav.avformat.IFormatContextWrapper;
 import org.libav.avformat.IStreamWrapper;
+import org.libav.avresample.bridge.AVResampleLibrary;
 import org.libav.avutil.IDictionaryWrapper;
 import org.libav.avutil.bridge.AVChannelLayout;
 import org.libav.avutil.bridge.AVSampleFormat;
+import org.libav.bridge.LibraryManager;
 import org.libav.data.IFrameConsumer;
 import org.libav.util.swing.VideoPane;
 
@@ -60,6 +59,8 @@ import org.libav.util.swing.VideoPane;
  */
 public class PlaybackSample extends javax.swing.JFrame {
 
+    private static final AVResampleLibrary resampleLib = LibraryManager.getInstance().getAVResampleLibrary();
+    
     private DefaultMediaPlayer player;
     private VideoPane videoPane;
     private SampleInputStream sis;
@@ -120,63 +121,18 @@ public class PlaybackSample extends javax.swing.JFrame {
      */
     public void open(String url) {
         try {
-            if (player != null) // close the player
-                player.close();
-            if (audioMixer != null) { // remove audio stream from the mixer
-                audioMixer.removeInputStream(audioStream);
-                PlaybackMixer.closeMixer(audioStream.getFormat());
-                audioMixer = null;
-                audioStream = null;
-            }
-            sliderSeek.setValue(0);
+            closeAll();
             if (url == null)
                 return;
+            
+            sliderSeek.setValue(0);
+            
             player = new DefaultMediaPlayer(url); // create a new media player
             IMediaReader mr = player.getMediaReader();
+            
             dumpMedia(mr);
-            
-            // set the video pane as a video frame consumer for the first video
-            // stream if there is at least one video stream
-            if (mr.getVideoStreamCount() > 0) {
-                videoPane.setVisible(true);
-                videoPane.clear();
-                player.setVideoStreamDecodingEnabled(0, true);
-                player.getVideoStreamDecoder(0).addFrameConsumer(scale());
-            } else // hide the video pane if there is no video stream
-                videoPane.setVisible(false);
-            
-            // add the first audio stream to the mixer if there is at least one
-            // audio stream
-            if (mr.getAudioStreamCount() > 0) {
-                ICodecContextWrapper cc = player.getAudioStreamDecoder(0).getCodecContext();
-                sis = new SampleInputStream(cc.getSampleRate() * AVSampleFormat.getBytesPerSample(cc.getSampleFormat()) * 2, true);
-                AudioFormat.Encoding senc = null;
-                if (AVSampleFormat.isSigned(cc.getSampleFormat()))
-                    senc = AudioFormat.Encoding.PCM_SIGNED;
-                else if (AVSampleFormat.isUnsigned(cc.getSampleFormat()))
-                    senc = AudioFormat.Encoding.PCM_UNSIGNED;
-                audioStream = new AudioInputStream(sis, new AudioFormat(senc, 
-                        cc.getSampleRate(), AVSampleFormat.getBitsPerSample(cc.getSampleFormat()), 2, 
-                        AVSampleFormat.getBytesPerSample(cc.getSampleFormat()) * 2, cc.getSampleRate(), 
-                        ByteOrder.BIG_ENDIAN.equals(ByteOrder.nativeOrder())), -1);
-                if (resampler != null)
-                    resampler.dispose();
-                
-                try {
-                    resampler = new Frame2AudioFrameAdapter(
-                            cc.getChannelLayout() == 0 ? AVChannelLayout.getDefaultChannelLayout(cc.getChannels()) : cc.getChannelLayout(), 
-                            AVChannelLayout.AV_CH_LAYOUT_STEREO, cc.getSampleRate(), cc.getSampleRate(), cc.getSampleFormat(), cc.getSampleFormat());
-                    player.getAudioStreamDecoder(0).addFrameConsumer(resampler);
-                    player.setAudioStreamDecodingEnabled(0, true);
-                    audioMixer = PlaybackMixer.getMixer(audioStream.getFormat());
-                    resampler.addAudioFrameConsumer(sis);
-                    audioMixer.addInputStream(audioStream);
-                    audioMixer.setStreamVolume(audioStream, getVolume());
-                    audioMixer.play();
-                } catch (Exception ex) {
-                    Logger.getLogger(PlaybackSample.class.getName()).log(Level.WARNING, "unable to play audio", ex);
-                }
-            }
+            openVideoStream(player);
+            openAudioStream(player);
             
             sliderSeek.setEnabled(mr.isSeekable());
             if (mr.isSeekable()) {
@@ -199,6 +155,101 @@ public class PlaybackSample extends javax.swing.JFrame {
             buttonPlay.setEnabled(false);
             buttonStop.setEnabled(false);
         }
+    }
+    
+    private void closeAll() throws LibavException {
+        if (player != null) { // close the player
+            player.close();
+            player = null;
+        }
+        if (audioMixer != null) { // remove audio stream from the mixer
+            audioMixer.removeInputStream(audioStream);
+            PlaybackMixer.closeMixer(audioStream.getFormat());
+            audioMixer = null;
+            audioStream = null;
+        }
+        if (resampler != null) {
+            resampler.dispose();
+            resampler = null;
+        }
+    }
+    
+    private void openVideoStream(IMediaPlayer player) throws LibavException {
+        IMediaReader reader = player.getMediaReader();
+        
+        // set the video pane as a video frame consumer for the first video
+        // stream if there is at least one video stream
+        if (reader.getVideoStreamCount() > 0) {
+            videoPane.setVisible(true);
+            videoPane.clear();
+            player.setVideoStreamDecodingEnabled(0, true);
+            player.getVideoStreamDecoder(0).addFrameConsumer(scale());
+        } else // hide the video pane if there is no video stream
+            videoPane.setVisible(false);
+    }
+    
+    private void openAudioStream(IMediaPlayer player) throws LibavException {
+        // add the first audio stream to the mixer if there is at least one
+        // audio stream
+        IMediaReader reader = player.getMediaReader();
+        if (reader.getAudioStreamCount() <= 0)
+            return;
+        
+        if (resampleLib == null)
+            openAudioStreamLegacy(player, 0);
+        else
+            openAudioStreamResampled(player, 0, AVChannelLayout.AV_CH_LAYOUT_STEREO, AVSampleFormat.AV_SAMPLE_FMT_S16);
+    }
+    
+    private void openAudioStreamResampled(IMediaPlayer player, int streamIndex, long channelLayout, int sampleFormat) throws LibavException {
+        IDecoder audioDecoder = player.getAudioStreamDecoder(streamIndex);
+        ICodecContextWrapper cc = audioDecoder.getCodecContext();
+        
+        int sampleRate = cc.getSampleRate();
+        int bytesPerSample = AVSampleFormat.getBytesPerSample(sampleFormat);
+        int channelCount = AVChannelLayout.getChannelCount(channelLayout);
+        long srcChannelLayout = cc.getChannelLayout();
+        AudioFormat.Encoding encoding;
+        
+        if (srcChannelLayout == 0)
+            srcChannelLayout = AVChannelLayout.getDefaultChannelLayout(cc.getChannels());
+        
+        try {
+            if (AVSampleFormat.isPlanar(sampleFormat) || AVSampleFormat.isReal(sampleFormat))
+                throw new LibavException("unsupported output sample format");
+            else if (AVSampleFormat.isSigned(sampleFormat))
+                encoding = AudioFormat.Encoding.PCM_SIGNED;
+            else
+                encoding = AudioFormat.Encoding.PCM_UNSIGNED;
+
+            sis = new SampleInputStream(sampleRate * bytesPerSample * channelCount, true);
+            audioStream = new AudioInputStream(sis, new AudioFormat(encoding, sampleRate, 
+                    bytesPerSample * 8, channelCount, bytesPerSample * channelCount, sampleRate, 
+                    ByteOrder.BIG_ENDIAN.equals(ByteOrder.nativeOrder())), -1);
+        
+            resampler = new Frame2AudioFrameAdapter(srcChannelLayout, channelLayout, sampleRate, 
+                    sampleRate, cc.getSampleFormat(), sampleFormat);
+            audioDecoder.addFrameConsumer(resampler);
+            player.setAudioStreamDecodingEnabled(streamIndex, true);
+            audioMixer = PlaybackMixer.getMixer(audioStream.getFormat());
+            resampler.addAudioFrameConsumer(sis);
+            audioMixer.addInputStream(audioStream);
+            audioMixer.setStreamVolume(audioStream, getVolume());
+            audioMixer.play();
+        } catch (Exception ex) {
+            Logger.getLogger(PlaybackSample.class.getName()).log(Level.WARNING, "unable to play audio", ex);
+        }
+    }
+    
+    private void openAudioStreamLegacy(IMediaPlayer player, int streamIndex) throws LibavException {
+        IDecoder audioDecoder = player.getAudioStreamDecoder(streamIndex);
+        ICodecContextWrapper cc = audioDecoder.getCodecContext();
+        
+        long channelLayout = cc.getChannelLayout();
+        if (channelLayout == 0)
+            channelLayout = AVChannelLayout.getDefaultChannelLayout(cc.getChannels());
+        
+        openAudioStreamResampled(player, streamIndex, channelLayout, cc.getSampleFormat());
     }
     
     private void dumpMedia(IMediaReader mr) {

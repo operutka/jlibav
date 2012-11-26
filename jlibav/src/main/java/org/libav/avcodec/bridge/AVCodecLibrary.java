@@ -258,13 +258,27 @@ public final class AVCodecLibrary implements ILibrary {
     }
     
     /**
+     * Free the frame and any dynamically allocated objects in it,
+     * e.g. extended_data.
+     * 
+     * WARNING: this function does NOT free the data buffers themselves
+     * (it does not know how, since they might have been allocated with
+     *  a custom get_buffer()).
+     * 
+     * @param frame frame to be freed. The pointer will be set to NULL.
+     */
+    public void avcodec_free_frame(Pointer<Pointer<?>> frame) {
+        Lib.avcodec_free_frame(frame.getPeer());
+    }
+    
+    /**
      * Set the fields of the given AVFrame to default values.
      * 
      * @param pic The AVFrame of which the fields should be set to default 
      * values.
      */
     public void avcodec_get_frame_defaults(Pointer<?> pic) {
-        Lib.avcodec_get_frame_defaults(pic);
+        Lib.avcodec_get_frame_defaults(pic.getPeer());
     }
     
     /**
@@ -273,7 +287,7 @@ public final class AVCodecLibrary implements ILibrary {
      * @param pkt packet
      */
     public void av_init_packet(Pointer<?> pkt) {
-        Lib.av_init_packet(pkt);
+        Lib.av_init_packet(pkt.getPeer());
     }
     
     /**
@@ -285,7 +299,7 @@ public final class AVCodecLibrary implements ILibrary {
      * @return 0 if OK, AVERROR_xxx otherwise
      */
     public int av_new_packet(Pointer<?> pkt, int size) {
-        return Lib.av_new_packet(pkt, size);
+        return Lib.av_new_packet(pkt.getPeer(), size);
     }
     
     /**
@@ -294,7 +308,7 @@ public final class AVCodecLibrary implements ILibrary {
      * @param pkt packet to free
      */
     public void av_free_packet(Pointer<?> pkt) {
-        Lib.av_free_packet(pkt);
+        Lib.av_free_packet(pkt.getPeer());
     }
     
     /**
@@ -335,7 +349,7 @@ public final class AVCodecLibrary implements ILibrary {
      * @return zero on success, a negative value on error
      */
     public synchronized int avcodec_open(Pointer<?> avctx, Pointer<?> codec) {
-        return Lib.avcodec_open(avctx, codec);
+        return Lib.avcodec_open(avctx.getPeer(), codec.getPeer());
     }
     
     /**
@@ -358,11 +372,11 @@ public final class AVCodecLibrary implements ILibrary {
      * @return zero on success, a negative value on error
      */
     public synchronized int avcodec_open2(Pointer<?> avctx, Pointer<?> codec, Pointer<Pointer<?>> options) {
-        return Lib.avcodec_open2(avctx, codec, options);
+        return Lib.avcodec_open2(avctx.getPeer(), codec.getPeer(), options == null ? 0 : options.getPeer());
     }
     
     public synchronized int avcodec_close(Pointer<?> avctx) {
-        return Lib.avcodec_close(avctx);
+        return Lib.avcodec_close(avctx.getPeer());
     }
     
     /**
@@ -409,7 +423,7 @@ public final class AVCodecLibrary implements ILibrary {
      * bytes used or zero if no frame could be decompressed.
      */
     public int avcodec_decode_video2(Pointer<?> avctx, Pointer<?> picture, Pointer<Integer> got_picture_ptr, Pointer<?> avpkt) {
-        return Lib.avcodec_decode_video2(avctx, picture, got_picture_ptr, avpkt);
+        return Lib.avcodec_decode_video2(avctx.getPeer(), picture.getPeer(), got_picture_ptr.getPeer(), avpkt.getPeer());
     }
     
     /**
@@ -426,7 +440,7 @@ public final class AVCodecLibrary implements ILibrary {
      * number of bytes used from the output buffer.
      */
     public int avcodec_encode_video(Pointer<?> avctx, Pointer<Byte> buf, int buf_size, Pointer<?> pict) {
-        return Lib.avcodec_encode_video(avctx, buf, buf_size, pict);
+        return Lib.avcodec_encode_video(avctx.getPeer(), buf.getPeer(), buf_size, pict == null ? 0 : pict.getPeer());
     }
     
     /**
@@ -461,7 +475,7 @@ public final class AVCodecLibrary implements ILibrary {
      * @return 0 on success, negative error code on failure
      */
     public int avcodec_encode_video2(Pointer<?> avctx, Pointer<?> avpkt, Pointer<?> frame, Pointer<Integer> got_packet_ptr) {
-        return Lib.avcodec_encode_video2(avctx, avpkt, frame, got_packet_ptr);
+        return Lib.avcodec_encode_video2(avctx.getPeer(), avpkt.getPeer(), frame == null ? 0 : frame.getPeer(), got_packet_ptr.getPeer());
     }
     
     /**
@@ -512,7 +526,7 @@ public final class AVCodecLibrary implements ILibrary {
      * input AVPacket.
      */
     public int avcodec_decode_audio3(Pointer<?> avctx, Pointer<Short> samples, Pointer<Integer> frameSizePtr, Pointer<?> avpkt) {
-        return Lib.avcodec_decode_audio3(avctx, samples, frameSizePtr, avpkt);
+        return Lib.avcodec_decode_audio3(avctx.getPeer(), samples.getPeer(), frameSizePtr.getPeer(), avpkt.getPeer());
     }
     
     /**
@@ -550,7 +564,7 @@ public final class AVCodecLibrary implements ILibrary {
      * is returned.
      */
     public int avcodec_decode_audio4(Pointer<?> avctx, Pointer<?> frame, Pointer<Integer> gotFramePtr, Pointer<?> avpkt) {
-        return Lib.avcodec_decode_audio4(avctx, frame, gotFramePtr, avpkt);
+        return Lib.avcodec_decode_audio4(avctx.getPeer(), frame.getPeer(), gotFramePtr.getPeer(), avpkt.getPeer());
     }
     
     /**
@@ -575,7 +589,7 @@ public final class AVCodecLibrary implements ILibrary {
      * the number of bytes used to encode the data read from the input buffer.
      */
     public int avcodec_encode_audio(Pointer<?> avctx, Pointer<Byte> buf, int bufSize, Pointer<Short> samples) {
-        return Lib.avcodec_encode_audio(avctx, buf, bufSize, samples);
+        return Lib.avcodec_encode_audio(avctx.getPeer(), buf.getPeer(), bufSize, samples == null ? 0 : samples.getPeer());
     }
     
     /**
@@ -609,7 +623,7 @@ public final class AVCodecLibrary implements ILibrary {
      * @return 0 on success, negative error code on failure
      */
     public int avcodec_encode_audio2(Pointer<?> avctx, Pointer<?> avpkt, Pointer<?> frame, Pointer<Integer> got_packet_ptr) {
-        return Lib.avcodec_encode_audio2(avctx, avpkt, frame, got_packet_ptr);
+        return Lib.avcodec_encode_audio2(avctx.getPeer(), avpkt.getPeer(), frame == null ? 0 : frame.getPeer(), got_packet_ptr.getPeer());
     }
     
     /**
@@ -652,7 +666,7 @@ public final class AVCodecLibrary implements ILibrary {
      * @return size of the image data in bytes
      */
     public int avpicture_fill(Pointer<?> picture, Pointer<Byte> ptr, int pix_fmt, int width, int height) {
-        return Lib.avpicture_fill(picture, ptr, pix_fmt, width, height);
+        return Lib.avpicture_fill(picture.getPeer(), ptr.getPeer(), pix_fmt, width, height);
     }
     
     /**
@@ -671,7 +685,7 @@ public final class AVCodecLibrary implements ILibrary {
      * code) on error
      */
     public int avpicture_layout(Pointer<?> src, int pix_fmt, int width, int height, Pointer<Byte> dest, int dest_size) {
-        return Lib.avpicture_layout(src, pix_fmt, width, height, dest, dest_size);
+        return Lib.avpicture_layout(src.getPeer(), pix_fmt, width, height, dest.getPeer(), dest_size);
     }
     
     /**
@@ -707,7 +721,7 @@ public final class AVCodecLibrary implements ILibrary {
      * @return 0 if error
      */
     public int audio_resample(Pointer<?> s, Pointer<Byte> output, Pointer<Byte> input, int nbSamples) {
-        return Lib.audio_resample(s, output, input, nbSamples);
+        return Lib.audio_resample(s.getPeer(), output.getPeer(), input.getPeer(), nbSamples);
     }
     
     /**
@@ -717,7 +731,7 @@ public final class AVCodecLibrary implements ILibrary {
      * with av_audio_resample_init()
      */
     public void audio_resample_close(Pointer<?> s) {
-        Lib.audio_resample_close(s);
+        Lib.audio_resample_close(s.getPeer());
     }
     
     /**
@@ -737,7 +751,7 @@ public final class AVCodecLibrary implements ILibrary {
      * @return 0 on success, negative error code on failure
      */
     public int avcodec_fill_audio_frame(Pointer<?> frame, int nb_channels, int sample_fmt, Pointer<Byte> buf, int buf_size, int align) {
-        return Lib.avcodec_fill_audio_frame(frame, nb_channels, sample_fmt, buf, buf_size, align);
+        return Lib.avcodec_fill_audio_frame(frame.getPeer(), nb_channels, sample_fmt, buf.getPeer(), buf_size, align);
     }
     
     @Library("avcodec")
@@ -754,38 +768,40 @@ public final class AVCodecLibrary implements ILibrary {
         public static native Pointer<?> avcodec_find_encoder_by_name(Pointer<Byte> name);
         public static native Pointer<?> avcodec_alloc_context3(Pointer<?> codec);
         public static native Pointer<?> avcodec_alloc_frame();
-        public static native void avcodec_get_frame_defaults(Pointer<?> pic);
-        public static native void av_init_packet(Pointer<?> pkt);
-        public static native int av_new_packet(Pointer<?> pkt, int size);
-        public static native void av_free_packet(Pointer<?> pkt);
+        @Optional
+        public static native void avcodec_free_frame(@Ptr long frame);
+        public static native void avcodec_get_frame_defaults(@Ptr long pic);
+        public static native void av_init_packet(@Ptr long pkt);
+        public static native int av_new_packet(@Ptr long pkt, int size);
+        public static native void av_free_packet(@Ptr long pkt);
         public static native int av_grow_packet(@Ptr long pkt, int grow_by);
         public static native void av_shrink_packet(@Ptr long pkt, int size);
         @Optional
-	public static native int avcodec_open(Pointer<?> avctx, Pointer<?> codec);
+	public static native int avcodec_open(@Ptr long avctx, @Ptr long codec);
         @Optional
-	public static native int avcodec_open2(Pointer<?> avctx, Pointer<?> codec, Pointer<Pointer<?>> options);
-        public static native int avcodec_close(Pointer<?> avctx);
-        public static native int avcodec_decode_video2(Pointer<?> avctx, Pointer<?> picture, Pointer<Integer> got_picture_ptr, Pointer<?> avpkt);
+	public static native int avcodec_open2(@Ptr long avctx, @Ptr long codec, @Ptr long options);
+        public static native int avcodec_close(@Ptr long avctx);
+        public static native int avcodec_decode_video2(@Ptr long avctx, @Ptr long picture, @Ptr long got_picture_ptr, @Ptr long avpkt);
         @Optional
-	public static native int avcodec_encode_video(Pointer<?> avctx, Pointer<Byte> buf, int buf_size, Pointer<?> pict);
+	public static native int avcodec_encode_video(@Ptr long avctx, @Ptr long buf, int buf_size, @Ptr long pict);
         @Optional
-	public static native int avcodec_encode_video2(Pointer<?> avctx, Pointer<?> avpkt, Pointer<?> frame, Pointer<Integer> got_packet_ptr);
+	public static native int avcodec_encode_video2(@Ptr long avctx, @Ptr long avpkt, @Ptr long frame, @Ptr long got_packet_ptr);
         @Optional
-	public static native int avcodec_decode_audio3(Pointer<?> avctx, Pointer<Short> samples, Pointer<Integer> frame_size_ptr, Pointer<?> avpkt);
+	public static native int avcodec_decode_audio3(@Ptr long avctx, @Ptr long samples, @Ptr long frame_size_ptr, @Ptr long avpkt);
         @Optional
-	public static native int avcodec_decode_audio4(Pointer<?> avctx, Pointer<?> frame, Pointer<Integer> got_frame_ptr, Pointer<?> avpkt);
+	public static native int avcodec_decode_audio4(@Ptr long avctx, @Ptr long frame, @Ptr long got_frame_ptr, @Ptr long avpkt);
         @Optional
-	public static native int avcodec_encode_audio(Pointer<?> avctx, Pointer<Byte> buf, int buf_size, Pointer<Short> samples);
+	public static native int avcodec_encode_audio(@Ptr long avctx, @Ptr long buf, int buf_size, @Ptr long samples);
         @Optional
-	public static native int avcodec_encode_audio2(Pointer<?> avctx, Pointer<?> avpkt, Pointer<?> frame, Pointer<Integer> got_packet_ptr);
+	public static native int avcodec_encode_audio2(@Ptr long avctx, @Ptr long avpkt, @Ptr long frame, @Ptr long got_packet_ptr);
         public static native int avpicture_get_size(int pix_fmt, int width, int height);
-        public static native int avpicture_fill(Pointer<?> picture, Pointer<Byte> ptr, int pix_fmt, int width, int height);
-        public static native int avpicture_layout(Pointer<?> src, int pix_fmt, int width, int height, Pointer<Byte> dest, int dest_size);
+        public static native int avpicture_fill(@Ptr long picture, @Ptr long ptr, int pix_fmt, int width, int height);
+        public static native int avpicture_layout(@Ptr long src, int pix_fmt, int width, int height, @Ptr long dest, int dest_size);
         public static native Pointer<?> av_audio_resample_init(int output_channels, int input_channels, int output_rate, int input_rate, int sample_fmt_out, int sample_fmt_in, int filter_length, int log2_phase_count, int linear, double cutoff);
-        public static native int audio_resample(Pointer<?> s, Pointer<Byte> output, Pointer<Byte> input, int nb_samples);
-        public static native void audio_resample_close(Pointer<?> s);
+        public static native int audio_resample(@Ptr long s, @Ptr long output, @Ptr long input, int nb_samples);
+        public static native void audio_resample_close(@Ptr long s);
         @Optional
-        public static native int avcodec_fill_audio_frame(Pointer<?> frame, int nb_channels, int sample_fmt, Pointer<Byte> buf, int buf_size, int align);
+        public static native int avcodec_fill_audio_frame(@Ptr long frame, int nb_channels, int sample_fmt, @Ptr long buf, int buf_size, int align);
     }
     
 }

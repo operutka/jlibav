@@ -35,7 +35,14 @@ public class AVSampleFormat {
     public static final int AV_SAMPLE_FMT_S32 = 2;
     public static final int AV_SAMPLE_FMT_FLT = 3;
     public static final int AV_SAMPLE_FMT_DBL = 4;
-    public static final int AV_SAMPLE_FMT_NB = 5;
+    
+    public static final int AV_SAMPLE_FMT_U8P = 5;
+    public static final int AV_SAMPLE_FMT_S16P = 6;
+    public static final int AV_SAMPLE_FMT_S32P = 7;
+    public static final int AV_SAMPLE_FMT_FLTP = 8;
+    public static final int AV_SAMPLE_FMT_DBLP = 9;
+    
+    public static final int AV_SAMPLE_FMT_NB = 10;
     
     public static int getBytesPerSample(int sampleFormat) {
         return utilLib.av_get_bytes_per_sample(sampleFormat);
@@ -50,14 +57,19 @@ public class AVSampleFormat {
             case AV_SAMPLE_FMT_DBL:
             case AV_SAMPLE_FMT_FLT:
             case AV_SAMPLE_FMT_S16:
-            case AV_SAMPLE_FMT_S32: return true;
+            case AV_SAMPLE_FMT_S32:
+            case AV_SAMPLE_FMT_DBLP:
+            case AV_SAMPLE_FMT_FLTP:
+            case AV_SAMPLE_FMT_S16P:
+            case AV_SAMPLE_FMT_S32P: return true;
             default: return false;
         }
     }
     
     public static boolean isUnsigned(int sampleFormat) {
         switch (sampleFormat) {
-            case AV_SAMPLE_FMT_U8: return true;
+            case AV_SAMPLE_FMT_U8:
+            case AV_SAMPLE_FMT_U8P: return true;
             default: return false;
         }
     }
@@ -65,7 +77,20 @@ public class AVSampleFormat {
     public static boolean isReal(int sampleFormat) {
         switch (sampleFormat) {
             case AV_SAMPLE_FMT_DBL:
-            case AV_SAMPLE_FMT_FLT: return true;
+            case AV_SAMPLE_FMT_FLT:
+            case AV_SAMPLE_FMT_DBLP:
+            case AV_SAMPLE_FMT_FLTP: return true;
+            default: return false;
+        }
+    }
+    
+    public static boolean isPlanar(int sampleFormat) {
+        switch (sampleFormat) {
+            case AV_SAMPLE_FMT_DBLP:
+            case AV_SAMPLE_FMT_FLTP:
+            case AV_SAMPLE_FMT_U8P:
+            case AV_SAMPLE_FMT_S16P:
+            case AV_SAMPLE_FMT_S32P: return true;
             default: return false;
         }
     }

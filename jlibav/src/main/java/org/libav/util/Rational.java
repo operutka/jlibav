@@ -216,10 +216,15 @@ public class Rational extends Number implements Comparable<Rational> {
             a = -a;
         if (b < 0)
             b = -b;
-        if (b == 0)
-            return a;
-        else
-            return gcd(b, a % b);
+        
+        long tmp;
+        while (b > 0) {
+            tmp = a % b;
+            a = b;
+            b = tmp;
+        }
+        
+        return a;
     }
     
 }

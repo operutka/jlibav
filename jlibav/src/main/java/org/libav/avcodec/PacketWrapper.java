@@ -203,6 +203,34 @@ public class PacketWrapper extends AbstractPacketWrapper {
     }
 
     @Override
+    public Pointer<?> getSideData() {
+        if (sideData == null)
+            sideData = packet.side_data();
+        
+        return sideData;
+    }
+
+    @Override
+    public void setSideData(Pointer<?> sideData) {
+        this.sideData = sideData;
+        packet.side_data(sideData == null ? null : sideData.as(AVPacket.SideData.class));
+    }
+
+    @Override
+    public int getSideDataElems() {
+        if (sideDataElems == null)
+            sideDataElems = packet.side_data_elems();
+        
+        return sideDataElems;
+    }
+
+    @Override
+    public void setSideDataElems(int sideDataElems) {
+        this.sideDataElems = sideDataElems;
+        packet.side_data_elems(sideDataElems);
+    }
+
+    @Override
     public PacketWrapper clone() {
         PacketWrapper result = new PacketWrapper(new AVPacket());
         int res = codecLib.av_new_packet(result.getPointer(), getSize());
@@ -216,6 +244,9 @@ public class PacketWrapper extends AbstractPacketWrapper {
         pData = getData();
         if (pData != null)
             pData.copyTo(result.getData(), getSize());
+        
+        result.setSideData(null);
+        result.setSideDataElems(0);
         
         return result;
     }

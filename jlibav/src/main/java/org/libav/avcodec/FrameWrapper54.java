@@ -33,6 +33,8 @@ public class FrameWrapper54 extends AbstractFrameWrapper {
     
     private static final AVCodecLibrary codecLib;
     private static final AVUtilLibrary utilLib;
+    
+    private static final IFreeFrame freeFrame;
     private static final int fillFrameAlignment;
     
     static {
@@ -45,6 +47,11 @@ public class FrameWrapper54 extends AbstractFrameWrapper {
             fillFrameAlignment = 0;
         else
             fillFrameAlignment = 1;
+        
+        if (codecLib.functionExists("avcodec_free_frame"))
+            freeFrame = new FreeFrame2();
+        else
+            freeFrame = new FreeFrame();
     }
     
     private AVFrame54 frame;
@@ -72,16 +79,7 @@ public class FrameWrapper54 extends AbstractFrameWrapper {
     
     @Override
     public void free() {
-        if (frame == null)
-            return;
-        
-        if (toBeFreed != null) {
-            for (Pointer p : toBeFreed)
-                utilLib.av_free(p);
-        }
-        utilLib.av_free(getPointer());
-        frame = null;
-        toBeFreed = null;
+        freeFrame.free(this);
     }
     
     @Override
@@ -254,6 +252,46 @@ public class FrameWrapper54 extends AbstractFrameWrapper {
         
         frame.nb_samples(nbSamples);
         this.nbSamples = nbSamples;
+    }
+    
+    private static interface IFreeFrame {
+        void free(FrameWrapper54 frame);
+    }
+    
+    private static class FreeFrame implements IFreeFrame {
+        @Override
+        public void free(FrameWrapper54 frame) {
+            if (frame.frame == null)
+                return;
+
+            if (frame.toBeFreed != null) {
+                for (Pointer p : frame.toBeFreed)
+                    utilLib.av_free(p);
+            }
+            utilLib.av_free(frame.getPointer());
+            
+            frame.frame = null;
+            frame.toBeFreed = null;
+        }
+    }
+    
+    private static class FreeFrame2 implements IFreeFrame {
+        @Override
+        public void free(FrameWrapper54 frame) {
+            if (frame.frame == null)
+                return;
+
+            if (frame.toBeFreed != null) {
+                for (Pointer p : frame.toBeFreed)
+                    utilLib.av_free(p);
+            }
+            Pointer<Pointer<?>> tmp = Pointer.allocatePointer();
+            tmp.set(frame.getPointer());
+            codecLib.avcodec_free_frame(tmp);
+            
+            frame.frame = null;
+            frame.toBeFreed = null;
+        }
     }
     
     public static FrameWrapper54 allocatePicture(int pixelFormat, int width, int height) throws LibavException {

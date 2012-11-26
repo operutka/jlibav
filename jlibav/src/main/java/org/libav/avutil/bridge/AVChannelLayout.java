@@ -61,6 +61,7 @@ public class AVChannelLayout {
     public static final long AV_CH_WIDE_RIGHT = 0x0000000100000000l;
     public static final long AV_CH_SURROUND_DIRECT_LEFT = 0x0000000200000000l;
     public static final long AV_CH_SURROUND_DIRECT_RIGHT = 0x0000000400000000l;
+    public static final long AV_CH_LOW_FREQUENCY_2 = 0x0000000800000000l;
 
     public static final long AV_CH_LAYOUT_NATIVE = 0x8000000000000000l;
 
