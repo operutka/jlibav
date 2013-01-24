@@ -44,20 +44,11 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-  <!-- the following repository will be removed after BridJ 0.6.2 release -->
-  <repositories>
-    <repository>
-      <id>sonatype</id>
-      <name>Sonatype OSS Snapshots Repository</name>
-      <url>http://oss.sonatype.org/content/groups/public</url>
-    </repository>
-  </repositories>
-
   <dependencies>
     <dependency>
       <groupId>com.nativelibs4java</groupId>
       <artifactId>bridj</artifactId>
-      <version>0.6.2-SNAPSHOT</version>
+      <version>0.6.2</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
