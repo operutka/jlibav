@@ -19,8 +19,11 @@ package org.libav.samples;
 
 import java.net.ServerSocket;
 import org.libav.*;
+import org.libav.audio.AudioFrameResampler;
 import org.libav.avcodec.CodecWrapperFactory;
 import org.libav.avcodec.ICodecContextWrapper;
+import org.libav.avutil.bridge.AVChannelLayout;
+import org.libav.avutil.bridge.AVSampleFormat;
 import org.libav.net.Server;
 import org.libav.net.rtsp.*;
 import org.libav.video.FrameScaler;
@@ -42,14 +45,16 @@ public class RtspSample {
         IMediaReader mr = mp.getMediaReader();
         
         IDecoder dec;
-        FrameScaler scaler;
+        ICodecContextWrapper cc;
+        FrameScaler scaler = null;
+        AudioFrameResampler resampler = null;
         
         // publish a new multimedia stream at the RTSP server
         SimpleAggregateMediaStream ams = new SimpleAggregateMediaStream();
         if (mr.getVideoStreamCount() > 0) {
             mp.setVideoStreamDecodingEnabled(0, true);
             dec = mp.getVideoStreamDecoder(0);
-            ICodecContextWrapper cc = dec.getCodecContext();
+            cc = dec.getCodecContext();
             VideoTranscodeStream vts = new VideoTranscodeStream(new VideoStreamWriterFactory(cc));
             scaler = new FrameScaler(cc.getWidth(), cc.getHeight(), cc.getPixelFormat(), cc.getWidth(), cc.getHeight(), cc.getPixelFormat());
             dec.addFrameConsumer(scaler);
@@ -59,8 +64,14 @@ public class RtspSample {
         if (mr.getAudioStreamCount() > 0) {
             mp.setAudioStreamDecodingEnabled(0, true);
             dec = mp.getAudioStreamDecoder(0);
-            AudioTranscodeStream ats = new AudioTranscodeStream(new AudioStreamWriterFactory(dec.getCodecContext()));
-            dec.addFrameConsumer(ats);
+            cc = dec.getCodecContext();
+            AudioTranscodeStream ats = new AudioTranscodeStream(new AudioStreamWriterFactory(CodecWrapperFactory.CODEC_ID_MP2, cc.getChannels(), 48000, AVSampleFormat.AV_SAMPLE_FMT_S16));
+            long channelLayout = cc.getChannelLayout();
+            if (channelLayout == 0)
+                channelLayout = AVChannelLayout.getDefaultChannelLayout(cc.getChannels());
+            resampler = new AudioFrameResampler(channelLayout, channelLayout, cc.getSampleRate(), 48000, cc.getSampleFormat(), AVSampleFormat.AV_SAMPLE_FMT_S16);
+            dec.addFrameConsumer(resampler);
+            resampler.addFrameConsumer(ats);
             ams.add(ats);
         }
         rtspServer.addMediaStream("/pokus.sdp", ams);
@@ -71,6 +82,11 @@ public class RtspSample {
         mp.play(); // start playback of our multimedia file/stream
         mp.join(); // wait until the playback stops
         s.stopListening(); // stop server
+        
+        if (resampler != null)
+            resampler.dispose();
+        if (scaler != null)
+            scaler.dispose();
     }
     
     /**
@@ -98,19 +114,21 @@ public class RtspSample {
      * Factory for client audio streams.
      */
     private static class AudioStreamWriterFactory implements IStreamWriterFactory {
+        private int codecId;
         private int channels;
         private int sampleRate;
         private int sampleFormat;
 
-        public AudioStreamWriterFactory(ICodecContextWrapper decoderContext) {
-            this.channels = decoderContext.getChannels();
-            this.sampleFormat = decoderContext.getSampleFormat();
-            this.sampleRate = decoderContext.getSampleRate();
+        public AudioStreamWriterFactory(int codecId, int channels, int sampleRate, int sampleFormat) {
+            this.codecId = codecId;
+            this.channels = channels;
+            this.sampleRate = sampleRate;
+            this.sampleFormat = sampleFormat;
         }
         
         @Override
         public int createWriter(IMediaWriter mediaWriter) throws LibavException {
-            return mediaWriter.addAudioStream(CodecWrapperFactory.CODEC_ID_MP2, sampleRate, sampleFormat, channels);
+            return mediaWriter.addAudioStream(codecId, sampleRate, sampleFormat, channels);
         }
     }
     
