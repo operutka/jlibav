@@ -9,9 +9,7 @@
     <version>0.2-SNAPSHOT</version>
   </parent>
 
-  <groupId>com.google.code.jlibav</groupId>
   <artifactId>jlibav</artifactId>
-  <version>0.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>jlibav</name>
