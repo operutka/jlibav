@@ -15,5 +15,6 @@
     <module>playback-sample</module>
     <module>rtsp-sample</module>
     <module>transcode-sample</module>
+    <module>quick-start-01</module>
   </modules>
 </project>
