@@ -6,10 +6,11 @@
   <parent>
     <groupId>com.google.code.jlibav</groupId>
     <artifactId>samples</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.3</version>
   </parent>
 
   <artifactId>transcode-sample</artifactId>
+  <version>${project.version}</version>
   <packaging>jar</packaging>
 
   <name>transcode-sample</name>
