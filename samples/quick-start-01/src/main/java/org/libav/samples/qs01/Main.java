@@ -258,7 +258,7 @@ public class Main {
      * @param codecContext codec context
      */
     private static void printMiscCodecInfo(String prefix, ICodecContextWrapper codecContext) {
-        String codecName = getCodecName(codecContext.getCodecId());;
+        String codecName = getCodecName(codecContext.getCodecId());
         System.out.printf("%smiscellaneous codec %s\n", prefix, codecName);
     }
     

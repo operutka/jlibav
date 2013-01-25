@@ -16,5 +16,6 @@
     <module>rtsp-sample</module>
     <module>transcode-sample</module>
     <module>quick-start-01</module>
+    <module>quick-start-02</module>
   </modules>
 </project>
