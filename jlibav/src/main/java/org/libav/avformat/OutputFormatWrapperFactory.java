@@ -17,6 +17,7 @@
  */
 package org.libav.avformat;
 
+import java.util.Iterator;
 import org.bridj.Pointer;
 import org.libav.avformat.bridge.AVFormatLibrary;
 import org.libav.avformat.bridge.AVOutputFormat53;
@@ -28,7 +29,7 @@ import org.libav.bridge.LibraryManager;
  * 
  * @author Ondrej Perutka
  */
-public class OutputFormatWrapperFactory {
+public class OutputFormatWrapperFactory implements Iterable<IOutputFormatWrapper> {
     
     private static final AVFormatLibrary formatLib;
     private static final OutputFormatWrapperFactory instance;
@@ -74,12 +75,68 @@ public class OutputFormatWrapperFactory {
     }
     
     /**
+     * Try to guess output format according to the given format short name,
+     * file name and/or mime type.
+     * 
+     * @param shortName format short name
+     * @param fileName file name
+     * @param mimeType mime type
+     * @return output format or null
+     */
+    public IOutputFormatWrapper guessFormat(String shortName, String fileName, String mimeType) {
+        switch (formatLib.getMajorVersion()) {
+            case 53: return OutputFormatWrapper53.guessFormat(shortName, fileName, mimeType);
+            case 54: return OutputFormatWrapper54.guessFormat(shortName, fileName, mimeType);
+        }
+        
+        throw new UnsatisfiedLinkError("unsupported version of the libavformat");
+    }
+    
+    @Override
+    public Iterator<IOutputFormatWrapper> iterator() {
+        return new OutputFormatIterator();
+    }
+    
+    /**
      * Get instance of this factory.
      * 
      * @return instance of this factory
      */
     public static OutputFormatWrapperFactory getInstance() {
         return instance;
+    }
+    
+    /**
+     * Iterator to probe all available output formats.
+     */
+    private class OutputFormatIterator implements Iterator<IOutputFormatWrapper> {
+        private Pointer<?> current;
+        private boolean last;
+
+        public OutputFormatIterator() {
+            current = null;
+            last = false;
+        }
+        
+        @Override
+        public boolean hasNext() {
+            return !last && formatLib.av_iformat_next(current) != null;
+        }
+
+        @Override
+        public IOutputFormatWrapper next() {
+            current = formatLib.av_iformat_next(current);
+            if (current != null)
+                return wrap(current);
+            
+            last = true;
+            return null;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("unsupported method");
+        }
     }
     
 }

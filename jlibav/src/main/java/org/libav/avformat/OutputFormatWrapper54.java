@@ -17,8 +17,11 @@
  */
 package org.libav.avformat;
 
+import java.nio.charset.Charset;
 import org.bridj.Pointer;
+import org.libav.avformat.bridge.AVFormatLibrary;
 import org.libav.avformat.bridge.AVOutputFormat54;
+import org.libav.bridge.LibraryManager;
 
 /**
  * Wrapper class for the AVOutputFormat54.
@@ -26,6 +29,8 @@ import org.libav.avformat.bridge.AVOutputFormat54;
  * @author Ondrej Perutka
  */
 public class OutputFormatWrapper54 extends AbstractOutputFormatWrapper {
+    
+    private static final AVFormatLibrary formatLib = LibraryManager.getInstance().getAVFormatLibrary();
     
     private AVOutputFormat54 format;
     
@@ -65,6 +70,27 @@ public class OutputFormatWrapper54 extends AbstractOutputFormatWrapper {
     public void setFlags(int flags) {
         this.flags = flags;
         format.flags(flags);
+    }
+    
+    public static OutputFormatWrapper54 guessFormat(String shortName, String fileName, String mimeType) {
+        Charset utf8 = Charset.forName("UTF-8");
+        
+        Pointer<Byte> pShortName = null;
+        Pointer<Byte> pFileName = null;
+        Pointer<Byte> pMimeType = null;
+        
+        if (shortName != null)
+            pShortName = Pointer.pointerToString(shortName, Pointer.StringType.C, utf8).as(Byte.class);
+        if (fileName != null)
+            pFileName = Pointer.pointerToString(fileName, Pointer.StringType.C, utf8).as(Byte.class);
+        if (mimeType != null)
+            pMimeType = Pointer.pointerToString(mimeType, Pointer.StringType.C, utf8).as(Byte.class);
+        
+        Pointer result = formatLib.av_guess_format(pShortName, pFileName, pMimeType);
+        if (result == null)
+            return null;
+        
+        return new OutputFormatWrapper54(new AVOutputFormat54(result));
     }
     
 }

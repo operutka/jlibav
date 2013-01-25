@@ -17,6 +17,7 @@
  */
 package org.libav.avformat;
 
+import java.util.Iterator;
 import org.bridj.Pointer;
 import org.libav.avformat.bridge.AVFormatLibrary;
 import org.libav.avformat.bridge.AVInputFormat53;
@@ -28,7 +29,7 @@ import org.libav.bridge.LibraryManager;
  * 
  * @author Ondrej Perutka
  */
-public class InputFormatWrapperFactory {
+public class InputFormatWrapperFactory implements Iterable<IInputFormatWrapper> {
     
     private static final AVFormatLibrary formatLib;
     private static final InputFormatWrapperFactory instance;
@@ -74,12 +75,65 @@ public class InputFormatWrapperFactory {
     }
     
     /**
+     * Find input format according to its short name.
+     * 
+     * @param shortName input format short name
+     * @return input format or null
+     */
+    public IInputFormatWrapper find(String shortName) {
+        switch (formatLib.getMajorVersion()) {
+            case 53: return InputFormatWrapper53.find(shortName);
+            case 54: return InputFormatWrapper54.find(shortName);
+        }
+        
+        throw new UnsatisfiedLinkError("unsupported version of the libavformat");
+    }
+    
+    @Override
+    public Iterator<IInputFormatWrapper> iterator() {
+        return new InputFormatIterator();
+    }
+    
+    /**
      * Get instance of this factory.
      * 
      * @return instance of this factory
      */
     public static InputFormatWrapperFactory getInstance() {
         return instance;
+    }
+    
+    /**
+     * Iterator to probe all available input formats.
+     */
+    private class InputFormatIterator implements Iterator<IInputFormatWrapper> {
+        private Pointer<?> current;
+        private boolean last;
+
+        public InputFormatIterator() {
+            current = null;
+            last = false;
+        }
+        
+        @Override
+        public boolean hasNext() {
+            return !last && formatLib.av_iformat_next(current) != null;
+        }
+
+        @Override
+        public IInputFormatWrapper next() {
+            current = formatLib.av_iformat_next(current);
+            if (current != null)
+                return wrap(current);
+            
+            last = true;
+            return null;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("unsupported method");
+        }
     }
     
 }

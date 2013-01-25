@@ -17,8 +17,11 @@
  */
 package org.libav.avformat;
 
+import java.nio.charset.Charset;
 import org.bridj.Pointer;
+import org.libav.avformat.bridge.AVFormatLibrary;
 import org.libav.avformat.bridge.AVInputFormat54;
+import org.libav.bridge.LibraryManager;
 
 /**
  * Wrapper class for the AVInputFormat54.
@@ -26,6 +29,8 @@ import org.libav.avformat.bridge.AVInputFormat54;
  * @author Ondrej Perutka
  */
 public class InputFormatWrapper54 extends AbstractInputFormatWrapper {
+    
+    private static final AVFormatLibrary formatLib = LibraryManager.getInstance().getAVFormatLibrary();
     
     private AVInputFormat54 format;
 
@@ -66,6 +71,18 @@ public class InputFormatWrapper54 extends AbstractInputFormatWrapper {
     public void setFlags(int flags) {
         format.flags(flags);
         this.flags = flags;
+    }
+    
+    public static InputFormatWrapper54 find(String shortName) {
+        if (shortName == null)
+            return null;
+        
+        Pointer<Byte> pShortName = Pointer.pointerToString(shortName, Pointer.StringType.C, Charset.forName("UTF-8")).as(Byte.class);
+        Pointer<?> result = formatLib.av_find_input_format(pShortName);
+        if (result == null)
+            return null;
+        
+        return new InputFormatWrapper54(new AVInputFormat54(result));
     }
     
 }

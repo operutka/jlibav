@@ -91,6 +91,40 @@ public class FormatContextWrapperFactory {
     }
     
     /**
+     * Open media stream using the given input format.
+     * 
+     * @param url a media URL
+     * @param inputFormat input format short name
+     * @return format context wrapper
+     * @throws LibavException if an error occurs while opening media
+     */
+    public IFormatContextWrapper openMedia(String url, String inputFormat) throws LibavException {
+        switch (formatLib.getMajorVersion()) {
+            case 53: return FormatContextWrapper53.openMedia(url, inputFormat);
+            case 54: return FormatContextWrapper54.openMedia(url, inputFormat);
+        }
+        
+        throw new UnsatisfiedLinkError("unsupported version of the libavformat");
+    }
+    
+    /**
+     * Open media stream using the given input format.
+     * 
+     * @param url a media URL
+     * @param inputFormat input format
+     * @return format context wrapper
+     * @throws LibavException if an error occurs while opening media
+     */
+    public IFormatContextWrapper openMedia(String url, IInputFormatWrapper inputFormat) throws LibavException {
+        switch (formatLib.getMajorVersion()) {
+            case 53: return FormatContextWrapper53.openMedia(url, inputFormat);
+            case 54: return FormatContextWrapper54.openMedia(url, inputFormat);
+        }
+        
+        throw new UnsatisfiedLinkError("unsupported version of the libavformat");
+    }
+    
+    /**
      * Create a new media stream.
      * 
      * @param url a media URL

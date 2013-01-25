@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import org.libav.audio.AudioFrameDecoder;
 import org.libav.avcodec.IFrameWrapper;
 import org.libav.avformat.IFormatContextWrapper;
+import org.libav.avformat.IInputFormatWrapper;
 import org.libav.avformat.IStreamWrapper;
 import org.libav.data.IPacketConsumer;
 import org.libav.video.VideoFrameDecoder;
@@ -68,6 +69,62 @@ public class DefaultMediaPlayer implements IMediaPlayer {
      */
     public DefaultMediaPlayer(String url, boolean liveStream) throws LibavException {
         this(new DefaultMediaReader(url), liveStream);
+    }
+    
+    /**
+     * Create a new media player and open the given media URL using the default
+     * media decoder and forcing the input format.
+     * 
+     * @param url a media URL
+     * @param inputFormat input format short name
+     * @throws LibavException if an error occurs while opening or player 
+     * initialization
+     */
+    public DefaultMediaPlayer(String url, String inputFormat) throws LibavException {
+        this(url, inputFormat, isUrlLiveStream(url));
+    }
+    
+    /**
+     * Create a new media player, open the given media URL using the default
+     * media decoder and forcing the input format and set the live stream flag.
+     * 
+     * @param url a media URL
+     * @param inputFormat input format short name
+     * @param liveStream live stream flag; it changes time synchronization 
+     * settings to satisfy live stream needs
+     * @throws LibavException if an error occurs while opening or player 
+     * initialization
+     */
+    public DefaultMediaPlayer(String url, String inputFormat, boolean liveStream) throws LibavException {
+        this(new DefaultMediaReader(url, inputFormat), liveStream);
+    }
+    
+    /**
+     * Create a new media player and open the given media URL using the default
+     * media decoder and forcing the input format.
+     * 
+     * @param url a media URL
+     * @param inputFormat input format
+     * @throws LibavException if an error occurs while opening or player 
+     * initialization
+     */
+    public DefaultMediaPlayer(String url, IInputFormatWrapper inputFormat) throws LibavException {
+        this(url, inputFormat, isUrlLiveStream(url));
+    }
+    
+    /**
+     * Create a new media player, open the given media URL using the default
+     * media decoder and forcing the input format and set the live stream flag.
+     * 
+     * @param url a media URL
+     * @param inputFormat input format
+     * @param liveStream live stream flag; it changes time synchronization 
+     * settings to satisfy live stream needs
+     * @throws LibavException if an error occurs while opening or player 
+     * initialization
+     */
+    public DefaultMediaPlayer(String url, IInputFormatWrapper inputFormat, boolean liveStream) throws LibavException {
+        this(new DefaultMediaReader(url, inputFormat), liveStream);
     }
     
     protected DefaultMediaPlayer(IMediaReader mr, boolean liveStream) {

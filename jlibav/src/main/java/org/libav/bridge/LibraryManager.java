@@ -22,13 +22,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bridj.BridJ;
 import org.libav.avcodec.bridge.AVCodecLibrary;
+import org.libav.avdevice.bridge.AVDeviceLibrary;
 import org.libav.avformat.bridge.AVFormatLibrary;
 import org.libav.avresample.bridge.AVResampleLibrary;
 import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.swscale.bridge.SWScaleLibrary;
 
 /**
- * This singleton class loads the dynamic libraries and holds refrences to them.
+ * This singleton class loads the Libav dynamic libraries and holds refrences 
+ * to them.
+ * 
+ * It searches for the native libraries in default system locations and inside
+ * a folder specified by the "org.libav.libpath" system property. Default value
+ * of this property is "./libav".
  * 
  * @author Ondrej Perutka
  */
@@ -42,36 +48,30 @@ public class LibraryManager {
     private final AVUtilLibrary avUtil;
     private final AVCodecLibrary avCodec;
     private final AVFormatLibrary avFormat;
+    private AVDeviceLibrary avDevice;
     private final SWScaleLibrary swScale;
     private AVResampleLibrary avResample;
     
     private LibraryManager() throws IOException {
         BridJ.addLibraryPath(System.getProperty(PKEY_LIBPATH, DEFAULT_LIBPATH));
         
-        BridJ.addNativeLibraryAlias(AVCodecLibrary.LIB_NAME, AVCodecLibrary.LIB_NAME);
-        for (int i = AVCodecLibrary.MIN_MAJOR_VERSION; i <= AVCodecLibrary.MAX_MAJOR_VERSION; i++)
-            BridJ.addNativeLibraryAlias(AVCodecLibrary.LIB_NAME, AVCodecLibrary.LIB_NAME + "-" + i);
-        
-        BridJ.addNativeLibraryAlias(AVFormatLibrary.LIB_NAME, AVFormatLibrary.LIB_NAME);
-        for (int i = AVFormatLibrary.MIN_MAJOR_VERSION; i <= AVFormatLibrary.MAX_MAJOR_VERSION; i++)
-            BridJ.addNativeLibraryAlias(AVFormatLibrary.LIB_NAME, AVFormatLibrary.LIB_NAME + "-" + i);
-        
-        BridJ.addNativeLibraryAlias(AVUtilLibrary.LIB_NAME, AVUtilLibrary.LIB_NAME);
-        for (int i = AVUtilLibrary.MIN_MAJOR_VERSION; i <= AVUtilLibrary.MAX_MAJOR_VERSION; i++)
-            BridJ.addNativeLibraryAlias(AVUtilLibrary.LIB_NAME, AVUtilLibrary.LIB_NAME + "-" + i);
-        
-        BridJ.addNativeLibraryAlias(SWScaleLibrary.LIB_NAME, SWScaleLibrary.LIB_NAME);
-        for (int i = SWScaleLibrary.MIN_MAJOR_VERSION; i <= SWScaleLibrary.MAX_MAJOR_VERSION; i++)
-            BridJ.addNativeLibraryAlias(SWScaleLibrary.LIB_NAME, SWScaleLibrary.LIB_NAME + "-" + i);
-        
-        BridJ.addNativeLibraryAlias(AVResampleLibrary.LIB_NAME, AVResampleLibrary.LIB_NAME);
-        for (int i = AVResampleLibrary.MIN_MAJOR_VERSION; i <= AVResampleLibrary.MAX_MAJOR_VERSION; i++)
-            BridJ.addNativeLibraryAlias(AVResampleLibrary.LIB_NAME, AVResampleLibrary.LIB_NAME + "-" + i);
+        addNativeLibraryAliases(AVCodecLibrary.LIB_NAME, AVCodecLibrary.MIN_MAJOR_VERSION, AVCodecLibrary.MAX_MAJOR_VERSION);
+        addNativeLibraryAliases(AVFormatLibrary.LIB_NAME, AVFormatLibrary.MIN_MAJOR_VERSION, AVFormatLibrary.MAX_MAJOR_VERSION);
+        addNativeLibraryAliases(AVUtilLibrary.LIB_NAME, AVUtilLibrary.MIN_MAJOR_VERSION, AVUtilLibrary.MAX_MAJOR_VERSION);
+        addNativeLibraryAliases(AVDeviceLibrary.LIB_NAME, AVDeviceLibrary.MIN_MAJOR_VERSION, AVDeviceLibrary.MAX_MAJOR_VERSION);
+        addNativeLibraryAliases(SWScaleLibrary.LIB_NAME, SWScaleLibrary.MIN_MAJOR_VERSION, SWScaleLibrary.MAX_MAJOR_VERSION);
+        addNativeLibraryAliases(AVResampleLibrary.LIB_NAME, AVResampleLibrary.MIN_MAJOR_VERSION, AVResampleLibrary.MAX_MAJOR_VERSION);
         
         avUtil = new AVUtilLibrary();
         avCodec = new AVCodecLibrary();
         avFormat = new AVFormatLibrary();
         swScale = new SWScaleLibrary();
+        
+        try {
+            avDevice = new AVDeviceLibrary();
+        } catch (IOException ex) {
+            avDevice = null;
+        }
         
         try {
             avResample = new AVResampleLibrary();
@@ -83,6 +83,22 @@ public class LibraryManager {
         if (avFormat.functionExists("avformat_network_init"))
             avFormat.avformat_network_init();
         avCodec.avcodec_register_all();
+        if (avDevice != null)
+            avDevice.avdevice_register_all();
+    }
+    
+    /**
+     * Add aliases for the given native library name. (It is required on some
+     * platforms.)
+     * 
+     * @param libName standard library name
+     * @param minMajorVersio min major version
+     * @param maxMajorVersion max major version
+     */
+    private void addNativeLibraryAliases(String libName, int minMajorVersio, int maxMajorVersion) {
+        BridJ.addNativeLibraryAlias(libName, libName);
+        for (int i = minMajorVersio; i <= maxMajorVersion; i++)
+            BridJ.addNativeLibraryAlias(libName, libName + "-" + i);
     }
     
     /**
@@ -110,6 +126,15 @@ public class LibraryManager {
      */
     public AVFormatLibrary getAVFormatLibrary() {
         return avFormat;
+    }
+    
+    /**
+     * Get avdevice library wrapper.
+     * 
+     * @return avdevice library wrapper
+     */
+    public AVDeviceLibrary getAVDeviceLibrary() {
+        return avDevice;
     }
     
     /**

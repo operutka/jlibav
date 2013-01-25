@@ -20,10 +20,7 @@ package org.libav;
 import java.util.*;
 import org.libav.avcodec.ICodecContextWrapper;
 import org.libav.avcodec.IPacketWrapper;
-import org.libav.avformat.FormatContextWrapperFactory;
-import org.libav.avformat.IFormatContextWrapper;
-import org.libav.avformat.IIOContextWrapper;
-import org.libav.avformat.IStreamWrapper;
+import org.libav.avformat.*;
 import org.libav.avutil.bridge.AVMediaType;
 import org.libav.data.BufferedPacketReader;
 import org.libav.data.IPacketConsumer;
@@ -53,13 +50,39 @@ public class DefaultMediaReader implements IMediaReader {
     private long position;
     
     /**
-     * Open the given media URL using the default media reader.
+     * Open the given media URL.
      * 
      * @param url a media URL
      * @throws LibavException if an error occurs while opening the media
      */
     public DefaultMediaReader(String url) throws LibavException {
-        formatContext = FormatContextWrapperFactory.getInstance().openMedia(url);
+        this(FormatContextWrapperFactory.getInstance().openMedia(url));
+    }
+    
+    /**
+     * Open the given media URL forcing the given input format.
+     * 
+     * @param url a media URL
+     * @param inputFormat input format short name
+     * @throws LibavException if an error occurs while opening the media
+     */
+    public DefaultMediaReader(String url, String inputFormat) throws LibavException {
+        this(FormatContextWrapperFactory.getInstance().openMedia(url, inputFormat));
+    }
+    
+    /**
+     * Open the given media URL forcing the given input format.
+     * 
+     * @param url a media URL
+     * @param inputFormat input format
+     * @throws LibavException if an error occurs while opening the media
+     */
+    public DefaultMediaReader(String url, IInputFormatWrapper inputFormat) throws LibavException {
+        this(FormatContextWrapperFactory.getInstance().openMedia(url, inputFormat));
+    }
+    
+    private DefaultMediaReader(IFormatContextWrapper formatContext) throws LibavException {
+        this.formatContext = formatContext;
         
         packetReader = new BufferedPacketReader(formatContext, 50);
         

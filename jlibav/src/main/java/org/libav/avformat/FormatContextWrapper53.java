@@ -506,14 +506,26 @@ public class FormatContextWrapper53 extends AbstractFormatContextWrapper {
     }
     
     public static FormatContextWrapper53 openMedia(String url) throws LibavException {
+        return openMedia(url, (IInputFormatWrapper)null);
+    }
+    
+    public static FormatContextWrapper53 openMedia(String url, String inputFormat) throws LibavException {
+        IInputFormatWrapper inpf = InputFormatWrapperFactory.getInstance().find(inputFormat);
+        return openMedia(url, inpf);
+    }
+    
+    public static FormatContextWrapper53 openMedia(String url, IInputFormatWrapper inputFormat) throws LibavException {
         Pointer<Byte> purl = Pointer.pointerToString(url, Pointer.StringType.C, Charset.forName("UTF-8")).as(Byte.class);
+        Pointer<?> pInputFormat = null;
+        if (inputFormat != null)
+            pInputFormat = inputFormat.getPointer();
         
         int result;
         Pointer<Pointer<?>> avfcByRef = Pointer.allocatePointer();
         if (avfOpenInput)
-            result = formatLib.avformat_open_input(avfcByRef, purl, null, null);
+            result = formatLib.avformat_open_input(avfcByRef, purl, pInputFormat, null);
         else
-            result = formatLib.av_open_input_file(avfcByRef, purl, null, 0, null);
+            result = formatLib.av_open_input_file(avfcByRef, purl, pInputFormat, 0, null);
         
         if (result < 0)
             throw new LibavException(result);
@@ -526,11 +538,10 @@ public class FormatContextWrapper53 extends AbstractFormatContextWrapper {
         FormatContextWrapper53 result = allocateContext();
         result.outputContext = true;
         
-        Pointer<Byte> ofn = outputFormatName == null ? null : Pointer.pointerToString(outputFormatName, Pointer.StringType.C, Charset.forName("UTF-8")).as(Byte.class);
-        Pointer<?> of = formatLib.av_guess_format(ofn, purl, ofn);
+        IOutputFormatWrapper of = OutputFormatWrapperFactory.getInstance().guessFormat(outputFormatName, url, outputFormatName);
         if (of == null)
             throw new LibavException("unknown format: " + outputFormatName);
-        result.setOutputFormat(OutputFormatWrapperFactory.getInstance().wrap(of));
+        result.setOutputFormat(of);
         result.setFileName(url);
         
         Pointer<Pointer<?>> avioc = Pointer.allocatePointer();

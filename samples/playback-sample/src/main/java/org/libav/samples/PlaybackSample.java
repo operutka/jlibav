@@ -33,7 +33,6 @@ import java.util.logging.Logger;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import org.libav.*;
@@ -43,6 +42,7 @@ import org.libav.audio.SampleInputStream;
 import org.libav.avcodec.ICodecContextWrapper;
 import org.libav.avformat.IChapterWrapper;
 import org.libav.avformat.IFormatContextWrapper;
+import org.libav.avformat.IInputFormatWrapper;
 import org.libav.avformat.IStreamWrapper;
 import org.libav.avresample.bridge.AVResampleLibrary;
 import org.libav.avutil.IDictionaryWrapper;
@@ -118,8 +118,9 @@ public class PlaybackSample extends javax.swing.JFrame {
      * file/stream if the null is given.
      * 
      * @param url a URL
+     * @param inputFormat input format
      */
-    public void open(String url) {
+    public void open(String url, IInputFormatWrapper inputFormat) {
         try {
             closeAll();
             if (url == null)
@@ -127,7 +128,7 @@ public class PlaybackSample extends javax.swing.JFrame {
             
             sliderSeek.setValue(0);
             
-            player = new DefaultMediaPlayer(url); // create a new media player
+            player = new DefaultMediaPlayer(url, inputFormat); // create a new media player
             IMediaReader mr = player.getMediaReader();
             
             dumpMedia(mr);
@@ -308,9 +309,14 @@ public class PlaybackSample extends javax.swing.JFrame {
     private class OpenUrlListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent ae) {
-            String url = JOptionPane.showInputDialog(PlaybackSample.this, "URL:", "Open URL ...", JOptionPane.PLAIN_MESSAGE);
+            UrlDialog dlg = new UrlDialog(PlaybackSample.this);
+            dlg.setVisible(true);
+            
+            if (dlg.getDialogResult() != UrlDialog.RESULT_OK)
+                return;
+            
             liveStream = true;
-            open(url);
+            open(dlg.getUrl(), dlg.getInputFormat());
         }
     }
     
@@ -322,7 +328,7 @@ public class PlaybackSample extends javax.swing.JFrame {
             fc.setMultiSelectionEnabled(false);
             if (fc.showOpenDialog(PlaybackSample.this) == JFileChooser.APPROVE_OPTION) {
                 liveStream = false;
-                open(fc.getSelectedFile().getAbsolutePath());
+                open(fc.getSelectedFile().getAbsolutePath(), null);
             }
         }
     }
@@ -505,7 +511,7 @@ public class PlaybackSample extends javax.swing.JFrame {
         vt.setVisible(true);
         
         if (args.length == 1)
-            vt.open(args[0]);
+            vt.open(args[0], null);
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonOpen;

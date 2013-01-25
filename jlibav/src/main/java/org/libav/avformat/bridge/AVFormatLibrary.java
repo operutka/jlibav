@@ -235,6 +235,40 @@ public final class AVFormatLibrary implements ILibrary {
     }
     
     /**
+     * If f is NULL, returns the first registered input format,
+     * if f is non-NULL, returns the next registered input format after f
+     * or NULL if f is the last one.
+     * 
+     * @param f pointer to input format
+     * @return pointer to input format
+     */
+    public Pointer<?> av_iformat_next(Pointer<?> f) {
+        return Lib.av_iformat_next(f);
+    }
+    
+    /**
+     * If f is NULL, returns the first registered output format,
+     * if f is non-NULL, returns the next registered output format after f
+     * or NULL if f is the last one.
+     * 
+     * @param f pointer to input format
+     * @return pointer to input format
+     */
+    public Pointer<?> av_oformat_next(Pointer<?> f) {
+        return Lib.av_oformat_next(f);
+    }
+    
+    /**
+     * Find AVInputFormat based on the short name of the input format.
+     * 
+     * @param short_name format short name
+     * @return pointer to input format or null
+     */
+    public Pointer<?> av_find_input_format(Pointer<Byte>  short_name) {
+        return Lib.av_find_input_format(short_name);
+    }
+    
+    /**
      * Return the output format in the list of registered output formats which 
      * best matches the provided parameters, or return NULL if there is no 
      * match.
@@ -557,6 +591,9 @@ public final class AVFormatLibrary implements ILibrary {
 	public static native void avformat_close_input(Pointer<Pointer<?>> s);
 	public static native Pointer<?> avformat_alloc_context();
 	public static native void avformat_free_context(Pointer<?> s);
+        public static native Pointer<?> av_iformat_next(Pointer<?> f);
+        public static native Pointer<?> av_oformat_next(Pointer<?> f);
+        public static native Pointer<?> av_find_input_format(Pointer<Byte>  short_name);
 	public static native Pointer<?> av_guess_format(Pointer<Byte> short_name, Pointer<Byte> filename, Pointer<Byte> mime_type);
 	public static native int avio_open(Pointer<Pointer<?>> s, Pointer<Byte> url, int flags);
 	public static native int avio_close(Pointer<?> s);
