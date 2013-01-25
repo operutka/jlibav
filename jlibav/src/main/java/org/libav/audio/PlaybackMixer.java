@@ -86,6 +86,15 @@ public class PlaybackMixer {
     }
     
     /**
+     * Get output audio format of this mixer.
+     * 
+     * @return audio format
+     */
+    public AudioFormat getAudioFormat() {
+        return as.getFormat();
+    }
+    
+    /**
      * Set mixer master volume.
      * 
      * @param volume a volume
@@ -217,6 +226,18 @@ public class PlaybackMixer {
             
             pm.close();
             instances.remove(format);
+        }
+    }
+    
+    public static void closeMixer(PlaybackMixer mixer) {
+        synchronized (instances) {
+            mixer.close();
+            mixer = instances.get(mixer.getAudioFormat());
+            if (mixer == null)
+                return;
+            
+            mixer.close();
+            instances.remove(mixer.getAudioFormat());
         }
     }
     
