@@ -321,6 +321,9 @@ public class FrameWrapper54 extends AbstractFrameWrapper {
     
     private static Pointer<?> allocatePictureBuffer(int pixelFormat, int width, int height) throws LibavException {
         int size = codecLib.avpicture_get_size(pixelFormat, width, height);
+        if (size <= 0)
+            throw new LibavException("invalid picture size");
+        
         Pointer<?> result = utilLib.av_malloc(size);
         if (result == null)
             throw new LibavException("unable to allocate a new picture");
