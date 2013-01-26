@@ -64,7 +64,7 @@
             <manifest>
               <addClasspath>true</addClasspath>
               <classpathPrefix>lib/</classpathPrefix>
-              <mainClass>org.libav.samples.qs01.Main</mainClass>
+              <mainClass>org.libav.samples.qs01.MetadataReader</mainClass>
             </manifest>
           </archive>
         </configuration>

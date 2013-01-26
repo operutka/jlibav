@@ -36,7 +36,7 @@ import org.libav.avutil.bridge.AVSampleFormat;
  * 
  * @author Ondrej Perutka
  */
-public class Main {
+public class SimpleAudioPlayer {
     
     private IMediaPlayer player;
     private SampleInputStream sampleInputStream;
@@ -44,7 +44,7 @@ public class Main {
     private Frame2AudioFrameAdapter audioFrameAdapter;
     private PlaybackMixer mixer;
 
-    public Main(String url) throws LibavException {
+    public SimpleAudioPlayer(String url) throws LibavException {
         // Open the given file/stream using IMediaPlayer with its default
         // implementation. DefaultMediaPlayer simply wraps around 
         // IMediaReader shown in the previous example.
@@ -181,24 +181,24 @@ public class Main {
     }
     
     public static void main(String[] args) {
-        Main main = null;
+        SimpleAudioPlayer main = null;
         
         try {
             // Get an audio file name or stream URL from command line args.
             String url = parseArgs(args);
             // Create a new instance of this simple audio player.
-            main = new Main(url);
+            main = new SimpleAudioPlayer(url);
             // Start audio playback.
             main.play();
         } catch (Exception ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "something's wrong", ex);
+            Logger.getLogger(SimpleAudioPlayer.class.getName()).log(Level.SEVERE, "something's wrong", ex);
         } finally {
             try {
                 // We should always release kept resources if we don't need them.
                 if (main != null)
                     main.close();
             } catch (Exception ex) {
-                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "unable to release system resources", ex);
+                Logger.getLogger(SimpleAudioPlayer.class.getName()).log(Level.SEVERE, "unable to release system resources", ex);
             }
         }
     }

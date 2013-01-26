@@ -64,7 +64,7 @@
             <manifest>
               <addClasspath>true</addClasspath>
               <classpathPrefix>lib/</classpathPrefix>
-              <mainClass>org.libav.samples.qs02.Main</mainClass>
+              <mainClass>org.libav.samples.qs02.SimpleAudioPlayer</mainClass>
             </manifest>
           </archive>
         </configuration>

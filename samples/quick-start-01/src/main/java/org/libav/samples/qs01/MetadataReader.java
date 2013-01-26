@@ -41,9 +41,18 @@ import org.libav.avutil.bridge.PixelFormat;
  * 
  * @author Ondrej Perutka
  */
-public class Main {
+public class MetadataReader {
     
     public static void main(String[] args) {
+        // First of all we need to ensure our Libav libraries will be properly
+        // loaded. BridJ searches for them in standard system locations and
+        // in a folder specified by the "org.libav.libpath" system property.
+        // By default the value of this property is "libav". It means 
+        // the libraries will be searched for in "libav" subdirectory of 
+        // the application working directory. You can simply change this
+        // behaviour by changing the system property but be sure you change
+        // it before ANY access to jlibav.
+        
         IMediaReader reader = null;
         
         try {
@@ -79,14 +88,14 @@ public class Main {
             for (int i = 0; i < reader.getStreamCount(); i++)
                 printStreamInfo("    ", reader.getStream(i));
         } catch (Exception ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "something's wrong", ex);
+            Logger.getLogger(MetadataReader.class.getName()).log(Level.SEVERE, "something's wrong", ex);
         } finally {
             try {
                 // We should always release kept resources if we don't need them.
                 if (reader != null)
                     reader.close();
             } catch (Exception ex) {
-                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "unable to release system resources", ex);
+                Logger.getLogger(MetadataReader.class.getName()).log(Level.SEVERE, "unable to release system resources", ex);
             }
         }
     }
