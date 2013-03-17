@@ -139,7 +139,6 @@ public class DefaultMediaWriter implements IMediaWriter {
             throw new IllegalStateException("the media stream has been closed");
         
         IStreamWrapper stream = formatContext.newStream();
-        stream.setTimeBase(new Rational(1, 1000));
         
         ICodecContextWrapper cc = stream.getCodecContext();
         cc.setCodecId(codecId);
@@ -147,7 +146,7 @@ public class DefaultMediaWriter implements IMediaWriter {
         cc.setBitRate(1000000);
         cc.setWidth(width);
         cc.setHeight(height);
-        cc.setTimeBase(new Rational(1, 25));
+        cc.setTimeBase(new Rational(1, 40));
         cc.setGopSize(12);
         cc.setPixelFormat(PixelFormat.PIX_FMT_YUV420P);
         
@@ -158,7 +157,11 @@ public class DefaultMediaWriter implements IMediaWriter {
         if ((ofw.getFlags() & AVFormatLibrary.AVFMT_GLOBALHEADER) != 0)
             cc.setFlags(cc.getFlags() | AVCodecLibrary.CODEC_FLAG_GLOBAL_HEADER);
         
-        stream.setTimeBase(new Rational(1, 1000));
+        // FIX: find a better solution
+        stream.setTimeBase(new Rational(1, 40));
+        if (ofw.getName().equalsIgnoreCase("matroska") ||
+                ofw.getName().equalsIgnoreCase("flv"))
+            stream.setTimeBase(new Rational(1, 1000));
         
         reloadStreams();
         return vStreams.length - 1;
@@ -194,7 +197,13 @@ public class DefaultMediaWriter implements IMediaWriter {
         if ((ofw.getFlags() & AVFormatLibrary.AVFMT_GLOBALHEADER) != 0)
             cc.setFlags(cc.getFlags() | AVCodecLibrary.CODEC_FLAG_GLOBAL_HEADER);
         
-        stream.setTimeBase(new Rational(1, 1000));
+        // FIX: find a better solution
+        stream.setTimeBase(new Rational(1, sampleRate));
+        if (ofw.getName().equalsIgnoreCase("matroska") ||
+                ofw.getName().equalsIgnoreCase("flv"))
+            stream.setTimeBase(new Rational(1, 1000));
+        else if (ofw.getName().equalsIgnoreCase("avi"))
+            stream.setTimeBase(new Rational(1, sampleRate / 2));
         
         reloadStreams();
         return aStreams.length - 1;
