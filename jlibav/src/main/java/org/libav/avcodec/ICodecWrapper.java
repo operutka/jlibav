@@ -36,7 +36,7 @@ public interface ICodecWrapper extends IWrapper {
      * 
      * @return 
      */
-    int getId();
+    CodecID getId();
     
     /**
      * Get the type property from the AVCodec.

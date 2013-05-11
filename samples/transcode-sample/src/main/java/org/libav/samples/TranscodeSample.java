@@ -20,7 +20,7 @@ package org.libav.samples;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.libav.*;
-import org.libav.avcodec.CodecWrapperFactory;
+import org.libav.avcodec.CodecID;
 import org.libav.avcodec.ICodecContextWrapper;
 import org.libav.video.FrameScaler;
 
@@ -34,8 +34,8 @@ public class TranscodeSample {
     public static void main(String[] args) {
         String srcUrl = "/media/D/foo.avi"; // some source multimedia file/stream
         String dstUrl = "/media/D/bar.mkv"; // destination file name
-        int videoCodecId = CodecWrapperFactory.CODEC_ID_MPEG4; // output video codec
-        int audioCodecId = CodecWrapperFactory.CODEC_ID_MP2; // output audio codec
+        CodecID videoCodecId = CodecID.MPEG4; // output video codec
+        CodecID audioCodecId = CodecID.MP2; // output audio codec
         
         IMediaDecoder md = null;
         IMediaEncoder me = null;

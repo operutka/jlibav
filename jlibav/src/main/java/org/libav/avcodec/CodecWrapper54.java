@@ -67,9 +67,9 @@ public class CodecWrapper54 extends AbstractCodecWrapper {
     }
 
     @Override
-    public int getId() {
+    public CodecID getId() {
         if (id == null)
-            id = codec.id();
+            id = CodecID.valueOf(codec.id());
         
         return id;
     }
@@ -109,16 +109,16 @@ public class CodecWrapper54 extends AbstractCodecWrapper {
         return capabilities;
     }
     
-    public static CodecWrapper54 findDecoder(int codecId) throws LibavException {
-        Pointer ptr = lib.avcodec_find_decoder(codecId);
+    public static CodecWrapper54 findDecoder(CodecID codecId) throws LibavException {
+        Pointer ptr = lib.avcodec_find_decoder(codecId.value());
         if (ptr == null)
             throw new LibavException("unable to find decoder");
         
         return new CodecWrapper54(new AVCodec54(ptr));
     }
     
-    public static CodecWrapper54 findEncoder(int codecId) throws LibavException {
-        Pointer ptr = lib.avcodec_find_encoder(codecId);
+    public static CodecWrapper54 findEncoder(CodecID codecId) throws LibavException {
+        Pointer ptr = lib.avcodec_find_encoder(codecId.value());
         if (ptr == null)
             throw new LibavException("unable to find encoder");
         

@@ -23,10 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.libav.DefaultMediaReader;
 import org.libav.IMediaReader;
-import org.libav.LibavException;
-import org.libav.avcodec.CodecWrapperFactory;
 import org.libav.avcodec.ICodecContextWrapper;
-import org.libav.avcodec.ICodecWrapper;
 import org.libav.avformat.IChapterWrapper;
 import org.libav.avformat.IFormatContextWrapper;
 import org.libav.avformat.IStreamWrapper;
@@ -186,7 +183,7 @@ public class MetadataReader {
      * @param codecContext codec context
      */
     private static void printAudioCodecInfo(String prefix, ICodecContextWrapper codecContext) {
-        String codecName = getCodecName(codecContext.getCodecId());
+        String codecName = codecContext.getCodecId().name();
         System.out.printf("%saudio codec %s:\n", prefix, codecName);
         System.out.printf("%s    sample rate:        %d\n", prefix, codecContext.getSampleRate());
         System.out.printf("%s    bit rate:           %d\n", prefix, codecContext.getBitRate());
@@ -217,7 +214,7 @@ public class MetadataReader {
      * @param codecContext codec context
      */
     private static void printVideoCodecInfo(String prefix, ICodecContextWrapper codecContext) {
-        String codecName = getCodecName(codecContext.getCodecId());
+        String codecName = codecContext.getCodecId().name();
         System.out.printf("%svideo codec %s:\n", prefix, codecName);
         System.out.printf("%s    frame width:        %d\n", prefix, codecContext.getWidth());
         System.out.printf("%s    frame height:       %d\n", prefix, codecContext.getHeight());
@@ -256,7 +253,7 @@ public class MetadataReader {
      * @param codecContext codec context
      */
     private static void printSubtitleCodecInfo(String prefix, ICodecContextWrapper codecContext) {
-        String codecName = getCodecName(codecContext.getCodecId());
+        String codecName = codecContext.getCodecId().name();
         System.out.printf("%ssubtitle codec %s\n", prefix, codecName);
     }
     
@@ -267,25 +264,8 @@ public class MetadataReader {
      * @param codecContext codec context
      */
     private static void printMiscCodecInfo(String prefix, ICodecContextWrapper codecContext) {
-        String codecName = getCodecName(codecContext.getCodecId());
+        String codecName = codecContext.getCodecId().name();
         System.out.printf("%smiscellaneous codec %s\n", prefix, codecName);
-    }
-    
-    /**
-     * Get name of the given codec according to its ID.
-     * 
-     * @param codecId codec ID
-     * @return name of the codec
-     */
-    private static String getCodecName(int codecId) {
-        CodecWrapperFactory cwf = CodecWrapperFactory.getInstance();
-        
-        try {
-            ICodecWrapper codec = cwf.findDecoder(codecId);
-            return codec.getName();
-        } catch (LibavException ex) {
-            return "unknown";
-        }
     }
     
 }

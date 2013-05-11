@@ -18,6 +18,7 @@
 package org.libav;
 
 import java.io.FileNotFoundException;
+import org.libav.avcodec.CodecID;
 import org.libav.avformat.IFormatContextWrapper;
 import org.libav.avformat.IStreamWrapper;
 import org.libav.data.IPacketConsumer;
@@ -82,7 +83,7 @@ public interface IMediaWriter extends IPacketConsumer {
      * @return index of the created video stream
      * @throws LibavException if an error occurs while creating a new stream
      */
-    int addVideoStream(int codecId, int width, int height) throws LibavException;
+    int addVideoStream(CodecID codecId, int width, int height) throws LibavException;
     
     /**
      * Get stream wrapper for the video stream at the given index.
@@ -109,7 +110,7 @@ public interface IMediaWriter extends IPacketConsumer {
      * @return index of the created audio stream
      * @throws LibavException if an error occurs while creating a new stream
      */
-    int addAudioStream(int codecId, int sampleRate, int sampleFormat, int channelCount) throws LibavException;
+    int addAudioStream(CodecID codecId, int sampleRate, int sampleFormat, int channelCount) throws LibavException;
     
     /**
      * Get stream wrapper for the audio stream at the given index.

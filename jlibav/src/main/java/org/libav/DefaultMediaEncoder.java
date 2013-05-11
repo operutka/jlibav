@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 import org.libav.audio.AudioFrameEncoder;
+import org.libav.avcodec.CodecID;
 import org.libav.avcodec.CodecWrapperFactory;
 import org.libav.avcodec.ICodecContextWrapper;
 import org.libav.avcodec.ICodecWrapper;
@@ -191,7 +192,7 @@ public class DefaultMediaEncoder implements IMediaEncoder {
         }
 
         @Override
-        public int addVideoStream(int codecId, int width, int height) throws LibavException {
+        public int addVideoStream(CodecID codecId, int width, int height) throws LibavException {
             return mw.addVideoStream(codecId, width, height);
         }
 
@@ -206,7 +207,7 @@ public class DefaultMediaEncoder implements IMediaEncoder {
         }
 
         @Override
-        public int addAudioStream(int codecId, int sampleRate, int sampleFormat, int channelCount) throws LibavException {
+        public int addAudioStream(CodecID codecId, int sampleRate, int sampleFormat, int channelCount) throws LibavException {
             return mw.addAudioStream(codecId, sampleRate, sampleFormat, channelCount);
         }
 

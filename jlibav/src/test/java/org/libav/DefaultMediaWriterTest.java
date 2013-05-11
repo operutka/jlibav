@@ -20,7 +20,7 @@ package org.libav;
 import java.io.File;
 import java.util.UUID;
 import org.junit.Test;
-import org.libav.avcodec.CodecWrapperFactory;
+import org.libav.avcodec.CodecID;
 import org.libav.avcodec.FrameWrapperFactory;
 import org.libav.avcodec.ICodecContextWrapper;
 import org.libav.avcodec.IFrameWrapper;
@@ -47,8 +47,8 @@ public class DefaultMediaWriterTest {
         if (!mw.getInterleave())
             mw.setInterleave(true);
         
-        int vsIndex = mw.addVideoStream(CodecWrapperFactory.CODEC_ID_MPEG4, 320, 240);
-        int asIndex = mw.addAudioStream(CodecWrapperFactory.CODEC_ID_MP2, 48000, AVSampleFormat.AV_SAMPLE_FMT_S16, 2);
+        int vsIndex = mw.addVideoStream(CodecID.MPEG4, 320, 240);
+        int asIndex = mw.addAudioStream(CodecID.MP2, 48000, AVSampleFormat.AV_SAMPLE_FMT_S16, 2);
         IEncoder ve = me.getVideoStreamEncoder(vsIndex);
         IEncoder ae = me.getAudioStreamEncoder(asIndex);
         
@@ -85,7 +85,7 @@ public class DefaultMediaWriterTest {
         if (mw.getInterleave())
             mw.setInterleave(false);
         
-        int vsIndex = mw.addVideoStream(CodecWrapperFactory.CODEC_ID_MPEG4, 320, 240);
+        int vsIndex = mw.addVideoStream(CodecID.MPEG4, 320, 240);
         IEncoder ve = me.getVideoStreamEncoder(vsIndex);
         
         ICodecContextWrapper cc = ve.getCodecContext();

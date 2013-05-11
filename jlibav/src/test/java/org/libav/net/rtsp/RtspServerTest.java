@@ -22,7 +22,7 @@ import java.net.ServerSocket;
 import org.junit.Test;
 import org.libav.*;
 import org.libav.audio.AudioFrameResampler;
-import org.libav.avcodec.CodecWrapperFactory;
+import org.libav.avcodec.CodecID;
 import org.libav.avcodec.ICodecContextWrapper;
 import org.libav.avutil.bridge.AVChannelLayout;
 import org.libav.avutil.bridge.AVSampleFormat;
@@ -65,7 +65,7 @@ public class RtspServerTest {
             mp.setAudioStreamDecodingEnabled(0, true);
             dec = mp.getAudioStreamDecoder(0);
             cc = dec.getCodecContext();
-            AudioTranscodeStream ats = new AudioTranscodeStream(new AudioStreamWriterFactory(CodecWrapperFactory.CODEC_ID_MP2, cc.getChannels(), 48000, AVSampleFormat.AV_SAMPLE_FMT_S16));
+            AudioTranscodeStream ats = new AudioTranscodeStream(new AudioStreamWriterFactory(CodecID.MP2, cc.getChannels(), 48000, AVSampleFormat.AV_SAMPLE_FMT_S16));
             long channelLayout = cc.getChannelLayout();
             if (channelLayout == 0)
                 channelLayout = AVChannelLayout.getDefaultChannelLayout(cc.getChannels());
@@ -108,7 +108,7 @@ public class RtspServerTest {
         
         @Override
         public int createWriter(IMediaWriter mediaWriter) throws LibavException {
-            int index = mediaWriter.addVideoStream(CodecWrapperFactory.CODEC_ID_MPEG4, width, height);
+            int index = mediaWriter.addVideoStream(CodecID.MPEG4, width, height);
             ICodecContextWrapper cc = mediaWriter.getVideoStream(index).getCodecContext();
             cc.setPixelFormat(pixelFormat);
             cc.setBitRate(1500000);
@@ -117,12 +117,12 @@ public class RtspServerTest {
     }
     
     private static class AudioStreamWriterFactory implements IStreamWriterFactory {
-        private int codecId;
+        private CodecID codecId;
         private int channels;
         private int sampleRate;
         private int sampleFormat;
 
-        public AudioStreamWriterFactory(int codecId, int channels, int sampleRate, int sampleFormat) {
+        public AudioStreamWriterFactory(CodecID codecId, int channels, int sampleRate, int sampleFormat) {
             this.codecId = codecId;
             this.channels = channels;
             this.sampleRate = sampleRate;

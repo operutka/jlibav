@@ -28,7 +28,7 @@ public abstract class AbstractCodecContextWrapper implements ICodecContextWrappe
 
     protected IFrameWrapper codedFrame;
     protected Integer codecType;
-    protected Integer codecId;
+    protected CodecID codecId;
     protected Integer flags;
     protected Integer width;
     protected Integer height;

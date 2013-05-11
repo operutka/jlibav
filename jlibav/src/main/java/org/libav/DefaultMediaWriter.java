@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import org.bridj.Pointer;
+import org.libav.avcodec.CodecID;
 import org.libav.avcodec.CodecWrapperFactory;
 import org.libav.avcodec.ICodecContextWrapper;
 import org.libav.avcodec.ICodecWrapper;
@@ -134,7 +135,7 @@ public class DefaultMediaWriter implements IMediaWriter {
     }
 
     @Override
-    public synchronized int addVideoStream(int codecId, int width, int height) throws LibavException {
+    public synchronized int addVideoStream(CodecID codecId, int width, int height) throws LibavException {
         if (isClosed())
             throw new IllegalStateException("the media stream has been closed");
         
@@ -168,7 +169,7 @@ public class DefaultMediaWriter implements IMediaWriter {
     }
 
     @Override
-    public synchronized int addAudioStream(int codecId, int sampleRate, int sampleFormat, int channelCount) throws LibavException {
+    public synchronized int addAudioStream(CodecID codecId, int sampleRate, int sampleFormat, int channelCount) throws LibavException {
         if (isClosed())
             throw new IllegalStateException("the media stream has been closed");
         

@@ -108,7 +108,7 @@ public interface ICodecContextWrapper extends IWrapper {
      * 
      * @return codec ID
      */
-    int getCodecId();
+    CodecID getCodecId();
     
     /**
      * Set the codec_id property of the AVCodecContext. The value may be 
@@ -116,7 +116,7 @@ public interface ICodecContextWrapper extends IWrapper {
      * 
      * @param codecId a codec ID
      */
-    void setCodecId(int codecId);
+    void setCodecId(CodecID codecId);
     
     /**
      * Get the flags property from the AVCodecContext.

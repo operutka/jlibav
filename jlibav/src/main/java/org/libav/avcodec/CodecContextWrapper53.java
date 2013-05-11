@@ -193,22 +193,22 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
     }
     
     @Override
-    public int getCodecId() {
+    public CodecID getCodecId() {
         if (context == null)
-            return 0;
+            return null;
         
         if (codecId == null)
-            codecId = context.codec_id();
+            codecId = CodecID.valueOf(context.codec_id());
         
         return codecId;
     }
     
     @Override
-    public void setCodecId(int codecId) {
+    public void setCodecId(CodecID codecId) {
         if (context == null)
             return;
         
-        context.codec_id(codecId);
+        context.codec_id(codecId.value());
         this.codecId = codecId;
     }
     

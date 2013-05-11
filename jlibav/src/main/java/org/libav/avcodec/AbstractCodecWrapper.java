@@ -24,7 +24,7 @@ package org.libav.avcodec;
  */
 public abstract class AbstractCodecWrapper implements ICodecWrapper {
     
-    protected Integer id;
+    protected CodecID id;
     protected Integer type;
     protected String name;
     protected Integer capabilities;
