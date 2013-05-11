@@ -59,6 +59,11 @@ public class DictionaryWrapper implements IDictionaryWrapper {
     public Pointer<?> getPointer() {
         return dictionary == null ? null : dictionary.get();
     }
+
+    @Override
+    public void rebind(Pointer<?> pointer) {
+        dictionary.set(pointer);
+    }
     
     @Override
     public void free() {

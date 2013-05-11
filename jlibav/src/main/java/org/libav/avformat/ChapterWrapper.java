@@ -60,12 +60,29 @@ public class ChapterWrapper implements IChapterWrapper {
         id = null;
         start = null;
         end = null;
-        metadata = null;
+        
+        if (chapter == null)
+            return;
+        
+        Pointer<?> ptr;
+        
+        if (metadata != null) {
+            ptr = chapter.metadata();
+            if (ptr == null)
+                metadata = null;
+            else
+                metadata.rebind(ptr);
+        }
     }
 
     @Override
     public Pointer<?> getPointer() {
         return Pointer.pointerTo(chapter);
+    }
+
+    @Override
+    public void rebind(Pointer<?> pointer) {
+        chapter = new AVChapter(pointer);
     }
 
     @Override

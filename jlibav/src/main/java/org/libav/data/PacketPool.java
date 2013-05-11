@@ -285,6 +285,11 @@ public class PacketPool {
         public Pointer<?> getPointer() {
             return internal.getPointer();
         }
+
+        @Override
+        public void rebind(Pointer<?> pointer) {
+            internal.rebind(pointer);
+        }
     }
     
 }

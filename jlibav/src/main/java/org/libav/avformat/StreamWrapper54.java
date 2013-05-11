@@ -44,6 +44,36 @@ public class StreamWrapper54 extends AbstractStreamWrapper {
     public StreamWrapper54(AVStream54 stream) {
         this.stream = stream;
     }
+
+    @Override
+    public void clearWrapperCache() {
+        super.clearWrapperCache();
+        
+        rebindCodecContext();
+        rebindMetadata();
+    }
+    
+    private void rebindCodecContext() {
+        if (stream == null || codecContext == null)
+            return;
+        
+        Pointer<?> ptr = stream.codec();
+        if (ptr == null)
+            codecContext = null;
+        else
+            codecContext.rebind(ptr);
+    }
+    
+    private void rebindMetadata() {
+        if (stream == null || metadata == null)
+            return;
+        
+        Pointer<?> ptr = stream.metadata();
+        if (ptr == null)
+            metadata = null;
+        else
+            metadata.rebind(ptr);
+    }
     
     @Override
     public Pointer<?> getPointer() {
@@ -51,6 +81,11 @@ public class StreamWrapper54 extends AbstractStreamWrapper {
             return null;
         
         return Pointer.pointerTo(stream);
+    }
+
+    @Override
+    public void rebind(Pointer<?> pointer) {
+        stream = new AVStream54(pointer);
     }
     
     @Override
@@ -94,6 +129,30 @@ public class StreamWrapper54 extends AbstractStreamWrapper {
             index = stream.index();
         
         return index;
+    }
+
+    @Override
+    public Rational getSampleAspectRatio() {
+        if (stream == null)
+            return null;
+        
+        if (sampleAspectRatio == null)
+            sampleAspectRatio = new Rational(stream.sample_aspect_ratio());
+        
+        return sampleAspectRatio;
+    }
+
+    @Override
+    public void setSampleAspectRatio(Rational sampleAspectRatio) {
+        if (stream == null)
+            return;
+        
+        if (sampleAspectRatio == null)
+            sampleAspectRatio = new Rational(0, 0);
+        
+        stream.sample_aspect_ratio().num((int)sampleAspectRatio.getNumerator());
+        stream.sample_aspect_ratio().den((int)sampleAspectRatio.getDenominator());
+        this.sampleAspectRatio = sampleAspectRatio;
     }
 
     @Override

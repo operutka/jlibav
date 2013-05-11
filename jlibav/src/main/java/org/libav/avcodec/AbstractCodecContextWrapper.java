@@ -26,13 +26,14 @@ import org.libav.util.Rational;
  */
 public abstract class AbstractCodecContextWrapper implements ICodecContextWrapper {
 
-    protected ICodecWrapper codec;
     protected IFrameWrapper codedFrame;
     protected Integer codecType;
     protected Integer codecId;
     protected Integer flags;
     protected Integer width;
     protected Integer height;
+    protected Rational sampleAspectRatio;
+    protected Integer chromaSampleLocation;
     protected Integer pixelFormat;
     protected Integer bitRate;
     protected Rational timeBase;
@@ -46,13 +47,14 @@ public abstract class AbstractCodecContextWrapper implements ICodecContextWrappe
     protected Integer frameSize;
     
     public AbstractCodecContextWrapper() {
-        codec = null;
         codedFrame = null;
         codecType = null;
         codecId = null;
         flags = null;
         width = null;
         height = null;
+        sampleAspectRatio = null;
+        chromaSampleLocation = null;
         pixelFormat = null;
         bitRate = null;
         timeBase = null;
@@ -68,12 +70,13 @@ public abstract class AbstractCodecContextWrapper implements ICodecContextWrappe
     
     @Override
     public void clearWrapperCache() {
-        codedFrame = null;
         codecType = null;
         codecId = null;
         flags = null;
         width = null;
         height = null;
+        sampleAspectRatio = null;
+        chromaSampleLocation = null;
         pixelFormat = null;
         bitRate = null;
         timeBase = null;

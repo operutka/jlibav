@@ -70,6 +70,25 @@ public interface IStreamWrapper extends IWrapper {
      * @return stream index
      */
     int getIndex();
+    
+    /**
+     * Get the sample_aspect_ratio property from the AVStream.
+     * 
+     * WARNING:
+     * The returned value may be cached. Call the clearWrapperCahce() if you
+     * think the value have been changed.
+     * 
+     * @return aspect ratio
+     */
+    Rational getSampleAspectRatio();
+    
+    /**
+     * Set the sample_aspect_ratio property of the AVStream. The value may be 
+     * cached.
+     * 
+     * @param aspectRatio 
+     */
+    void setSampleAspectRatio(Rational aspectRatio);
 
     /**
      * Get the r_frame_rate property from the AVStream.

@@ -68,6 +68,116 @@ public class FormatContextWrapper53 extends AbstractFormatContextWrapper {
         this.context = context;
         this.outputContext = false;
     }
+
+    @Override
+    public void clearWrapperCache() {
+        super.clearWrapperCache();
+        
+        rebindStreams();
+        rebindChapters();
+        rebindIOContext();
+        rebindInputFormat();
+        rebindOutputFormat();
+        rebindMetadata();
+    }
+    
+    private void rebindStreams() {
+        if (context == null || streams == null)
+            return;
+        
+        Pointer<Pointer<?>> pPtr = context.streams();
+        Pointer ptr;
+        
+        streamCount = context.nb_streams();
+        
+        if (pPtr == null)
+            streams = null;
+        else {
+            IStreamWrapper[] newStreams = new IStreamWrapper[streamCount];
+            for (int i = 0; i < newStreams.length; i++) {
+                ptr = pPtr.get(i);
+                if (ptr == null)
+                    newStreams[i] = null;
+                else if  (i < streams.length) {
+                    newStreams[i] = streams[i];
+                    newStreams[i].rebind(ptr);
+                } else
+                    newStreams[i] = StreamWrapperFactory.getInstance().wrap(ptr);
+            }
+            streams = newStreams;
+        }
+    }
+    
+    private void rebindChapters() {
+        if (context == null || chapters == null)
+            return;
+        
+        Pointer<Pointer<?>> pPtr = context.chapters();
+        Pointer ptr;
+        
+        chapterCount = context.nb_chapters();
+        
+        if (pPtr == null)
+            chapters = null;
+        else {
+            IChapterWrapper[] newChapters = new IChapterWrapper[chapterCount];
+            for (int i = 0; i < newChapters.length; i++) {
+                ptr = pPtr.get(i);
+                if (ptr == null)
+                    newChapters[i] = null;
+                else if  (i < chapters.length) {
+                    newChapters[i] = chapters[i];
+                    newChapters[i].rebind(ptr);
+                } else
+                    newChapters[i] = ChapterWrapperFactory.getInstance().wrap(ptr);
+            }
+            chapters = newChapters;
+        }
+    }
+    
+    private void rebindIOContext() {
+        if (context == null || ioContext == null)
+            return;
+        
+        Pointer<?> ptr = context.pb();
+        if (ptr == null)
+            ioContext = null;
+        else
+            ioContext.rebind(ptr);
+    }
+    
+    private void rebindInputFormat() {
+        if (context == null || inputFormat == null)
+            return;
+        
+        Pointer<?> ptr = context.iformat();
+        if (ptr == null)
+            inputFormat = null;
+        else
+            inputFormat.rebind(ptr);
+    }
+    
+    private void rebindOutputFormat() {
+        if (context == null || outputFormat == null)
+            return;
+        
+        Pointer<?> ptr = context.oformat();
+        if (ptr == null)
+            outputFormat = null;
+        else
+            outputFormat.rebind(ptr);
+    }
+    
+    private void rebindMetadata() {
+        if (context == null || metadata == null)
+            return;
+        
+        Pointer<?> ptr = context.metadata();
+        if (ptr == null)
+            metadata = null;
+        else
+            metadata.rebind(ptr);
+    }
     
     @Override
     public Pointer<?> getPointer() {
@@ -75,6 +185,11 @@ public class FormatContextWrapper53 extends AbstractFormatContextWrapper {
             return null;
         
         return Pointer.pointerTo(context);
+    }
+
+    @Override
+    public void rebind(Pointer<?> pointer) {
+        context = new AVFormatContext53(pointer);
     }
     
     @Override
@@ -157,6 +272,7 @@ public class FormatContextWrapper53 extends AbstractFormatContextWrapper {
         if (isClosed())
             return;
         
+        rebindStreams();
         getStreams();
         streams[streamIndex] = stream;
         Pointer<Pointer<?>> pStrms = context.streams();
@@ -177,9 +293,14 @@ public class FormatContextWrapper53 extends AbstractFormatContextWrapper {
         if (pStream == null)
             throw new LibavException("unable to create a new stream");
         
-        streams = null;
+        rebindStreams();
+        getStreams();
+        for (IStreamWrapper stream : streams) {
+            if (pStream.equals(stream.getPointer()))
+                return stream;
+        }
         
-        return StreamWrapperFactory.getInstance().wrap(pStream);
+        return null;
     }
 
     @Override
@@ -243,8 +364,7 @@ public class FormatContextWrapper53 extends AbstractFormatContextWrapper {
         context.chapters(pNewChapters);
         utilLib.av_free(pChapters);
         
-        chapters = null;
-        chapterCount = null;
+        rebindChapters();
         
         return true;
     }
@@ -272,8 +392,7 @@ public class FormatContextWrapper53 extends AbstractFormatContextWrapper {
         for (; i < (tmp.length - 1); i++)
             pChapters.set(i, pChapters.get(i + 1));
         
-        chapters = null;
-        chapterCount = null;
+        rebindChapters();
         
         return result;
     }

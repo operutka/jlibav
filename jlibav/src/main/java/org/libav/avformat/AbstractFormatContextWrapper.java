@@ -58,18 +58,12 @@ public abstract class AbstractFormatContextWrapper implements IFormatContextWrap
 
     @Override
     public void clearWrapperCache() {
-        streams = null;
         streamCount = null;
-        chapters = null;
         chapterCount = null;
         fileName = null;
-        ioContext = null;
-        outputFormat = null;
-        inputFormat = null;
         duration = null;
         privateData = null;
         realStartTime = null;
-        metadata = null;
     }
     
 }

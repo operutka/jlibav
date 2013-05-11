@@ -39,4 +39,11 @@ public interface IWrapper {
      */
     public Pointer<?> getPointer();
     
+    /**
+     * Rebind the native struct/object represented by this wrapper.
+     * 
+     * @param pointer pointer to the native struct/object
+     */
+    void rebind(Pointer<?> pointer);
+    
 }

@@ -70,6 +70,11 @@ public class AudioResampleContextWrapperLAVR implements IAudioResampleContextWra
     public Pointer<?> getPointer() {
         return context;
     }
+
+    @Override
+    public void rebind(Pointer<?> pointer) {
+        context = pointer;
+    }
     
     @Override
     public void open() throws LibavException {

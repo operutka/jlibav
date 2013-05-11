@@ -62,6 +62,11 @@ public class CodecWrapper54 extends AbstractCodecWrapper {
     }
 
     @Override
+    public void rebind(Pointer<?> pointer) {
+        codec = new AVCodec54(pointer);
+    }
+
+    @Override
     public int getId() {
         if (id == null)
             id = codec.id();

@@ -50,6 +50,11 @@ public class InputFormatWrapper54 extends AbstractInputFormatWrapper {
     }
 
     @Override
+    public void rebind(Pointer<?> pointer) {
+        format = new AVInputFormat54(pointer);
+    }
+
+    @Override
     public String getName() {
         if (name == null) {
             Pointer<Byte> ptr = format.name();

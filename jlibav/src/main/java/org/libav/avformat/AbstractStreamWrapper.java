@@ -30,6 +30,7 @@ public abstract class AbstractStreamWrapper implements IStreamWrapper {
     
     protected ICodecContextWrapper codecContext;
     protected Integer index;
+    protected Rational sampleAspectRatio;
     protected Rational timeBase;
     protected Rational frameRate;
     protected Long frameCount;
@@ -40,6 +41,7 @@ public abstract class AbstractStreamWrapper implements IStreamWrapper {
     public AbstractStreamWrapper() {
         codecContext = null;
         index = null;
+        sampleAspectRatio = null;
         timeBase = null;
         frameRate = null;
         frameCount = null;
@@ -50,13 +52,12 @@ public abstract class AbstractStreamWrapper implements IStreamWrapper {
 
     @Override
     public void clearWrapperCache() {
-        codecContext = null;
         index = null;
+        sampleAspectRatio = null;
         timeBase = null;
         frameRate = null;
         frameCount = null;
         duration = null;
-        metadata = null;
         disposition = null;
     }
     

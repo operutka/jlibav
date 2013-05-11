@@ -31,7 +31,16 @@ import org.libav.util.Rational;
 public interface ICodecContextWrapper extends IWrapper {
     
     /**
-     * Initialize the codec context to use the given codec.
+     * Set the fields of this AVCodecContext to default values 
+     * corresponding to the given codec.
+     * 
+     * @param codec a codec
+     */
+    void getDefaults(ICodecWrapper codec) throws LibavException;
+    
+    /**
+     * Initialize the codec context to use the given codec. The given codec 
+     * must be the same codec as passed to the getDefaults() method.
      * 
      * @param codec a codec
      * @throws LibavException if the codec context cannot be initialized using
@@ -165,6 +174,44 @@ public interface ICodecContextWrapper extends IWrapper {
      * @param height 
      */
     void setHeight(int height);
+    
+    /**
+     * Get the sample_aspect_ratio property from the AVCodecContext.
+     * 
+     * WARNING:
+     * The returned value may be cached. Call the clearWrapperCahce() if you
+     * think the value have been changed.
+     * 
+     * @return aspect ratio
+     */
+    Rational getSampleAspectRatio();
+    
+    /**
+     * Set the sample_aspect_ratio property of the AVCodecContext. The value 
+     * may be cached.
+     * 
+     * @param aspectRatio 
+     */
+    void setSampleAspectRatio(Rational aspectRatio);
+    
+    /**
+     * Get the chroma_sample_location property from the AVCodecContext.
+     * 
+     * WARNING:
+     * The returned value may be cached. Call the clearWrapperCahce() if you
+     * think the value have been changed.
+     * 
+     * @return chroma sample location
+     */
+    int getChromaSampleLocation();
+    
+    /**
+     * Set the chroma_sample_location property of the AVCodecContext. The value 
+     * may be cached.
+     * 
+     * @param chromaSampleLocation 
+     */
+    void setChromaSampleLocation(int chromaSampleLocation);
     
     /**
      * Get the pix_fmt property from the AVCodecContext.

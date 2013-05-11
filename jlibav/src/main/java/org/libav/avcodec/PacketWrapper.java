@@ -47,6 +47,11 @@ public class PacketWrapper extends AbstractPacketWrapper {
     public Pointer<?> getPointer() {
         return Pointer.pointerTo(packet);
     }
+
+    @Override
+    public void rebind(Pointer<?> pointer) {
+        packet = new AVPacket(pointer);
+    }
     
     @Override
     public void init() {

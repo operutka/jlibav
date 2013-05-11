@@ -45,17 +45,19 @@ public class VideoFrameEncoder implements IEncoder {
     
     private static final AVUtilLibrary utilLib = LibraryManager.getInstance().getAVUtilLibrary();
     
-    public static final int DEFAULT_OUTPUT_BUFFER_SIZE = 200000;
+    public static final int DEFAULT_OUTPUT_BUFFER_SIZE = 256 * 1024;
     
     private IStreamWrapper stream;
     private ICodecContextWrapper cc;
+    private boolean initialized;
     
     private boolean rawFormat;
     
     private int outputBufferSize;
     private Pointer<Byte> outputBuffer;
     private IPacketWrapper packet;
-    private Rational ptsTransformBase;
+    private Rational tsToCodecBase;
+    private Rational tsToStreamBase;
     private ITimestampGenerator timestampGenerator;
     
     private final Set<IPacketConsumer> consumers;
@@ -76,12 +78,15 @@ public class VideoFrameEncoder implements IEncoder {
         if (cc.getCodecType() != AVMediaType.AVMEDIA_TYPE_VIDEO)
             throw new IllegalArgumentException("not a video stream");
         
+        initialized = false;
+        
         rawFormat = (formatContext.getOutputFormat().getFlags() & AVFormatLibrary.AVFMT_RAWPICTURE) != 0;
         
         outputBufferSize = DEFAULT_OUTPUT_BUFFER_SIZE;
         outputBuffer = malloc(outputBufferSize);
         packet = PacketWrapperFactory.getInstance().alloc();
-        ptsTransformBase = stream.getTimeBase().mul(1000).invert();
+        tsToCodecBase = null;
+        tsToStreamBase = null;
         timestampGenerator = new CopyTimestampGenerator();
         
         consumers = Collections.synchronizedSet(new HashSet<IPacketConsumer>());
@@ -162,8 +167,8 @@ public class VideoFrameEncoder implements IEncoder {
     public synchronized void processFrame(Object producer, IFrameWrapper frame) throws LibavException {
         if (isClosed())
             return;
-        if (cc.isClosed())
-            openCodecContext();
+        
+        initEncoder();
         
         IPacketWrapper p;
         long pts;
@@ -179,18 +184,26 @@ public class VideoFrameEncoder implements IEncoder {
     public synchronized void flush() throws LibavException {
         if (isClosed())
             return;
-        if (cc.isClosed())
-            openCodecContext();
+        
+        initEncoder();
         
         IPacketWrapper p;
         while ((p = encodeFrame(null, timestampGenerator.getLastTimestamp())) != null)
             sendPacket(p);
     }
     
-    private void openCodecContext() throws LibavException {
-        cc.clearWrapperCache();
-        cc.open(CodecWrapperFactory.getInstance().findEncoder(cc.getCodecId()));
+    private void initEncoder() throws LibavException {
+        if (initialized)
+            return;
         
+        cc.clearWrapperCache();
+        tsToCodecBase = cc.getTimeBase().mul(1000).invert();
+        
+        // propper time base is set after avformat_write_header() call
+        stream.clearWrapperCache();
+        tsToStreamBase = cc.getTimeBase().div(stream.getTimeBase());
+        
+        initialized = true;
     }
     
     private IPacketWrapper encodeFrame(IFrameWrapper frame, long pts) throws LibavException {
@@ -207,17 +220,32 @@ public class VideoFrameEncoder implements IEncoder {
             packet.setData(outputBuffer);
             packet.setSize(outputBufferSize);
 
-            if (!cc.encodeVideoFrame(frame, packet))
+            boolean gotPacket;
+            if (frame == null)
+                gotPacket = cc.encodeVideoFrame(null, packet);
+            else {
+                long oldPts = frame.getPts();
+                frame.setPts(tsToCodecBase.mul(pts).longValue());
+                gotPacket = cc.encodeVideoFrame(frame, packet);
+                frame.setPts(oldPts);
+            }
+            
+            if (!gotPacket)
                 return null;
 
-            packet.setStreamIndex(stream.getIndex());
+            packet.clearWrapperCache();
             cc.clearWrapperCache();
+            
+            packet.setStreamIndex(stream.getIndex());
             IFrameWrapper codedFrame = cc.getCodedFrame();
+            codedFrame.clearWrapperCache();
             if (codedFrame.isKeyFrame())
                 packet.setFlags(packet.getFlags() | AVCodecLibrary.AV_PKT_FLAG_KEY);
-             //System.out.printf("encoding video frame: pts = %d (pts_offset = %d, source_pts = %d)\n", pts, timestampGenerator.getOffset(), frame.getPts());
-            packet.setPts(ptsTransformBase.mul(pts).longValue());
-            packet.setDts(packet.getPts());
+            //System.out.printf("encoding video frame: pts = %d (pts_offset = %d, source_pts = %d)\n", pts, timestampGenerator.getOffset(), frame.getPts());
+            if (packet.getPts() != AVUtilLibrary.AV_NOPTS_VALUE)
+                packet.setPts(tsToStreamBase.mul(packet.getPts()).longValue());
+            if (packet.getDts() != AVUtilLibrary.AV_NOPTS_VALUE)
+                packet.setDts(tsToStreamBase.mul(packet.getDts()).longValue());
         }
         
         return packet;

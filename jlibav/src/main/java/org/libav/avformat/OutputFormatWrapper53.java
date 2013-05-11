@@ -49,6 +49,11 @@ public class OutputFormatWrapper53 extends AbstractOutputFormatWrapper {
     }
 
     @Override
+    public void rebind(Pointer<?> pointer) {
+        format = new AVOutputFormat53(pointer);
+    }
+
+    @Override
     public String getName() {
         if (name == null) {
             Pointer<Byte> ptr = format.name();

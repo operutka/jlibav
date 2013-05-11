@@ -46,6 +46,15 @@ public final class AVUtilLibrary implements ILibrary {
     public static final int AV_DICT_DONT_STRDUP_VAL = 8;
     public static final int AV_DICT_DONT_OVERWRITE = 16;
     public static final int AV_DICT_APPEND = 32;
+    
+    public static final int AV_LOG_QUIET = -8;
+    public static final int AV_LOG_PANIC = 0;
+    public static final int AV_LOG_FATAL = 8;
+    public static final int AV_LOG_ERROR = 16;
+    public static final int AV_LOG_WARNING = 24;
+    public static final int AV_LOG_INFO = 32;
+    public static final int AV_LOG_VERBOSE = 40;
+    public static final int AV_LOG_DEBUG = 48;
 
     public static final String LIB_NAME = BridJ.getNativeLibraryName(Lib.class);
     public static final int MIN_MAJOR_VERSION = 51;
@@ -183,6 +192,24 @@ public final class AVUtilLibrary implements ILibrary {
      */
     public int av_strerror(int errNum, Pointer<Byte> errBuf, long errbufSize) {
         return Lib.av_strerror(errNum, errBuf, errbufSize);
+    }
+    
+    /**
+     * Get Libav log level.
+     * 
+     * @return log level
+     */
+    public int av_log_get_level() {
+        return Lib.av_log_get_level();
+    }
+    
+    /**
+     * Set Libav log level.
+     * 
+     * @param logLevel log level
+     */
+    public void av_log_set_level(int logLevel) {
+        Lib.av_log_set_level(logLevel);
     }
     
     /**
@@ -555,6 +582,9 @@ public final class AVUtilLibrary implements ILibrary {
 	public static native void av_free(Pointer<?> ptr);
 	public static native void av_freep(Pointer<?> ptr);
 	public static native int av_strerror(int errnum, Pointer<Byte> errbuf, @Ptr long errbuf_size);
+        
+        public static native int av_log_get_level();
+        public static native void av_log_set_level(int logLevel);
         
         public static native Pointer<?> av_dict_get(Pointer<?> m, Pointer<Byte> key, Pointer<?> prev, int flags);
         public static native int av_dict_set(Pointer<Pointer<?>> pm, Pointer<Byte> key, Pointer<Byte> value, int flags);

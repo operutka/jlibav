@@ -42,6 +42,11 @@ public class IOContextWrapper extends AbstractIOContextWrapper {
     public Pointer<?> getPointer() {
         return Pointer.pointerTo(context);
     }
+
+    @Override
+    public void rebind(Pointer<?> pointer) {
+        context = new AVIOContext(pointer);
+    }
     
     @Override
     public boolean isSeekable() {

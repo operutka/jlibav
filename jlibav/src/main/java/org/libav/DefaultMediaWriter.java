@@ -23,6 +23,7 @@ import java.nio.charset.Charset;
 import org.bridj.Pointer;
 import org.libav.avcodec.CodecWrapperFactory;
 import org.libav.avcodec.ICodecContextWrapper;
+import org.libav.avcodec.ICodecWrapper;
 import org.libav.avcodec.IPacketWrapper;
 import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.avformat.FormatContextWrapperFactory;
@@ -32,7 +33,6 @@ import org.libav.avformat.IStreamWrapper;
 import org.libav.avformat.bridge.AVFormatLibrary;
 import org.libav.avutil.bridge.AVChannelLayout;
 import org.libav.avutil.bridge.AVMediaType;
-import org.libav.avutil.bridge.PixelFormat;
 import org.libav.bridge.LibraryManager;
 import org.libav.util.Rational;
 
@@ -138,30 +138,20 @@ public class DefaultMediaWriter implements IMediaWriter {
         if (isClosed())
             throw new IllegalStateException("the media stream has been closed");
         
+        ICodecWrapper codec = CodecWrapperFactory.getInstance().findEncoder(codecId);
         IStreamWrapper stream = formatContext.newStream();
-        
         ICodecContextWrapper cc = stream.getCodecContext();
+        
+        cc.getDefaults(codec);
+        
         cc.setCodecId(codecId);
-        cc.setCodecType(AVMediaType.AVMEDIA_TYPE_VIDEO);
-        cc.setBitRate(1000000);
         cc.setWidth(width);
         cc.setHeight(height);
-        cc.setTimeBase(new Rational(1, 40));
-        cc.setGopSize(12);
-        cc.setPixelFormat(PixelFormat.PIX_FMT_YUV420P);
-        
-        if (codecId == CodecWrapperFactory.CODEC_ID_MPEG2VIDEO)
-            cc.setMaxBFrames(2);
+        cc.setTimeBase(new Rational(1, 25));
         
         IOutputFormatWrapper ofw = formatContext.getOutputFormat();
         if ((ofw.getFlags() & AVFormatLibrary.AVFMT_GLOBALHEADER) != 0)
             cc.setFlags(cc.getFlags() | AVCodecLibrary.CODEC_FLAG_GLOBAL_HEADER);
-        
-        // FIX: find a better solution
-        stream.setTimeBase(new Rational(1, 40));
-        if (ofw.getName().equalsIgnoreCase("matroska") ||
-                ofw.getName().equalsIgnoreCase("flv"))
-            stream.setTimeBase(new Rational(1, 1000));
         
         reloadStreams();
         return vStreams.length - 1;
@@ -182,10 +172,12 @@ public class DefaultMediaWriter implements IMediaWriter {
         if (isClosed())
             throw new IllegalStateException("the media stream has been closed");
         
+        ICodecWrapper codec = CodecWrapperFactory.getInstance().findEncoder(codecId);
         IStreamWrapper stream = formatContext.newStream();
         ICodecContextWrapper cc = stream.getCodecContext();
         
-        cc.setCodecType(AVMediaType.AVMEDIA_TYPE_AUDIO);
+        cc.getDefaults(codec);
+        
         cc.setCodecId(codecId);
         cc.setBitRate(192000);
         cc.setSampleRate(sampleRate);
@@ -196,14 +188,6 @@ public class DefaultMediaWriter implements IMediaWriter {
         IOutputFormatWrapper ofw = formatContext.getOutputFormat();
         if ((ofw.getFlags() & AVFormatLibrary.AVFMT_GLOBALHEADER) != 0)
             cc.setFlags(cc.getFlags() | AVCodecLibrary.CODEC_FLAG_GLOBAL_HEADER);
-        
-        // FIX: find a better solution
-        stream.setTimeBase(new Rational(1, sampleRate));
-        if (ofw.getName().equalsIgnoreCase("matroska") ||
-                ofw.getName().equalsIgnoreCase("flv"))
-            stream.setTimeBase(new Rational(1, 1000));
-        else if (ofw.getName().equalsIgnoreCase("avi"))
-            stream.setTimeBase(new Rational(1, sampleRate / 2));
         
         reloadStreams();
         return aStreams.length - 1;

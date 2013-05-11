@@ -74,6 +74,11 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
         
         return Pointer.pointerTo(frame);
     }
+
+    @Override
+    public void rebind(Pointer<?> pointer) {
+        frame = new AVFrame53(pointer);
+    }
     
     @Override
     public void free() {

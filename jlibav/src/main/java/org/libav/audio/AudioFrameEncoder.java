@@ -44,10 +44,11 @@ public class AudioFrameEncoder implements IEncoder {
     
     private static final AVUtilLibrary utilLib = LibraryManager.getInstance().getAVUtilLibrary();
     
-    public static final int DEFAULT_OUTPUT_BUFFER_SIZE = 200000;
+    public static final int DEFAULT_OUTPUT_BUFFER_SIZE = 256 * 1024;
     
     private IStreamWrapper stream;
     private ICodecContextWrapper cc;
+    private boolean initialized;
     private boolean smallLastFrame;
     
     private IFrameWrapper tmpFrame;
@@ -83,6 +84,7 @@ public class AudioFrameEncoder implements IEncoder {
         if (cc.getCodecType() != AVMediaType.AVMEDIA_TYPE_AUDIO)
             throw new IllegalArgumentException("not an audio stream");
         
+        initialized = false;
         smallLastFrame = false;
         
         tmpFrame = FrameWrapperFactory.getInstance().allocFrame();
@@ -97,8 +99,7 @@ public class AudioFrameEncoder implements IEncoder {
         packet = PacketWrapperFactory.getInstance().alloc();
         
         flushFramePts = 0;
-        stream.clearWrapperCache();
-        ptsTransformBase = stream.getTimeBase().mul(1000).invert();
+        ptsTransformBase = null;
         timestampGenerator = new CopyTimestampGenerator();
         
         consumers = Collections.synchronizedSet(new HashSet<IPacketConsumer>());
@@ -182,8 +183,8 @@ public class AudioFrameEncoder implements IEncoder {
     public synchronized void processFrame(Object producer, IFrameWrapper frame) throws LibavException {
         if (isClosed())
             return;
-        if (cc.isClosed())
-            openCodecContext();
+        
+        initEncoder();
         
         long pts;
         while ((pts = timestampGenerator.nextFrame(frame.getPts())) >= 0)
@@ -194,19 +195,21 @@ public class AudioFrameEncoder implements IEncoder {
     public synchronized void flush() throws LibavException {
         if (isClosed())
             return;
-        if (cc.isClosed())
-            openCodecContext();
+        
+        initEncoder();
         
         boolean flush = true;
         while (flush)
             flush = flushFrame();
     }
     
-    private void openCodecContext() throws LibavException {
+    private void initEncoder() throws LibavException {
+        if (initialized)
+            return;
+        
         cc.clearWrapperCache();
+        
         ICodecWrapper codec = CodecWrapperFactory.getInstance().findEncoder(cc.getCodecId());
-        cc.open(codec);
-        cc.clearWrapperCache();
         
         smallLastFrame = (codec.getCapabilities() & AVCodecLibrary.CODEC_CAP_SMALL_LAST_FRAME) == AVCodecLibrary.CODEC_CAP_SMALL_LAST_FRAME;
         frameSampleCount = cc.getFrameSize();
@@ -218,6 +221,12 @@ public class AudioFrameEncoder implements IEncoder {
         frameDuration = 1000 * frameSampleCount / cc.getSampleRate();
         byteDuration = new Rational(frameDuration, frameSize);
         offset = 0;
+        
+        // propper time base is set after avformat_write_header() call
+        stream.clearWrapperCache();
+        ptsTransformBase = stream.getTimeBase().mul(1000).invert();
+        
+        initialized = true;
     }
     
     private boolean flushFrame() throws LibavException {

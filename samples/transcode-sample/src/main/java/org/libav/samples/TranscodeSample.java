@@ -81,8 +81,7 @@ public class TranscodeSample {
             
             mw.writeHeader(); // write file header
             boolean hasNext = true;
-            int count = 10000;
-            while (hasNext && count-- > 0) {
+            while (hasNext) {
                 try {
                     hasNext = mr.readNextPacket();
                 } catch (LibavException ex) {

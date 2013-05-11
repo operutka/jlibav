@@ -60,6 +60,11 @@ public class ScaleContextWrapper implements IScaleContextWrapper {
     public Pointer<?> getPointer() {
         return scaleContext;
     }
+
+    @Override
+    public void rebind(Pointer<?> pointer) {
+        scaleContext = pointer;
+    }
     
     @Override
     public int scale(IFrameWrapper src, IFrameWrapper dst, int srcSliceY, int srcSliceHeight) throws LibavException {

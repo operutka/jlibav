@@ -48,6 +48,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
     }
     
     private AVCodecContext53 context;
+    private boolean closed;
     
     private Pointer<Integer> intByRef;
     private IDecodeAudioFunction decodeAudioFunction;
@@ -60,6 +61,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
      */
     public CodecContextWrapper53(AVCodecContext53 context) {
         this.context = context;
+        this.closed = true;
         
         this.intByRef = Pointer.allocateInt();
         
@@ -73,6 +75,24 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         else
             this.encodeAudioFunction = new EncodeAudio();
     }
+
+    @Override
+    public void clearWrapperCache() {
+        super.clearWrapperCache();
+        
+        rebindCodedFrame();
+    }
+    
+    private void rebindCodedFrame() {
+        if (context == null || codedFrame == null)
+            return;
+        
+        Pointer<?> ptr = context.coded_frame();
+        if (ptr == null)
+            codedFrame = null;
+        else
+            codedFrame.rebind(ptr);
+    }
     
     @Override
     public Pointer<?> getPointer() {
@@ -81,11 +101,25 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         
         return Pointer.pointerTo(context);
     }
+
+    @Override
+    public void rebind(Pointer<?> pointer) {
+        context = new AVCodecContext53(pointer);
+    }
+
+    @Override
+    public void getDefaults(ICodecWrapper codec) throws LibavException {
+        int result = codecLib.avcodec_get_context_defaults3(getPointer(), codec.getPointer());
+        if (result != 0)
+            throw new LibavException(result);
+        
+        clearWrapperCache();
+    }
     
     @Override
     public void open(ICodecWrapper codec) throws LibavException {
-        if (this.codec != null)
-            close();
+        if (!isClosed())
+            return;
         
         int result;
         if (avcOpen2)
@@ -96,7 +130,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         if(result < 0)
             throw new LibavException(result);
         
-        this.codec = codec;
+        closed = false;
     }
     
     @Override
@@ -105,7 +139,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             return;
         
         codecLib.avcodec_close(getPointer());
-        codec = null;
+        closed = true;
     }
     
     @Override
@@ -122,7 +156,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
     
     @Override
     public boolean isClosed() {
-        return codec == null;
+        return closed;
     }
     
     @Override
@@ -237,6 +271,50 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         context.height(height);
         this.height = height;
     }
+
+    @Override
+    public Rational getSampleAspectRatio() {
+        if (context == null)
+            return null;
+        
+        if (sampleAspectRatio == null)
+            sampleAspectRatio = new Rational(context.sample_aspect_ratio());
+        
+        return sampleAspectRatio;
+    }
+
+    @Override
+    public void setSampleAspectRatio(Rational sampleAspectRatio) {
+        if (context == null)
+            return;
+        
+        if (sampleAspectRatio == null)
+            sampleAspectRatio = new Rational(0, 0);
+        
+        context.sample_aspect_ratio().num((int)sampleAspectRatio.getNumerator());
+        context.sample_aspect_ratio().den((int)sampleAspectRatio.getDenominator());
+        this.sampleAspectRatio = sampleAspectRatio;
+    }
+
+    @Override
+    public int getChromaSampleLocation() {
+        if (context == null)
+            return 0;
+        
+        if (chromaSampleLocation == null)
+            chromaSampleLocation = context.chroma_sample_location();
+        
+        return chromaSampleLocation;
+    }
+
+    @Override
+    public void setChromaSampleLocation(int chromaSampleLocation) {
+        if (context == null)
+            return;
+        
+        context.chroma_sample_location(chromaSampleLocation);
+        this.chromaSampleLocation = chromaSampleLocation;
+    }
     
     @Override
     public int getPixelFormat() {
@@ -293,6 +371,9 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
     public void setTimeBase(Rational timeBase) {
         if (context == null)
             return;
+        
+        if (timeBase == null)
+            timeBase = new Rational(0, 0);
         
         context.time_base().num((int)timeBase.getNumerator());
         context.time_base().den((int)timeBase.getDenominator());
