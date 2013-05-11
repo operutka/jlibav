@@ -19,7 +19,10 @@ package org.libav.avcodec;
 
 import org.bridj.Pointer;
 import org.libav.LibavException;
+import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.avcodec.bridge.AVPacket;
+import org.libav.avcodec.bridge.AVPacket55;
+import org.libav.bridge.LibraryManager;
 
 /**
  * Factory class for packet wrappers.
@@ -28,9 +31,11 @@ import org.libav.avcodec.bridge.AVPacket;
  */
 public class PacketWrapperFactory {
     
+    private static final AVCodecLibrary codecLib;
     private static final PacketWrapperFactory instance;
     
     static {
+        codecLib = LibraryManager.getInstance().getAVCodecLibrary();
         instance = new PacketWrapperFactory();
     }
     
@@ -41,7 +46,13 @@ public class PacketWrapperFactory {
      * @return packet wrapper
      */
     public IPacketWrapper wrap(Pointer<?> packet) {
-        return wrap(new AVPacket(packet));
+        switch (codecLib.getMajorVersion()) {
+            case 53:
+            case 54: return wrap(new AVPacket(packet));
+            case 55: return wrap(new AVPacket55(packet));
+        }
+        
+        throw new UnsatisfiedLinkError("unsupported version of the libavcodec");
     }
     
     /**
@@ -55,12 +66,28 @@ public class PacketWrapperFactory {
     }
     
     /**
+     * Wrap the given struct.
+     * 
+     * @param packet AVPacket struct
+     * @return packet wrapper
+     */
+    public IPacketWrapper wrap(AVPacket55 packet) {
+        return new PacketWrapper55(packet);
+    }
+    
+    /**
      * Allocate a new empty packet.
      * 
      * @return packet wrapper
      */
     public IPacketWrapper alloc() {
-        return PacketWrapper.allocatePacket();
+        switch (codecLib.getMajorVersion()) {
+            case 53:
+            case 54: return PacketWrapper.allocatePacket();
+            case 55: return PacketWrapper55.allocatePacket();
+        }
+        
+        throw new UnsatisfiedLinkError("unsupported version of the libavcodec");
     }
     
     /**
@@ -70,7 +97,13 @@ public class PacketWrapperFactory {
      * @return packet wrapper
      */
     public IPacketWrapper alloc(int size) throws LibavException {
-        return PacketWrapper.allocatePacket(size);
+        switch (codecLib.getMajorVersion()) {
+            case 53:
+            case 54: return PacketWrapper.allocatePacket(size);
+            case 55: return PacketWrapper55.allocatePacket(size);
+        }
+        
+        throw new UnsatisfiedLinkError("unsupported version of the libavcodec");
     }
     
     /**

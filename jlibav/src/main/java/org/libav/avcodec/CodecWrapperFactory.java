@@ -46,7 +46,8 @@ public class CodecWrapperFactory {
     public ICodecWrapper wrap(Pointer<?> codec) {
         switch (codecLib.getMajorVersion()) {
             case 53: return wrap(new AVCodec53(codec));
-            case 54: return wrap(new AVCodec54(codec));
+            case 54:
+            case 55: return wrap(new AVCodec54(codec));
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavcodec");
@@ -82,7 +83,8 @@ public class CodecWrapperFactory {
     public ICodecWrapper findDecoder(CodecID codecId) throws LibavException {
         switch (codecLib.getMajorVersion()) {
             case 53: return CodecWrapper53.findDecoder(codecId);
-            case 54: return CodecWrapper54.findDecoder(codecId);
+            case 54:
+            case 55: return CodecWrapper54.findDecoder(codecId);
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavcodec");
@@ -98,7 +100,8 @@ public class CodecWrapperFactory {
     public ICodecWrapper findEncoder(CodecID codecId) throws LibavException {
         switch (codecLib.getMajorVersion()) {
             case 53: return CodecWrapper53.findEncoder(codecId);
-            case 54: return CodecWrapper54.findEncoder(codecId);
+            case 54:
+            case 55: return CodecWrapper54.findEncoder(codecId);
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavcodec");
@@ -114,7 +117,8 @@ public class CodecWrapperFactory {
     public ICodecWrapper findDecoderByName(String name) throws LibavException {
         switch (codecLib.getMajorVersion()) {
             case 53: return CodecWrapper53.findDecoderByName(name);
-            case 54: return CodecWrapper54.findDecoderByName(name);
+            case 54:
+            case 55: return CodecWrapper54.findDecoderByName(name);
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavcodec");
@@ -130,7 +134,8 @@ public class CodecWrapperFactory {
     public ICodecWrapper findEncoderByName(String name) throws LibavException {
         switch (codecLib.getMajorVersion()) {
             case 53: return CodecWrapper53.findEncoderByName(name);
-            case 54: return CodecWrapper54.findEncoderByName(name);
+            case 54:
+            case 55: return CodecWrapper54.findEncoderByName(name);
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavcodec");

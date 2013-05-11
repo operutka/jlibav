@@ -20,6 +20,7 @@ package org.libav.avcodec;
 import org.bridj.Pointer;
 import org.libav.avcodec.bridge.AVCodecContext53;
 import org.libav.avcodec.bridge.AVCodecContext54;
+import org.libav.avcodec.bridge.AVCodecContext55;
 import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.bridge.LibraryManager;
 
@@ -48,6 +49,7 @@ public class CodecContextWrapperFactory {
         switch (codecLib.getMajorVersion()) {
             case 53: return wrap(new AVCodecContext53(codecContext));
             case 54: return wrap(new AVCodecContext54(codecContext));
+            case 55: return wrap(new AVCodecContext55(codecContext));
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavcodec");
@@ -71,6 +73,16 @@ public class CodecContextWrapperFactory {
      */
     public ICodecContextWrapper wrap(AVCodecContext54 codecContext) {
         return new CodecContextWrapper54(codecContext);
+    }
+    
+    /**
+     * Wrap the given struct.
+     * 
+     * @param codecContext AVCodecContext struct
+     * @return codec context wrapper
+     */
+    public ICodecContextWrapper wrap(AVCodecContext55 codecContext) {
+        return new CodecContextWrapper55(codecContext);
     }
     
     /**

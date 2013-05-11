@@ -23,8 +23,8 @@ import org.bridj.ann.Array;
 import org.bridj.ann.Field;
 
 /**
- * Mirror of the native AVPicture struct for the libavcodec v 54.x.x. For
- * details see the Libav documentation.
+ * Mirror of the native AVPicture struct for the libavcodec v54.x.x and 55.x.x. 
+ * For details see the Libav documentation.
  *
  * @author Ondrej Perutka
  */

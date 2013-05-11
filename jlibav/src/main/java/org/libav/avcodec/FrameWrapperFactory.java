@@ -19,7 +19,6 @@ package org.libav.avcodec;
 
 import org.bridj.BridJ;
 import org.bridj.Pointer;
-import org.bridj.StructObject;
 import org.libav.LibavException;
 import org.libav.avcodec.bridge.*;
 import org.libav.bridge.LibraryManager;
@@ -49,6 +48,7 @@ public class FrameWrapperFactory {
         switch (codecLib.getMajorVersion()) {
             case 53: return wrap(new AVFrame53(frame));
             case 54: return wrap(new AVFrame54(frame));
+            case 55: return wrap(new AVFrame55(frame));
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavcodec");
@@ -75,6 +75,16 @@ public class FrameWrapperFactory {
     }
     
     /**
+     * Wrap the given struct.
+     * 
+     * @param frame AVFrame struct
+     * @return frame wrapper
+     */
+    public IFrameWrapper wrap(AVFrame55 frame) {
+        return new FrameWrapper55(frame);
+    }
+    
+    /**
      * Allocate a new frame.
      * 
      * @return frame wrapper
@@ -84,6 +94,7 @@ public class FrameWrapperFactory {
         switch (codecLib.getMajorVersion()) {
             case 53: return FrameWrapper53.allocateFrame();
             case 54: return FrameWrapper54.allocateFrame();
+            case 55: return FrameWrapper55.allocateFrame();
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavcodec");
@@ -103,6 +114,7 @@ public class FrameWrapperFactory {
         switch (codecLib.getMajorVersion()) {
             case 53: return FrameWrapper53.allocatePicture(pixelFormat, width, height);
             case 54: return FrameWrapper54.allocatePicture(pixelFormat, width, height);
+            case 55: return FrameWrapper55.allocatePicture(pixelFormat, width, height);
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavcodec");
@@ -116,7 +128,8 @@ public class FrameWrapperFactory {
     public long getAVPictureSize() {
         switch (codecLib.getMajorVersion()) {
             case 53: return BridJ.sizeOf(AVPicture53.class);
-            case 54: return BridJ.sizeOf(AVPicture54.class);
+            case 54:
+            case 55: return BridJ.sizeOf(AVPicture54.class);
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavcodec");

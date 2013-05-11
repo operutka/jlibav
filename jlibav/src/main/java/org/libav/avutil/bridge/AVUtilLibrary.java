@@ -213,6 +213,27 @@ public final class AVUtilLibrary implements ILibrary {
     }
     
     /**
+     * Allocate an AVFrame and set its fields to default values.  The resulting
+     * struct must be freed using av_frame_free().
+     *
+     * @return An AVFrame filled with default values or NULL on failure.
+     */
+    public Pointer<?> av_frame_alloc() {
+        return Lib.av_frame_alloc();
+    }
+    
+    /**
+     * Free the frame and any dynamically allocated objects in it,
+     * e.g. extended_data. If the frame is reference counted, it will be
+     * unreferenced first.
+     *
+     * @param frame frame to be freed. The pointer will be set to NULL.
+     */
+    public void av_frame_free(Pointer<Pointer<?>> frame) {
+        Lib.av_frame_free(frame.getPeer());
+    }
+    
+    /**
      * Get a dictionary entry with matching key.
      * 
      * @param m
@@ -585,6 +606,9 @@ public final class AVUtilLibrary implements ILibrary {
         
         public static native int av_log_get_level();
         public static native void av_log_set_level(int logLevel);
+        
+        public static native Pointer<?> av_frame_alloc();
+        public static native void av_frame_free(@Ptr long frame);
         
         public static native Pointer<?> av_dict_get(Pointer<?> m, Pointer<Byte> key, Pointer<?> prev, int flags);
         public static native int av_dict_set(Pointer<Pointer<?>> pm, Pointer<Byte> key, Pointer<Byte> value, int flags);
