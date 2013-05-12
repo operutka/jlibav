@@ -22,8 +22,8 @@ import org.bridj.StructObject;
 import org.bridj.ann.Field;
 
 /**
- * Mirror of the native AVProbeData struct for the libavformat v53.x.x and
- * 54.x.x. For details see the Libav documentation.
+ * Mirror of the native AVProbeData struct for the libavformat v53.x.x, 
+ * v54.x.x and v55.x.x. For details see the Libav documentation.
  *
  * @author Ondrej Perutka
  */

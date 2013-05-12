@@ -32,7 +32,6 @@ public abstract class AbstractStreamWrapper implements IStreamWrapper {
     protected Integer index;
     protected Rational sampleAspectRatio;
     protected Rational timeBase;
-    protected Rational frameRate;
     protected Long frameCount;
     protected Long duration;
     protected IDictionaryWrapper metadata;
@@ -43,7 +42,6 @@ public abstract class AbstractStreamWrapper implements IStreamWrapper {
         index = null;
         sampleAspectRatio = null;
         timeBase = null;
-        frameRate = null;
         frameCount = null;
         duration = null;
         metadata = null;
@@ -55,7 +53,6 @@ public abstract class AbstractStreamWrapper implements IStreamWrapper {
         index = null;
         sampleAspectRatio = null;
         timeBase = null;
-        frameRate = null;
         frameCount = null;
         duration = null;
         disposition = null;

@@ -21,6 +21,7 @@ import org.bridj.Pointer;
 import org.libav.avformat.bridge.AVFormatLibrary;
 import org.libav.avformat.bridge.AVStream53;
 import org.libav.avformat.bridge.AVStream54;
+import org.libav.avformat.bridge.AVStream55;
 import org.libav.bridge.LibraryManager;
 
 /**
@@ -48,6 +49,7 @@ public class StreamWrapperFactory {
         switch (formatLib.getMajorVersion()) {
             case 53: return wrap(new AVStream53(stream));
             case 54: return wrap(new AVStream54(stream));
+            case 55: return wrap(new AVStream55(stream));
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavformat");
@@ -71,6 +73,16 @@ public class StreamWrapperFactory {
      */
     public IStreamWrapper wrap(AVStream54 stream) {
         return new StreamWrapper54(stream);
+    }
+    
+    /**
+     * Wrap the given struct.
+     * 
+     * @param stream AVStream struct
+     * @return stream wrapper
+     */
+    public IStreamWrapper wrap(AVStream55 stream) {
+        return new StreamWrapper55(stream);
     }
     
     /**

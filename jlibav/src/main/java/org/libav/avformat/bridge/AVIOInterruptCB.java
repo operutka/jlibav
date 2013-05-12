@@ -23,8 +23,8 @@ import org.bridj.StructObject;
 import org.bridj.ann.Field;
 
 /**
- * Mirror of the native AVIOInterruptCB struct from the libavformat v54.x.x. For
- * details see the Libav documentation.
+ * Mirror of the native AVIOInterruptCB struct from the libavformat v54.x.x and
+ * v55.x.x. For details see the Libav documentation.
  *
  * @author Ondrej Perutka
  */

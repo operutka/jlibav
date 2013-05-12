@@ -48,7 +48,8 @@ public class OutputFormatWrapperFactory implements Iterable<IOutputFormatWrapper
     public IOutputFormatWrapper wrap(Pointer<?> format) {
         switch (formatLib.getMajorVersion()) {
             case 53: return wrap(new AVOutputFormat53(format));
-            case 54: return wrap(new AVOutputFormat54(format));
+            case 54:
+            case 55: return wrap(new AVOutputFormat54(format));
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavformat");
@@ -86,7 +87,8 @@ public class OutputFormatWrapperFactory implements Iterable<IOutputFormatWrapper
     public IOutputFormatWrapper guessFormat(String shortName, String fileName, String mimeType) {
         switch (formatLib.getMajorVersion()) {
             case 53: return OutputFormatWrapper53.guessFormat(shortName, fileName, mimeType);
-            case 54: return OutputFormatWrapper54.guessFormat(shortName, fileName, mimeType);
+            case 54:
+            case 55: return OutputFormatWrapper54.guessFormat(shortName, fileName, mimeType);
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavformat");

@@ -22,9 +22,9 @@ import org.bridj.StructObject;
 import org.bridj.ann.Field;
 
 /**
- * Mirror of the native AVOutputFormat struct for the libavformat v54.x.x. This
- * class contains only the public API fields, the real AVOutputFormat struct is
- * bigger. For details see the Libav documentation.
+ * Mirror of the native AVOutputFormat struct for the libavformat v54.x.x and 
+ * v55.x.x. This class contains only the public API fields, the real 
+ * AVOutputFormat struct is bigger. For details see the Libav documentation.
  *
  * @author Ondrej Perutka
  */

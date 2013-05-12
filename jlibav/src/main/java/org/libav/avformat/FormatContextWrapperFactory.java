@@ -48,7 +48,8 @@ public class FormatContextWrapperFactory {
     public IFormatContextWrapper wrap(Pointer<?> formatContext) {
         switch (formatLib.getMajorVersion()) {
             case 53: return wrap(new AVFormatContext53(formatContext));
-            case 54: return wrap(new AVFormatContext54(formatContext));
+            case 54:
+            case 55: return wrap(new AVFormatContext54(formatContext));
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavformat");
@@ -84,7 +85,8 @@ public class FormatContextWrapperFactory {
     public IFormatContextWrapper openMedia(String url) throws LibavException {
         switch (formatLib.getMajorVersion()) {
             case 53: return FormatContextWrapper53.openMedia(url);
-            case 54: return FormatContextWrapper54.openMedia(url);
+            case 54:
+            case 55: return FormatContextWrapper54.openMedia(url);
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavformat");
@@ -101,7 +103,8 @@ public class FormatContextWrapperFactory {
     public IFormatContextWrapper openMedia(String url, String inputFormat) throws LibavException {
         switch (formatLib.getMajorVersion()) {
             case 53: return FormatContextWrapper53.openMedia(url, inputFormat);
-            case 54: return FormatContextWrapper54.openMedia(url, inputFormat);
+            case 54:
+            case 55: return FormatContextWrapper54.openMedia(url, inputFormat);
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavformat");
@@ -118,7 +121,8 @@ public class FormatContextWrapperFactory {
     public IFormatContextWrapper openMedia(String url, IInputFormatWrapper inputFormat) throws LibavException {
         switch (formatLib.getMajorVersion()) {
             case 53: return FormatContextWrapper53.openMedia(url, inputFormat);
-            case 54: return FormatContextWrapper54.openMedia(url, inputFormat);
+            case 54:
+            case 55: return FormatContextWrapper54.openMedia(url, inputFormat);
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavformat");
@@ -135,7 +139,8 @@ public class FormatContextWrapperFactory {
     public IFormatContextWrapper createMedia(String url, String outputFormatName) throws LibavException {
         switch (formatLib.getMajorVersion()) {
             case 53: return FormatContextWrapper53.createMedia(url, outputFormatName);
-            case 54: return FormatContextWrapper54.createMedia(url, outputFormatName);
+            case 54:
+            case 55: return FormatContextWrapper54.createMedia(url, outputFormatName);
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavformat");

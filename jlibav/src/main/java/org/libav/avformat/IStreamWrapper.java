@@ -91,17 +91,6 @@ public interface IStreamWrapper extends IWrapper {
     void setSampleAspectRatio(Rational aspectRatio);
 
     /**
-     * Get the r_frame_rate property from the AVStream.
-     * 
-     * WARNING:
-     * The returned value may be cached. Call the clearWrapperCahce() if you
-     * think the value have been changed.
-     * 
-     * @return real base frame rate
-     */
-    Rational getRFrameRate();
-
-    /**
      * Get the time_base property from the AVStream.
      * 
      * WARNING:

@@ -48,7 +48,8 @@ public class InputFormatWrapperFactory implements Iterable<IInputFormatWrapper> 
     public IInputFormatWrapper wrap(Pointer<?> format) {
         switch (formatLib.getMajorVersion()) {
             case 53: return wrap(new AVInputFormat53(format));
-            case 54: return wrap(new AVInputFormat54(format));
+            case 54:
+            case 55: return wrap(new AVInputFormat54(format));
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavformat");
@@ -83,7 +84,8 @@ public class InputFormatWrapperFactory implements Iterable<IInputFormatWrapper> 
     public IInputFormatWrapper find(String shortName) {
         switch (formatLib.getMajorVersion()) {
             case 53: return InputFormatWrapper53.find(shortName);
-            case 54: return InputFormatWrapper54.find(shortName);
+            case 54:
+            case 55: return InputFormatWrapper54.find(shortName);
         }
         
         throw new UnsatisfiedLinkError("unsupported version of the libavformat");

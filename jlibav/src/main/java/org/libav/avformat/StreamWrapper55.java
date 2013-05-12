@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Ondrej Perutka
+ * Copyright (C) 2013 Ondrej Perutka
  *
  * This program is free software: you can redistribute it and/or 
  * modify it under the terms of the GNU Lesser General Public 
@@ -20,7 +20,7 @@ package org.libav.avformat;
 import org.bridj.Pointer;
 import org.libav.avcodec.CodecContextWrapperFactory;
 import org.libav.avcodec.ICodecContextWrapper;
-import org.libav.avformat.bridge.AVStream53;
+import org.libav.avformat.bridge.AVStream55;
 import org.libav.avutil.DictionaryWrapperFactory;
 import org.libav.avutil.IDictionaryWrapper;
 import org.libav.avutil.bridge.AVUtilLibrary;
@@ -28,20 +28,20 @@ import org.libav.bridge.LibraryManager;
 import org.libav.util.Rational;
 
 /**
- * Wrapper class for the AVStream54.
+ * Wrapper class for the AVStream55.
  * 
  * @author Ondrej Perutka
  */
-public class StreamWrapper53 extends AbstractStreamWrapper {
+public class StreamWrapper55 extends AbstractStreamWrapper {
     
-    private AVStream53 stream;
+    private AVStream55 stream;
     
     /**
      * Create a new wrapper for the given AVStream.
      * 
      * @param stream an AVStream structure
      */
-    public StreamWrapper53(AVStream53 stream) {
+    public StreamWrapper55(AVStream55 stream) {
         this.stream = stream;
     }
 
@@ -85,7 +85,7 @@ public class StreamWrapper53 extends AbstractStreamWrapper {
 
     @Override
     public void rebind(Pointer<?> pointer) {
-        stream = new AVStream53(pointer);
+        stream = new AVStream55(pointer);
     }
     
     @Override

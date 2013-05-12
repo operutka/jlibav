@@ -156,17 +156,6 @@ public class StreamWrapper54 extends AbstractStreamWrapper {
     }
 
     @Override
-    public Rational getRFrameRate() {
-        if (stream == null)
-            return null;
-        
-        if (frameRate == null)
-            frameRate = new Rational(stream.r_frame_rate());
-        
-        return frameRate;
-    }
-
-    @Override
     public Rational getTimeBase() {
         if (stream == null)
             return null;

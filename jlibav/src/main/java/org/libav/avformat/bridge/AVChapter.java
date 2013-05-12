@@ -23,8 +23,8 @@ import org.bridj.ann.Field;
 import org.libav.avutil.bridge.AVRational;
 
 /**
- * Mirror of the native AVChapter struct for the libavformat v53.x.x and
- * 54.x.x. For details see the Libav documentation.
+ * Mirror of the native AVChapter struct for the libavformat v53.x.x, 54.x.x
+ * and 55.x.x. For details see the Libav documentation.
  * 
  * @author Ondrej Perutka
  */
