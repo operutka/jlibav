@@ -270,4 +270,11 @@ public interface IPacketWrapper extends IWrapper, Cloneable {
      */
     IPacketWrapper clone();
     
+    /**
+     * Make this object to be a clone of the given packet.
+     * 
+     * @param packet a packet
+     */
+    void clone(IPacketWrapper packet);
+    
 }

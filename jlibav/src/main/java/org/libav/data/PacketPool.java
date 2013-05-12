@@ -56,15 +56,7 @@ public class PacketPool {
      * @return packet wrapper
      */
     public IPacketWrapper getEmptyPacket() {
-        IPacketWrapper result;
-        
-        synchronized (this) {
-            result = recycle.poll();
-        }
-        
-        if (result == null)
-            return new PooledPacket(packetFactory.alloc());
-        
+        IPacketWrapper result = getPacket();
         result.free();
         result.init();
         
@@ -79,22 +71,7 @@ public class PacketPool {
      */
     public IPacketWrapper clonePacket(IPacketWrapper packet) {
         PooledPacket result = getPacket();
-        int growBy = packet.getSize() - result.getSize();
-        if (growBy > 0)
-            result.grow(growBy);
-        
-        Pointer<Byte> pData = result.getData();
-        packet.getPointer().copyTo(result.getPointer());
-        result.setData(pData);
-        
-        pData = packet.getData();
-        if (pData != null)
-            pData.copyTo(result.getData(), packet.getSize());
-        
-        result.setSideData(null);
-        result.setSideDataElems(0);
-        
-        result.clearWrapperCache();
+        result.clone(packet);
         
         return result;
     }
@@ -274,6 +251,16 @@ public class PacketPool {
         @Override
         public IPacketWrapper clone() {
             return clonePacket(internal);
+        }
+
+        @Override
+        public void clone(IPacketWrapper packet) {
+            // growing must be done here (to get the new buffer size)
+            int growBy = packet.getSize() - getSize();
+            if (growBy > 0)
+                grow(growBy);
+            
+            internal.clone(packet);
         }
 
         @Override

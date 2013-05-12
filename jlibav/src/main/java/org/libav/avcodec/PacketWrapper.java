@@ -255,6 +255,26 @@ public class PacketWrapper extends AbstractPacketWrapper {
         
         return result;
     }
+
+    @Override
+    public void clone(IPacketWrapper packet) {
+        int growBy = packet.getSize() - getSize();
+        if (growBy > 0)
+            grow(growBy);
+        
+        Pointer<Byte> pData = getData();
+        packet.getPointer().copyTo(getPointer());
+        setData(pData);
+        
+        pData = packet.getData();
+        if (pData != null)
+            pData.copyTo(getData(), packet.getSize());
+        
+        setSideData(null);
+        setSideDataElems(0);
+        
+        clearWrapperCache();
+    }
     
     public static PacketWrapper allocatePacket() {
         PacketWrapper result = new PacketWrapper(new AVPacket());
