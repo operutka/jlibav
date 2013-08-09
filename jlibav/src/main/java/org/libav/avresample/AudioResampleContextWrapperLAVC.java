@@ -20,8 +20,8 @@ package org.libav.avresample;
 import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avcodec.bridge.AVCodecLibrary;
+import org.libav.avutil.SampleFormat;
 import org.libav.avutil.bridge.AVChannelLayout;
-import org.libav.avutil.bridge.AVSampleFormat;
 import org.libav.bridge.LibraryManager;
 
 /**
@@ -34,10 +34,10 @@ public class AudioResampleContextWrapperLAVC implements IAudioResampleContextWra
     private static final AVCodecLibrary codecLib = LibraryManager.getInstance().getAVCodecLibrary();
     
     private long inChannelLayout;
-    private int inSampleFormat;
+    private SampleFormat inSampleFormat;
     private int inSampleRate;
     private long outChannelLayout;
-    private int outSampleFormat;
+    private SampleFormat outSampleFormat;
     private int outSampleRate;
     
     private Pointer<?> rc;
@@ -46,10 +46,10 @@ public class AudioResampleContextWrapperLAVC implements IAudioResampleContextWra
         this.rc = null;
         
         inChannelLayout = AVChannelLayout.AV_CH_LAYOUT_STEREO;
-        inSampleFormat = AVSampleFormat.AV_SAMPLE_FMT_S16;
+        inSampleFormat = SampleFormat.S16;
         inSampleRate = 44100;
         outChannelLayout = AVChannelLayout.AV_CH_LAYOUT_STEREO;
-        outSampleFormat = AVSampleFormat.AV_SAMPLE_FMT_S16;
+        outSampleFormat = SampleFormat.S16;
         outSampleRate = 44100;
     }
     
@@ -74,7 +74,7 @@ public class AudioResampleContextWrapperLAVC implements IAudioResampleContextWra
         
         int inChannelCount = AVChannelLayout.getChannelCount(inChannelLayout);
         int outChannelCount = AVChannelLayout.getChannelCount(outChannelLayout);
-        rc = codecLib.av_audio_resample_init(outChannelCount, inChannelCount, outSampleRate, inSampleRate, outSampleFormat, inSampleFormat, 16, 10, 0, 0.8);
+        rc = codecLib.av_audio_resample_init(outChannelCount, inChannelCount, outSampleRate, inSampleRate, outSampleFormat.value(), inSampleFormat.value(), 16, 10, 0, 0.8);
         if (rc == null)
             throw new LibavException("unable to create audio resample context");
     }
@@ -104,12 +104,12 @@ public class AudioResampleContextWrapperLAVC implements IAudioResampleContextWra
     }
 
     @Override
-    public int getInputSampleFormat() {
+    public SampleFormat getInputSampleFormat() {
         return inSampleFormat;
     }
 
     @Override
-    public void setInputSampleFormat(int sampleFormat) {
+    public void setInputSampleFormat(SampleFormat sampleFormat) {
         inSampleFormat = sampleFormat;
     }
 
@@ -134,12 +134,12 @@ public class AudioResampleContextWrapperLAVC implements IAudioResampleContextWra
     }
 
     @Override
-    public int getOutputSampleFormat() {
+    public SampleFormat getOutputSampleFormat() {
         return outSampleFormat;
     }
 
     @Override
-    public void setOutputSampleFormat(int sampleFormat) {
+    public void setOutputSampleFormat(SampleFormat sampleFormat) {
         outSampleFormat = sampleFormat;
     }
 

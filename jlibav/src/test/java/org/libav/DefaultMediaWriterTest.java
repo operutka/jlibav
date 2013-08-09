@@ -24,9 +24,9 @@ import org.libav.avcodec.CodecID;
 import org.libav.avcodec.FrameWrapperFactory;
 import org.libav.avcodec.ICodecContextWrapper;
 import org.libav.avcodec.IFrameWrapper;
-import org.libav.avutil.bridge.AVSampleFormat;
+import org.libav.avutil.PixelFormat;
+import org.libav.avutil.SampleFormat;
 import org.libav.avutil.bridge.AVUtilLibrary;
-import org.libav.avutil.bridge.PixelFormat;
 import org.libav.bridge.LibraryManager;
 
 /**
@@ -48,12 +48,12 @@ public class DefaultMediaWriterTest {
             mw.setInterleave(true);
         
         int vsIndex = mw.addVideoStream(CodecID.MPEG4, 320, 240);
-        int asIndex = mw.addAudioStream(CodecID.MP2, 48000, AVSampleFormat.AV_SAMPLE_FMT_S16, 2);
+        int asIndex = mw.addAudioStream(CodecID.MP2, 48000, SampleFormat.S16, 2);
         IEncoder ve = me.getVideoStreamEncoder(vsIndex);
         IEncoder ae = me.getAudioStreamEncoder(asIndex);
         
         ICodecContextWrapper cc = ve.getCodecContext();
-        cc.setPixelFormat(PixelFormat.PIX_FMT_YUV420P);
+        cc.setPixelFormat(PixelFormat.YUV420P);
         IFrameWrapper picture = FrameWrapperFactory.getInstance().allocPicture(cc.getPixelFormat(), cc.getWidth(), cc.getHeight());
         IFrameWrapper af = FrameWrapperFactory.getInstance().allocFrame();
         picture.setPts(0);
@@ -89,7 +89,7 @@ public class DefaultMediaWriterTest {
         IEncoder ve = me.getVideoStreamEncoder(vsIndex);
         
         ICodecContextWrapper cc = ve.getCodecContext();
-        cc.setPixelFormat(PixelFormat.PIX_FMT_YUV420P);
+        cc.setPixelFormat(PixelFormat.YUV420P);
         IFrameWrapper picture = FrameWrapperFactory.getInstance().allocPicture(cc.getPixelFormat(), cc.getWidth(), cc.getHeight());
         picture.setPts(0);
         

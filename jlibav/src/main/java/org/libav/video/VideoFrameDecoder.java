@@ -25,7 +25,7 @@ import org.libav.IDecoder;
 import org.libav.LibavException;
 import org.libav.avcodec.*;
 import org.libav.avformat.IStreamWrapper;
-import org.libav.avutil.bridge.AVMediaType;
+import org.libav.avutil.MediaType;
 import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.data.IFrameConsumer;
 import org.libav.util.Rational;
@@ -60,7 +60,7 @@ public class VideoFrameDecoder implements IDecoder {
         
         cc = stream.getCodecContext();
         cc.clearWrapperCache();
-        if (cc.getCodecType() != AVMediaType.AVMEDIA_TYPE_VIDEO)
+        if (cc.getCodecType() != MediaType.VIDEO)
             throw new IllegalArgumentException("not a video stream");
         
         cc.open(CodecWrapperFactory.getInstance().findDecoder(cc.getCodecId()));

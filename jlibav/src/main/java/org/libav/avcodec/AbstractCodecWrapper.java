@@ -17,6 +17,10 @@
  */
 package org.libav.avcodec;
 
+import org.libav.avutil.PixelFormat;
+import org.libav.avutil.SampleFormat;
+import org.libav.util.Rational;
+
 /**
  * Abstract wrapper for the AVCodec.
  * 
@@ -28,12 +32,22 @@ public abstract class AbstractCodecWrapper implements ICodecWrapper {
     protected Integer type;
     protected String name;
     protected Integer capabilities;
+    protected Rational[] supportedFrameRates;
+    protected PixelFormat[] supportedPixelFormats;
+    protected int[] supportedSampleRates;
+    protected SampleFormat[] supportedSampleFormats;
+    protected long[] supportedChannelLayouts;
 
     public AbstractCodecWrapper() {
         id = null;
         type = null;
         name = null;
         capabilities = null;
+        supportedFrameRates = null;
+        supportedPixelFormats = null;
+        supportedSampleRates = null;
+        supportedSampleFormats = null;
+        supportedChannelLayouts = null;
     }
 
     @Override
@@ -42,6 +56,11 @@ public abstract class AbstractCodecWrapper implements ICodecWrapper {
         type = null;
         name = null;
         capabilities = null;
+        supportedFrameRates = null;
+        supportedPixelFormats = null;
+        supportedSampleRates = null;
+        supportedSampleFormats = null;
+        supportedChannelLayouts = null;
     }
     
 }

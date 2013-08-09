@@ -23,6 +23,7 @@ import java.util.Set;
 import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avcodec.IFrameWrapper;
+import org.libav.avutil.SampleFormat;
 import org.libav.data.IFrameConsumer;
 
 /**
@@ -46,7 +47,7 @@ public class Frame2AudioFrameAdapter implements IFrameConsumer, IAudioFrameProdu
      * @param outputSampleFormat a sample format of the output frames
      * @throws LibavException if an error occurs
      */
-    public Frame2AudioFrameAdapter(long inputChannelLayout, long outputChannelLayout, int inputSampleRate, int outputSampleRate, int inputSampleFormat, int outputSampleFormat) throws LibavException {
+    public Frame2AudioFrameAdapter(long inputChannelLayout, long outputChannelLayout, int inputSampleRate, int outputSampleRate, SampleFormat inputSampleFormat, SampleFormat outputSampleFormat) throws LibavException {
         resampler = new AudioFrameResampler(inputChannelLayout, outputChannelLayout, inputSampleRate, outputSampleRate, inputSampleFormat, outputSampleFormat);
         consumers = Collections.synchronizedSet(new HashSet<IAudioFrameConsumer>());
         
@@ -61,7 +62,7 @@ public class Frame2AudioFrameAdapter implements IFrameConsumer, IAudioFrameProdu
      * @param sampleFormat a sample format
      * @throws LibavException if an error occurs
      */
-    public synchronized void setInputFormat(long channelLayout, int sampleRate, int sampleFormat) throws LibavException {
+    public synchronized void setInputFormat(long channelLayout, int sampleRate, SampleFormat sampleFormat) throws LibavException {
         resampler.setInputFormat(channelLayout, sampleRate, sampleFormat);
     }
 
@@ -79,7 +80,7 @@ public class Frame2AudioFrameAdapter implements IFrameConsumer, IAudioFrameProdu
      * 
      * @return expected sample format of the input frames
      */
-    public int getInputSampleFormat() {
+    public SampleFormat getInputSampleFormat() {
         return resampler.getInputSampleFormat();
     }
 
@@ -100,7 +101,7 @@ public class Frame2AudioFrameAdapter implements IFrameConsumer, IAudioFrameProdu
      * @param sampleFormat a sample format
      * @throws LibavException if an error occurs
      */
-    public synchronized void setOutputFormat(long channelLayout, int sampleRate, int sampleFormat) throws LibavException {
+    public synchronized void setOutputFormat(long channelLayout, int sampleRate, SampleFormat sampleFormat) throws LibavException {
         resampler.setOutputFormat(channelLayout, sampleRate, sampleFormat);
     }
 
@@ -118,7 +119,7 @@ public class Frame2AudioFrameAdapter implements IFrameConsumer, IAudioFrameProdu
      * 
      * @return sample format of the output frames
      */
-    public int getOutputSampleFormat() {
+    public SampleFormat getOutputSampleFormat() {
         return resampler.getOutputSampleFormat();
     }
 

@@ -19,6 +19,7 @@ package org.libav.avresample;
 
 import org.bridj.Pointer;
 import org.libav.LibavException;
+import org.libav.avutil.SampleFormat;
 import org.libav.bridge.IWrapper;
 
 /**
@@ -66,14 +67,14 @@ public interface IAudioResampleContextWrapper extends IWrapper {
      * 
      * @return sample format
      */
-    int getInputSampleFormat();
+    SampleFormat getInputSampleFormat();
     
     /**
      * Set input sample format.
      * 
      * @param sampleFormat sample format
      */
-    void setInputSampleFormat(int sampleFormat);
+    void setInputSampleFormat(SampleFormat sampleFormat);
     
     /**
      * Get input sample rate.
@@ -108,14 +109,14 @@ public interface IAudioResampleContextWrapper extends IWrapper {
      * 
      * @return sample format
      */
-    int getOutputSampleFormat();
+    SampleFormat getOutputSampleFormat();
     
     /**
      * Set output sample format.
      * 
      * @param sampleFormat sample format
      */
-    void setOutputSampleFormat(int sampleFormat);
+    void setOutputSampleFormat(SampleFormat sampleFormat);
     
     /**
      * Get output sample rate.

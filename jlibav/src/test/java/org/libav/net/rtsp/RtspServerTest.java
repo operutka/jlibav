@@ -24,8 +24,9 @@ import org.libav.*;
 import org.libav.audio.AudioFrameResampler;
 import org.libav.avcodec.CodecID;
 import org.libav.avcodec.ICodecContextWrapper;
+import org.libav.avutil.PixelFormat;
+import org.libav.avutil.SampleFormat;
 import org.libav.avutil.bridge.AVChannelLayout;
-import org.libav.avutil.bridge.AVSampleFormat;
 import org.libav.net.Server;
 import org.libav.video.FrameScaler;
 
@@ -65,11 +66,11 @@ public class RtspServerTest {
             mp.setAudioStreamDecodingEnabled(0, true);
             dec = mp.getAudioStreamDecoder(0);
             cc = dec.getCodecContext();
-            AudioTranscodeStream ats = new AudioTranscodeStream(new AudioStreamWriterFactory(CodecID.MP2, cc.getChannels(), 48000, AVSampleFormat.AV_SAMPLE_FMT_S16));
+            AudioTranscodeStream ats = new AudioTranscodeStream(new AudioStreamWriterFactory(CodecID.MP2, cc.getChannels(), 48000, SampleFormat.S16));
             long channelLayout = cc.getChannelLayout();
             if (channelLayout == 0)
                 channelLayout = AVChannelLayout.getDefaultChannelLayout(cc.getChannels());
-            resampler = new AudioFrameResampler(channelLayout, channelLayout, cc.getSampleRate(), 48000, cc.getSampleFormat(), AVSampleFormat.AV_SAMPLE_FMT_S16);
+            resampler = new AudioFrameResampler(channelLayout, channelLayout, cc.getSampleRate(), 48000, cc.getSampleFormat(), SampleFormat.S16);
             dec.addFrameConsumer(resampler);
             resampler.addFrameConsumer(ats);
             ams.add(ats);
@@ -98,7 +99,7 @@ public class RtspServerTest {
     private static class VideoStreamWriterFactory implements IStreamWriterFactory {
         private int width;
         private int height;
-        private int pixelFormat;
+        private PixelFormat pixelFormat;
 
         public VideoStreamWriterFactory(ICodecContextWrapper decoderContext) {
             width = decoderContext.getWidth();
@@ -120,9 +121,9 @@ public class RtspServerTest {
         private CodecID codecId;
         private int channels;
         private int sampleRate;
-        private int sampleFormat;
+        private SampleFormat sampleFormat;
 
-        public AudioStreamWriterFactory(CodecID codecId, int channels, int sampleRate, int sampleFormat) {
+        public AudioStreamWriterFactory(CodecID codecId, int channels, int sampleRate, SampleFormat sampleFormat) {
             this.codecId = codecId;
             this.channels = channels;
             this.sampleRate = sampleRate;

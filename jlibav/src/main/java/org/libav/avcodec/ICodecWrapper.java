@@ -17,7 +17,10 @@
  */
 package org.libav.avcodec;
 
+import org.libav.avutil.PixelFormat;
+import org.libav.avutil.SampleFormat;
 import org.libav.bridge.IWrapper;
+import org.libav.util.Rational;
 
 /**
  * Wrapper for the AVCodec. It provides access to some of the AVCodec 
@@ -70,5 +73,60 @@ public interface ICodecWrapper extends IWrapper {
      * @return codec capabilities
      */
     int getCapabilities();
+    
+    /**
+     * Get the supported_framerates property from the AVCodec.
+     * 
+     * WARNING:
+     * The returned value may be cached. Call the clearWrapperCahce() if you
+     * think the value have been changed.
+     * 
+     * @return supported frame rates
+     */
+    Rational[] getSupportedFrameRates();
+    
+    /**
+     * Get the pix_fmts property from the AVCodec.
+     * 
+     * WARNING:
+     * The returned value may be cached. Call the clearWrapperCahce() if you
+     * think the value have been changed.
+     * 
+     * @return supported pixel formats
+     */
+    PixelFormat[] getSupportedPixelFormats();
+    
+    /**
+     * Get the supported_samplerates property from the AVCodec.
+     * 
+     * WARNING:
+     * The returned value may be cached. Call the clearWrapperCahce() if you
+     * think the value have been changed.
+     * 
+     * @return supported sample rates
+     */
+    int[] getSupportedSampleRates();
+    
+    /**
+     * Get the sample_fmts property from the AVCodec.
+     * 
+     * WARNING:
+     * The returned value may be cached. Call the clearWrapperCahce() if you
+     * think the value have been changed.
+     * 
+     * @return supported sample formats
+     */
+    SampleFormat[] getSupportedSampleFormats();
+    
+    /**
+     * Get the channel_layouts property from the AVCodec.
+     * 
+     * WARNING:
+     * The returned value may be cached. Call the clearWrapperCahce() if you
+     * think the value have been changed.
+     * 
+     * @return supported channel layouts
+     */
+    long[] getSupportedChannelLayouts();
     
 }

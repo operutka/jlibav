@@ -32,8 +32,8 @@ import org.libav.avformat.IFormatContextWrapper;
 import org.libav.avformat.IOutputFormatWrapper;
 import org.libav.avformat.IStreamWrapper;
 import org.libav.avformat.bridge.AVFormatLibrary;
+import org.libav.avutil.SampleFormat;
 import org.libav.avutil.bridge.AVChannelLayout;
-import org.libav.avutil.bridge.AVMediaType;
 import org.libav.bridge.LibraryManager;
 import org.libav.util.Rational;
 
@@ -100,8 +100,8 @@ public class DefaultMediaWriter implements IMediaWriter {
         for (int i = 0; i < streams.length; i++) {
             ccs[i] = streams[i].getCodecContext();
             switch (ccs[i].getCodecType()) {
-                case AVMediaType.AVMEDIA_TYPE_VIDEO: v++; break;
-                case AVMediaType.AVMEDIA_TYPE_AUDIO: a++; break;
+                case VIDEO: v++; break;
+                case AUDIO: a++; break;
                 default: break;
             }
         }
@@ -112,8 +112,8 @@ public class DefaultMediaWriter implements IMediaWriter {
         v = a = 0;
         for (int i = 0; i < streams.length; i++) {
             switch (ccs[i].getCodecType()) {
-                case AVMediaType.AVMEDIA_TYPE_VIDEO: vStreams[v++] = i; break;
-                case AVMediaType.AVMEDIA_TYPE_AUDIO: aStreams[a++] = i; break;
+                case VIDEO: vStreams[v++] = i; break;
+                case AUDIO: aStreams[a++] = i; break;
                 default: break;
             }
         }
@@ -169,7 +169,7 @@ public class DefaultMediaWriter implements IMediaWriter {
     }
 
     @Override
-    public synchronized int addAudioStream(CodecID codecId, int sampleRate, int sampleFormat, int channelCount) throws LibavException {
+    public synchronized int addAudioStream(CodecID codecId, int sampleRate, SampleFormat sampleFormat, int channelCount) throws LibavException {
         if (isClosed())
             throw new IllegalStateException("the media stream has been closed");
         

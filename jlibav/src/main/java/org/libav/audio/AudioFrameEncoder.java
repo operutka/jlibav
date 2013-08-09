@@ -28,8 +28,7 @@ import org.libav.LibavException;
 import org.libav.avcodec.*;
 import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.avformat.IStreamWrapper;
-import org.libav.avutil.bridge.AVMediaType;
-import org.libav.avutil.bridge.AVSampleFormat;
+import org.libav.avutil.MediaType;
 import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.bridge.LibraryManager;
 import org.libav.data.IPacketConsumer;
@@ -77,7 +76,7 @@ public class AudioFrameEncoder implements IEncoder {
         
         cc = stream.getCodecContext();
         cc.clearWrapperCache();
-        if (cc.getCodecType() != AVMediaType.AVMEDIA_TYPE_AUDIO)
+        if (cc.getCodecType() != MediaType.AUDIO)
             throw new IllegalArgumentException("not an audio stream");
         
         initialized = false;
@@ -182,7 +181,7 @@ public class AudioFrameEncoder implements IEncoder {
             frameSampleCount = 8192;
         if (frameSampleCount <= 1) // keep compatibility with older PCM encoders
             frameSampleCount = 8192;
-        frameSize = frameSampleCount * cc.getChannels() * AVSampleFormat.getBytesPerSample(cc.getSampleFormat());
+        frameSize = frameSampleCount * cc.getChannels() * cc.getSampleFormat().getBytesPerSample();
         frameDuration = 1000 * frameSampleCount / cc.getSampleRate();
         byteDuration = new Rational(frameDuration, frameSize);
         offset = 0;
@@ -199,7 +198,7 @@ public class AudioFrameEncoder implements IEncoder {
         packet.setData(null);
         packet.setSize(0);
         
-        int sampleCount = offset / (cc.getChannels() * AVSampleFormat.getBytesPerSample(cc.getSampleFormat()));
+        int sampleCount = offset / (cc.getChannels() * cc.getSampleFormat().getBytesPerSample());
         if (sampleCount > 0) {
             if (sampleCount < frameSampleCount && !smallLastFrame) {
                 sampleCount = frameSampleCount;

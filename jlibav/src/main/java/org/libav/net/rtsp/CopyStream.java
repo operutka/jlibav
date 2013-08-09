@@ -30,7 +30,7 @@ import org.libav.LibavException;
 import org.libav.avcodec.ICodecContextWrapper;
 import org.libav.avcodec.IPacketWrapper;
 import org.libav.avformat.IStreamWrapper;
-import org.libav.avutil.bridge.AVMediaType;
+import org.libav.avutil.MediaType;
 import org.libav.data.IPacketConsumer;
 import org.libav.net.sdp.*;
 
@@ -103,9 +103,9 @@ public class CopyStream extends AbstractSingleMediaStream implements ISingleMedi
     
     private void createStream(IMediaWriter writer) throws LibavException {
         ICodecContextWrapper cc = inputStream.getCodecContext();
-        if (cc.getCodecType() == AVMediaType.AVMEDIA_TYPE_AUDIO)
+        if (cc.getCodecType() == MediaType.AUDIO)
             writer.addAudioStream(cc.getCodecId(), cc.getSampleRate(), cc.getSampleFormat(), cc.getChannels());
-        else if (cc.getCodecType() == AVMediaType.AVMEDIA_TYPE_VIDEO)
+        else if (cc.getCodecType() == MediaType.VIDEO)
             writer.addVideoStream(cc.getCodecId(), cc.getWidth(), cc.getHeight());
         else
             throw new LibavException("unsupported media type");

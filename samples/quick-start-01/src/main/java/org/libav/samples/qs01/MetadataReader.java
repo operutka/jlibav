@@ -17,8 +17,6 @@
  */
 package org.libav.samples.qs01;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.libav.DefaultMediaReader;
@@ -28,9 +26,6 @@ import org.libav.avformat.IChapterWrapper;
 import org.libav.avformat.IFormatContextWrapper;
 import org.libav.avformat.IStreamWrapper;
 import org.libav.avutil.IDictionaryWrapper;
-import org.libav.avutil.bridge.AVMediaType;
-import org.libav.avutil.bridge.AVSampleFormat;
-import org.libav.avutil.bridge.PixelFormat;
 
 /**
  * This is the first quick start usage example. It shows how to open 
@@ -161,13 +156,13 @@ public class MetadataReader {
     private static void printCodecInfo(String prefix, ICodecContextWrapper codecContext) {
         // Print codec info according to the codec type.
         switch (codecContext.getCodecType()) {
-            case AVMediaType.AVMEDIA_TYPE_AUDIO:
+            case AUDIO:
                 printAudioCodecInfo(prefix, codecContext);
                 break;
-            case AVMediaType.AVMEDIA_TYPE_VIDEO:
+            case VIDEO:
                 printVideoCodecInfo(prefix, codecContext);
                 break;
-            case AVMediaType.AVMEDIA_TYPE_SUBTITLE:
+            case SUBTITLE:
                 printSubtitleCodecInfo(prefix, codecContext);
                 break;
             default:
@@ -191,16 +186,16 @@ public class MetadataReader {
         
         String sampleFormat = "unknown";
         switch (codecContext.getSampleFormat()) {
-            case AVSampleFormat.AV_SAMPLE_FMT_U8:
-            case AVSampleFormat.AV_SAMPLE_FMT_U8P: sampleFormat = "unsigned, 8 bps"; break;
-            case AVSampleFormat.AV_SAMPLE_FMT_S16:
-            case AVSampleFormat.AV_SAMPLE_FMT_S16P: sampleFormat = "signed, 16 bps"; break;
-            case AVSampleFormat.AV_SAMPLE_FMT_S32:
-            case AVSampleFormat.AV_SAMPLE_FMT_S32P: sampleFormat = "signed, 32 bps"; break;
-            case AVSampleFormat.AV_SAMPLE_FMT_FLT:
-            case AVSampleFormat.AV_SAMPLE_FMT_FLTP: sampleFormat = "floating-point, 32 bps"; break;
-            case AVSampleFormat.AV_SAMPLE_FMT_DBL:
-            case AVSampleFormat.AV_SAMPLE_FMT_DBLP: sampleFormat = "floating-point, 64 bps"; break;
+            case U8:
+            case U8P: sampleFormat = "unsigned, 8 bps"; break;
+            case S16:
+            case S16P: sampleFormat = "signed, 16 bps"; break;
+            case S32:
+            case S32P: sampleFormat = "signed, 32 bps"; break;
+            case FLT:
+            case FLTP: sampleFormat = "floating-point, 32 bps"; break;
+            case DBL:
+            case DBLP: sampleFormat = "floating-point, 64 bps"; break;
             default: break;
         }
         
@@ -219,31 +214,7 @@ public class MetadataReader {
         System.out.printf("%s    frame width:        %d\n", prefix, codecContext.getWidth());
         System.out.printf("%s    frame height:       %d\n", prefix, codecContext.getHeight());
         System.out.printf("%s    bit rate:           %d\n", prefix, codecContext.getBitRate());
-        
-        String pixelFormat = "unknown";
-        
-        // This is kind of a hack to get a name of the pixel format. You don't
-        // need to understand it, it's just for fun :-D ...
-        Class<?> pixFmtClass = PixelFormat.class;
-        Field[] pixFmtFields = pixFmtClass.getDeclaredFields();
-        for (Field field : pixFmtFields) {
-            if (!Modifier.isStatic(field.getModifiers()))
-                continue;
-            if (!field.getName().startsWith("PIX_FMT_"))
-                continue;
-            
-            try {
-                if (codecContext.getPixelFormat() != field.getInt(null))
-                    continue;
-            } catch (Exception ex) {
-                continue;
-            }
-            
-            pixelFormat = field.getName().substring(8);
-            break;
-        }
-        
-        System.out.printf("%s    pixel format:       %s\n", prefix, pixelFormat, codecContext.getPixelFormat());
+        System.out.printf("%s    pixel format:       %s\n", prefix, codecContext.getPixelFormat().name());
     }
     
     /**

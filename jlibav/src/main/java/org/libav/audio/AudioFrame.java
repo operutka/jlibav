@@ -17,6 +17,8 @@
  */
 package org.libav.audio;
 
+import org.libav.avutil.SampleFormat;
+
 /**
  * Audio frame. Holds an array of audio samples and its size in bytes.
  * 
@@ -30,7 +32,7 @@ public class AudioFrame {
     private byte[] samples;
     private int frameSize;
     private int channelCount;
-    private int sampleFormat;
+    private SampleFormat sampleFormat;
     private int sampleRate;
 
     /**
@@ -42,7 +44,7 @@ public class AudioFrame {
      * @param sampleFormat a sample format
      * @param sampleRate sample rate
      */
-    public AudioFrame(byte[] samples, int channelCount, int sampleFormat, int sampleRate) {
+    public AudioFrame(byte[] samples, int channelCount, SampleFormat sampleFormat, int sampleRate) {
         this(samples, samples.length, channelCount, sampleFormat, sampleRate);
     }
 
@@ -56,7 +58,7 @@ public class AudioFrame {
      * @param sampleFormat a sample format
      * @param sampleRate sample rate
      */
-    public AudioFrame(byte[] samples, int frameSize, int channelCount, int sampleFormat, int sampleRate) {
+    public AudioFrame(byte[] samples, int frameSize, int channelCount, SampleFormat sampleFormat, int sampleRate) {
         this.samples = samples;
         this.frameSize = frameSize;
         this.channelCount = channelCount;
@@ -96,7 +98,7 @@ public class AudioFrame {
      * 
      * @return sample format
      */
-    public int getSampleFormat() {
+    public SampleFormat getSampleFormat() {
         return sampleFormat;
     }
 

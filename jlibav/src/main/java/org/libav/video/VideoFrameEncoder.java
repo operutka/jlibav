@@ -29,7 +29,7 @@ import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.avformat.IFormatContextWrapper;
 import org.libav.avformat.IStreamWrapper;
 import org.libav.avformat.bridge.AVFormatLibrary;
-import org.libav.avutil.bridge.AVMediaType;
+import org.libav.avutil.MediaType;
 import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.data.IPacketConsumer;
 import org.libav.util.Rational;
@@ -67,7 +67,7 @@ public class VideoFrameEncoder implements IEncoder {
         
         cc = stream.getCodecContext();
         cc.clearWrapperCache();
-        if (cc.getCodecType() != AVMediaType.AVMEDIA_TYPE_VIDEO)
+        if (cc.getCodecType() != MediaType.VIDEO)
             throw new IllegalArgumentException("not a video stream");
         
         initialized = false;

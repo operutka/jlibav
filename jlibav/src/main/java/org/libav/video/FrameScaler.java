@@ -23,6 +23,7 @@ import java.util.Set;
 import org.libav.LibavException;
 import org.libav.avcodec.FrameWrapperFactory;
 import org.libav.avcodec.IFrameWrapper;
+import org.libav.avutil.PixelFormat;
 import org.libav.data.IFrameConsumer;
 import org.libav.data.IFrameProducer;
 import org.libav.swscale.ScaleContextWrapper;
@@ -37,11 +38,11 @@ public class FrameScaler implements IFrameConsumer, IFrameProducer {
     
     private int srcWidth;
     private int srcHeight;
-    private int srcFormat;
+    private PixelFormat srcFormat;
     
     private int dstWidth;
     private int dstHeight;
-    private int dstFormat;
+    private PixelFormat dstFormat;
     
     private ScaleContextWrapper scaleContext;
     private int scalingAlg;
@@ -61,7 +62,7 @@ public class FrameScaler implements IFrameConsumer, IFrameProducer {
      * @param dstPixelFormat a pixel format of produced images
      * @throws LibavException if an error occurs
      */
-    public FrameScaler(int srcWidth, int srcHeight, int srcPixelFormat, int dstWidth, int dstHeight, int dstPixelFormat) throws LibavException {
+    public FrameScaler(int srcWidth, int srcHeight, PixelFormat srcPixelFormat, int dstWidth, int dstHeight, PixelFormat dstPixelFormat) throws LibavException {
         this.srcWidth = srcWidth;
         this.srcHeight = srcHeight;
         this.srcFormat = srcPixelFormat;
@@ -92,7 +93,7 @@ public class FrameScaler implements IFrameConsumer, IFrameProducer {
      * @param pixelFormat a pixel format
      * @throws LibavException if an error occurs
      */
-    public synchronized void setSourceImageFormat(int width, int height, int pixelFormat) throws LibavException {
+    public synchronized void setSourceImageFormat(int width, int height, PixelFormat pixelFormat) throws LibavException {
         if (width != srcWidth || height != srcHeight || srcFormat != pixelFormat) {
             srcWidth = width;
             srcHeight = height;
@@ -124,7 +125,7 @@ public class FrameScaler implements IFrameConsumer, IFrameProducer {
      * 
      * @return expected pixel format of source images
      */
-    public int getSourceImagePixelFormat() {
+    public PixelFormat getSourceImagePixelFormat() {
         return srcFormat;
     }
     
@@ -136,7 +137,7 @@ public class FrameScaler implements IFrameConsumer, IFrameProducer {
      * @param pixelFormat a pixel format
      * @throws LibavException if an error occurs
      */
-    public synchronized void setDestinationImageFormat(int width, int height, int pixelFormat) throws LibavException {
+    public synchronized void setDestinationImageFormat(int width, int height, PixelFormat pixelFormat) throws LibavException {
         if (width != dstWidth || height != dstHeight || pixelFormat != dstFormat) {
             dstWidth = width;
             dstHeight = height;
@@ -168,7 +169,7 @@ public class FrameScaler implements IFrameConsumer, IFrameProducer {
      * 
      * @return pixel format of produced images
      */
-    public int getDestinationPixelFormat() {
+    public PixelFormat getDestinationPixelFormat() {
         return dstFormat;
     }
     

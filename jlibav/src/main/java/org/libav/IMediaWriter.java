@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import org.libav.avcodec.CodecID;
 import org.libav.avformat.IFormatContextWrapper;
 import org.libav.avformat.IStreamWrapper;
+import org.libav.avutil.SampleFormat;
 import org.libav.data.IPacketConsumer;
 
 /**
@@ -110,7 +111,7 @@ public interface IMediaWriter extends IPacketConsumer {
      * @return index of the created audio stream
      * @throws LibavException if an error occurs while creating a new stream
      */
-    int addAudioStream(CodecID codecId, int sampleRate, int sampleFormat, int channelCount) throws LibavException;
+    int addAudioStream(CodecID codecId, int sampleRate, SampleFormat sampleFormat, int channelCount) throws LibavException;
     
     /**
      * Get stream wrapper for the audio stream at the given index.

@@ -46,8 +46,8 @@ import org.libav.avformat.IInputFormatWrapper;
 import org.libav.avformat.IStreamWrapper;
 import org.libav.avresample.bridge.AVResampleLibrary;
 import org.libav.avutil.IDictionaryWrapper;
+import org.libav.avutil.SampleFormat;
 import org.libav.avutil.bridge.AVChannelLayout;
-import org.libav.avutil.bridge.AVSampleFormat;
 import org.libav.bridge.LibraryManager;
 import org.libav.data.IFrameConsumer;
 import org.libav.util.swing.VideoPane;
@@ -199,15 +199,15 @@ public class PlaybackSample extends javax.swing.JFrame {
         if (resampleLib == null)
             openAudioStreamLegacy(player, 0);
         else
-            openAudioStreamResampled(player, 0, AVChannelLayout.AV_CH_LAYOUT_STEREO, AVSampleFormat.AV_SAMPLE_FMT_S16);
+            openAudioStreamResampled(player, 0, AVChannelLayout.AV_CH_LAYOUT_STEREO, SampleFormat.S16);
     }
     
-    private void openAudioStreamResampled(IMediaPlayer player, int streamIndex, long channelLayout, int sampleFormat) throws LibavException {
+    private void openAudioStreamResampled(IMediaPlayer player, int streamIndex, long channelLayout, SampleFormat sampleFormat) throws LibavException {
         IDecoder audioDecoder = player.getAudioStreamDecoder(streamIndex);
         ICodecContextWrapper cc = audioDecoder.getCodecContext();
         
         int sampleRate = cc.getSampleRate();
-        int bytesPerSample = AVSampleFormat.getBytesPerSample(sampleFormat);
+        int bytesPerSample = sampleFormat.getBytesPerSample();
         int channelCount = AVChannelLayout.getChannelCount(channelLayout);
         long srcChannelLayout = cc.getChannelLayout();
         AudioFormat.Encoding encoding;
@@ -216,9 +216,9 @@ public class PlaybackSample extends javax.swing.JFrame {
             srcChannelLayout = AVChannelLayout.getDefaultChannelLayout(cc.getChannels());
         
         try {
-            if (AVSampleFormat.isPlanar(sampleFormat) || AVSampleFormat.isReal(sampleFormat))
+            if (sampleFormat.isPlanar() || sampleFormat.isReal())
                 throw new LibavException("unsupported output sample format");
-            else if (AVSampleFormat.isSigned(sampleFormat))
+            else if (sampleFormat.isSigned())
                 encoding = AudioFormat.Encoding.PCM_SIGNED;
             else
                 encoding = AudioFormat.Encoding.PCM_UNSIGNED;
@@ -283,7 +283,7 @@ public class PlaybackSample extends javax.swing.JFrame {
             cc = stream.getCodecContext();
             List<IDictionaryWrapper.Pair> metadata = stream.getMetadata().toList();
             System.out.printf("stream[%02d]:\n", i);
-            System.out.printf("\t.codec.codec_type = 0x%08x\n", cc.getCodecType());
+            System.out.printf("\t.codec.codec_type = %s\n", cc.getCodecType().toString());
             System.out.printf("\t.disposition = 0x%08x\n", stream.getDisposition());
             System.out.println("\t.metadata:");
             for (IDictionaryWrapper.Pair pair : metadata)

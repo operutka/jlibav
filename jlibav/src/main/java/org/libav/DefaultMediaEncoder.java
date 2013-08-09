@@ -28,6 +28,7 @@ import org.libav.avcodec.ICodecWrapper;
 import org.libav.avcodec.IPacketWrapper;
 import org.libav.avformat.IFormatContextWrapper;
 import org.libav.avformat.IStreamWrapper;
+import org.libav.avutil.SampleFormat;
 import org.libav.video.VideoFrameEncoder;
 
 /**
@@ -207,7 +208,7 @@ public class DefaultMediaEncoder implements IMediaEncoder {
         }
 
         @Override
-        public int addAudioStream(CodecID codecId, int sampleRate, int sampleFormat, int channelCount) throws LibavException {
+        public int addAudioStream(CodecID codecId, int sampleRate, SampleFormat sampleFormat, int channelCount) throws LibavException {
             return mw.addAudioStream(codecId, sampleRate, sampleFormat, channelCount);
         }
 

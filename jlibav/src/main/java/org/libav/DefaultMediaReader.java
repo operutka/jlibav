@@ -21,7 +21,6 @@ import java.util.*;
 import org.libav.avcodec.ICodecContextWrapper;
 import org.libav.avcodec.IPacketWrapper;
 import org.libav.avformat.*;
-import org.libav.avutil.bridge.AVMediaType;
 import org.libav.data.BufferedPacketReader;
 import org.libav.data.IPacketConsumer;
 import org.libav.util.Buffer;
@@ -101,8 +100,8 @@ public class DefaultMediaReader implements IMediaReader {
             bufferingEnabled[i] = false;
             packetConsumers.add(Collections.synchronizedSet(new HashSet<IPacketConsumer>()));
             switch (ccs[i].getCodecType()) {
-                case AVMediaType.AVMEDIA_TYPE_VIDEO: v++; break;
-                case AVMediaType.AVMEDIA_TYPE_AUDIO: a++; break;
+                case VIDEO: v++; break;
+                case AUDIO: a++; break;
                 default: break;
             }
             timeBases[i] = streams[i].getTimeBase().mul(1000);
@@ -114,8 +113,8 @@ public class DefaultMediaReader implements IMediaReader {
         v = a = 0;
         for (int i = 0; i < streams.length; i++) {
             switch (ccs[i].getCodecType()) {
-                case AVMediaType.AVMEDIA_TYPE_VIDEO: vStreams[v++] = i; break;
-                case AVMediaType.AVMEDIA_TYPE_AUDIO: aStreams[a++] = i; break;
+                case VIDEO: vStreams[v++] = i; break;
+                case AUDIO: aStreams[a++] = i; break;
                 default: break;
             }
         }

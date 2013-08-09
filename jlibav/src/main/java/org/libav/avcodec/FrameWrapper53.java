@@ -21,7 +21,8 @@ import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.avcodec.bridge.AVFrame53;
-import org.libav.avutil.bridge.AVSampleFormat;
+import org.libav.avutil.PixelFormat;
+import org.libav.avutil.SampleFormat;
 import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.bridge.LibraryManager;
 
@@ -104,7 +105,7 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
     }
 
     @Override
-    public void fillAudioFrame(int sampleCount, int channelCount, int sampleFormat, Pointer<Byte> buffer, int bufferSize) throws LibavException {
+    public void fillAudioFrame(int sampleCount, int channelCount, SampleFormat sampleFormat, Pointer<Byte> buffer, int bufferSize) throws LibavException {
         fillAudioFrameFunction.fillAudioFrame(sampleCount, channelCount, sampleFormat, buffer, bufferSize);
     }
     
@@ -264,7 +265,7 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
         this.nbSamples = nbSamples;
     }
     
-    public static FrameWrapper53 allocatePicture(int pixelFormat, int width, int height) throws LibavException {
+    public static FrameWrapper53 allocatePicture(PixelFormat pixelFormat, int width, int height) throws LibavException {
         FrameWrapper53 result = allocateFrame();
         Pointer data;
 
@@ -276,7 +277,7 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
         }
 
         result.toBeFreed = new Pointer[] { data };
-        codecLib.avpicture_fill(result.getPointer(), data, pixelFormat, width, height);
+        codecLib.avpicture_fill(result.getPointer(), data, pixelFormat.value(), width, height);
 
         return result;
     }
@@ -289,8 +290,8 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
         return new FrameWrapper53(new AVFrame53(ptr));
     }
     
-    private static Pointer<?> allocatePictureBuffer(int pixelFormat, int width, int height) throws LibavException {
-        int size = codecLib.avpicture_get_size(pixelFormat, width, height);
+    private static Pointer<?> allocatePictureBuffer(PixelFormat pixelFormat, int width, int height) throws LibavException {
+        int size = codecLib.avpicture_get_size(pixelFormat.value(), width, height);
         if (size <= 0)
             throw new LibavException("invalid picture size");
         
@@ -302,19 +303,19 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
     }
     
     private static interface IFillAudioFrameFunction {
-        void fillAudioFrame(int sampleCount, int channelCount, int sampleFormat, Pointer<Byte> buffer, int bufferSize) throws LibavException;
+        void fillAudioFrame(int sampleCount, int channelCount, SampleFormat sampleFormat, Pointer<Byte> buffer, int bufferSize) throws LibavException;
     }
     
     private class FillAudioFrameFunctionManual implements IFillAudioFrameFunction {
         @Override
-        public void fillAudioFrame(int sampleCount, int channelCount, int sampleFormat, Pointer<Byte> buffer, int bufferSize) throws LibavException {
+        public void fillAudioFrame(int sampleCount, int channelCount, SampleFormat sampleFormat, Pointer<Byte> buffer, int bufferSize) throws LibavException {
             if (frame == null)
                 return;
             
             if (hasNbSamples)
                 setNbSamples(sampleCount);
             
-            int lineSize = sampleCount * channelCount * AVSampleFormat.getBytesPerSample(sampleFormat);
+            int lineSize = sampleCount * channelCount * sampleFormat.getBytesPerSample();
             if (lineSize > bufferSize)
                 throw new LibavException("not enough audio data");
             
@@ -325,12 +326,12 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
     
     private class FillAudioFrameFunctionLibav implements IFillAudioFrameFunction {
         @Override
-        public void fillAudioFrame(int sampleCount, int channelCount, int sampleFormat, Pointer<Byte> buffer, int bufferSize) throws LibavException {
+        public void fillAudioFrame(int sampleCount, int channelCount, SampleFormat sampleFormat, Pointer<Byte> buffer, int bufferSize) throws LibavException {
             if (frame == null)
                 return;
 
             setNbSamples(sampleCount);
-            int res = codecLib.avcodec_fill_audio_frame(getPointer(), channelCount, sampleFormat, buffer, bufferSize, 1);
+            int res = codecLib.avcodec_fill_audio_frame(getPointer(), channelCount, sampleFormat.value(), buffer, bufferSize, 1);
             if (res != 0)
                 throw new LibavException(res);
         }

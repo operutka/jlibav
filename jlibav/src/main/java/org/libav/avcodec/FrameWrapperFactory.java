@@ -21,6 +21,7 @@ import org.bridj.BridJ;
 import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avcodec.bridge.*;
+import org.libav.avutil.PixelFormat;
 import org.libav.bridge.LibraryManager;
 
 /**
@@ -110,7 +111,7 @@ public class FrameWrapperFactory {
      * @return frame wrapper
      * @throws LibavException if the frame cannot be allocated
      */
-    public IFrameWrapper allocPicture(int pixelFormat, int width, int height) throws LibavException {
+    public IFrameWrapper allocPicture(PixelFormat pixelFormat, int width, int height) throws LibavException {
         switch (codecLib.getMajorVersion()) {
             case 53: return FrameWrapper53.allocatePicture(pixelFormat, width, height);
             case 54: return FrameWrapper54.allocatePicture(pixelFormat, width, height);

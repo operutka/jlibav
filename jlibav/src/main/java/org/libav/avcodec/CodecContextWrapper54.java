@@ -21,7 +21,9 @@ import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avcodec.bridge.AVCodecContext54;
 import org.libav.avcodec.bridge.AVCodecLibrary;
-import org.libav.avutil.bridge.AVSampleFormat;
+import org.libav.avutil.MediaType;
+import org.libav.avutil.PixelFormat;
+import org.libav.avutil.SampleFormat;
 import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.bridge.LibraryManager;
 import org.libav.util.Rational;
@@ -169,22 +171,22 @@ public class CodecContextWrapper54 extends AbstractCodecContextWrapper {
     }
     
     @Override
-    public int getCodecType() {
+    public MediaType getCodecType() {
         if (context == null)
-            return 0;
+            return null;
         
         if (codecType == null)
-            codecType = context.codec_type();
+            codecType = MediaType.valueOf(context.codec_type());
         
         return codecType;
     }
     
     @Override
-    public void setCodecType(int codecType) {
+    public void setCodecType(MediaType codecType) {
         if (context == null)
             return;
         
-        context.codec_type(codecType);
+        context.codec_type(codecType.value());
         this.codecType = codecType;
     }
     
@@ -313,22 +315,22 @@ public class CodecContextWrapper54 extends AbstractCodecContextWrapper {
     }
     
     @Override
-    public int getPixelFormat() {
+    public PixelFormat getPixelFormat() {
         if (context == null)
-            return 0;
+            return null;
         
         if (pixelFormat == null)
-            pixelFormat = context.pix_fmt();
+            pixelFormat = PixelFormat.valueOf(context.pix_fmt());
         
         return pixelFormat;
     }
     
     @Override
-    public void setPixelFormat(int pixelFormat) {
+    public void setPixelFormat(PixelFormat pixelFormat) {
         if (context == null)
             return;
         
-        context.pix_fmt(pixelFormat);
+        context.pix_fmt(pixelFormat.value());
         this.pixelFormat = pixelFormat;
     }
 
@@ -477,22 +479,22 @@ public class CodecContextWrapper54 extends AbstractCodecContextWrapper {
     }
 
     @Override
-    public int getSampleFormat() {
+    public SampleFormat getSampleFormat() {
         if (context == null)
-            return 0;
+            return null;
         
         if (sampleFormat == null)
-            sampleFormat = context.sample_fmt();
+            sampleFormat = SampleFormat.valueOf(context.sample_fmt());
         
         return sampleFormat;
     }
 
     @Override
-    public void setSampleFormat(int sampleFormat) {
+    public void setSampleFormat(SampleFormat sampleFormat) {
         if (context == null)
             return;
         
-        context.sample_fmt(sampleFormat);
+        context.sample_fmt(sampleFormat.value());
         this.sampleFormat = sampleFormat;
     }
 
@@ -575,7 +577,7 @@ public class CodecContextWrapper54 extends AbstractCodecContextWrapper {
         packet.setSize(packetSize);
         packet.setData(packetSize <= 0 ? null : packet.getData().offset(len));
         if (intByRef.getInt() != 0) {
-            frame.getLineSize().set(0, frame.getNbSamples() * getChannels() * AVSampleFormat.getBytesPerSample(getSampleFormat()));
+            frame.getLineSize().set(0, frame.getNbSamples() * getChannels() * getSampleFormat().getBytesPerSample());
             return true;
         }
 

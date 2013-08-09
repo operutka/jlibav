@@ -27,8 +27,8 @@ import org.libav.audio.Frame2AudioFrameAdapter;
 import org.libav.audio.PlaybackMixer;
 import org.libav.audio.SampleInputStream;
 import org.libav.avcodec.ICodecContextWrapper;
+import org.libav.avutil.SampleFormat;
 import org.libav.avutil.bridge.AVChannelLayout;
-import org.libav.avutil.bridge.AVSampleFormat;
 import org.libav.util.swing.VideoPane;
 
 /**
@@ -69,7 +69,7 @@ public class SimpleVideoPlayer {
         // NOTE: upmixing/downmixing (i.e. audio channel conversion) is not
         // supported without avresample library!!!
         if (reader.getAudioStreamCount() != 0)
-            openAudioStream(0, AVChannelLayout.AV_CH_LAYOUT_STEREO, AVSampleFormat.AV_SAMPLE_FMT_S16);
+            openAudioStream(0, AVChannelLayout.AV_CH_LAYOUT_STEREO, SampleFormat.S16);
         
         // Prepare the first video stream to be played.
         if (reader.getVideoStreamCount() != 0)
@@ -143,7 +143,7 @@ public class SimpleVideoPlayer {
      * @param outputSampleFormat output sample format
      * @throws Exception if something goes wrong
      */
-    private void openAudioStream(int audioStreamIndex, long outputChannelLayout, int outputSampleFormat) throws Exception {
+    private void openAudioStream(int audioStreamIndex, long outputChannelLayout, SampleFormat outputSampleFormat) throws Exception {
         // Get decoder of the given audio stream and its codec context.
         IDecoder decoder = player.getAudioStreamDecoder(audioStreamIndex);
         ICodecContextWrapper codecContext = decoder.getCodecContext();
@@ -168,7 +168,7 @@ public class SimpleVideoPlayer {
         
         // Create a sample input stream.
         sampleInputStream = new SampleInputStream(inputSampleRate * outputChannelCount * 
-                AVSampleFormat.getBytesPerSample(outputSampleFormat), true);
+                outputSampleFormat.getBytesPerSample(), true);
         
         // Create Java Sound API AudioInputStream for the SampleInputStream.
         audioInputStream = new AudioInputStream(sampleInputStream, audioFormat, -1);
@@ -197,15 +197,15 @@ public class SimpleVideoPlayer {
      * @param sampleFormat sample format
      * @return audio format descriptor
      */
-    private AudioFormat getAudioFormat(int channelCount, int sampleRate, int sampleFormat) {
+    private AudioFormat getAudioFormat(int channelCount, int sampleRate, SampleFormat sampleFormat) {
         // Get sample width for the given sample format.
-        int bytesPerSample = AVSampleFormat.getBytesPerSample(sampleFormat);
+        int bytesPerSample = sampleFormat.getBytesPerSample();
         
         AudioFormat.Encoding encoding;
         
-        if (AVSampleFormat.isPlanar(sampleFormat) || AVSampleFormat.isReal(sampleFormat))
+        if (sampleFormat.isPlanar() || sampleFormat.isReal())
             throw new IllegalArgumentException("unsupported output sample format");
-        else if (AVSampleFormat.isSigned(sampleFormat))
+        else if (sampleFormat.isSigned())
             encoding = AudioFormat.Encoding.PCM_SIGNED;
         else
             encoding = AudioFormat.Encoding.PCM_UNSIGNED;

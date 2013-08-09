@@ -18,6 +18,9 @@
 package org.libav.avcodec;
 
 import org.libav.LibavException;
+import org.libav.avutil.MediaType;
+import org.libav.avutil.PixelFormat;
+import org.libav.avutil.SampleFormat;
 import org.libav.bridge.IWrapper;
 import org.libav.util.Rational;
 
@@ -89,7 +92,7 @@ public interface ICodecContextWrapper extends IWrapper {
      * 
      * @return media type
      */
-    int getCodecType();
+    MediaType getCodecType();
     
     /**
      * Set the codec_type property of the AVCodecContext. The value may be 
@@ -97,7 +100,7 @@ public interface ICodecContextWrapper extends IWrapper {
      * 
      * @param codecType a media type
      */
-    void setCodecType(int codecType);
+    void setCodecType(MediaType codecType);
     
     /**
      * Get the codec_id property from the AVCodecContext.
@@ -222,7 +225,7 @@ public interface ICodecContextWrapper extends IWrapper {
      * 
      * @return pixel format
      */
-    int getPixelFormat();
+    PixelFormat getPixelFormat();
     
     /**
      * Set the pix_fmt property of the AVCodecContext. The value may be 
@@ -230,7 +233,7 @@ public interface ICodecContextWrapper extends IWrapper {
      * 
      * @param pixelFormat a pixel format
      */
-    void setPixelFormat(int pixelFormat);
+    void setPixelFormat(PixelFormat pixelFormat);
 
     /**
      * Get the bit_rate property from the AVCodecContext.
@@ -374,7 +377,7 @@ public interface ICodecContextWrapper extends IWrapper {
      * 
      * @return audio sample format
      */
-    int getSampleFormat();
+    SampleFormat getSampleFormat();
 
     /**
      * Set the channels property of the AVCodecContext. The value may be 
@@ -382,7 +385,7 @@ public interface ICodecContextWrapper extends IWrapper {
      * 
      * @param sampleFormat an audio sample format
      */
-    void setSampleFormat(int sampleFormat);
+    void setSampleFormat(SampleFormat sampleFormat);
 
     /**
      * Get the sample_rate property from the AVCodecContext.

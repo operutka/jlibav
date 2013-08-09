@@ -17,6 +17,9 @@
  */
 package org.libav.avcodec;
 
+import org.libav.avutil.MediaType;
+import org.libav.avutil.PixelFormat;
+import org.libav.avutil.SampleFormat;
 import org.libav.util.Rational;
 
 /**
@@ -27,14 +30,14 @@ import org.libav.util.Rational;
 public abstract class AbstractCodecContextWrapper implements ICodecContextWrapper {
 
     protected IFrameWrapper codedFrame;
-    protected Integer codecType;
+    protected MediaType codecType;
     protected CodecID codecId;
     protected Integer flags;
     protected Integer width;
     protected Integer height;
     protected Rational sampleAspectRatio;
     protected Integer chromaSampleLocation;
-    protected Integer pixelFormat;
+    protected PixelFormat pixelFormat;
     protected Integer bitRate;
     protected Rational timeBase;
     protected Integer gopSize;
@@ -43,7 +46,7 @@ public abstract class AbstractCodecContextWrapper implements ICodecContextWrappe
     protected Integer channels;
     protected Long channelLayout;
     protected Integer sampleRate;
-    protected Integer sampleFormat;
+    protected SampleFormat sampleFormat;
     protected Integer frameSize;
     
     public AbstractCodecContextWrapper() {

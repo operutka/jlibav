@@ -27,8 +27,8 @@ import org.libav.avcodec.IFrameWrapper;
 import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.avresample.AudioResampleContextWrapperFactory;
 import org.libav.avresample.IAudioResampleContextWrapper;
+import org.libav.avutil.SampleFormat;
 import org.libav.avutil.bridge.AVChannelLayout;
-import org.libav.avutil.bridge.AVSampleFormat;
 import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.bridge.LibraryManager;
 import org.libav.data.IFrameConsumer;
@@ -46,13 +46,13 @@ public class AudioFrameResampler implements IFrameConsumer, IFrameProducer {
     private long inputChannelLayout;
     private int inputChannelCount;
     private int inputSampleRate;
-    private int inputSampleFormat;
+    private SampleFormat inputSampleFormat;
     private int inputBytesPerSample;
     
     private long outputChannelLayout;
     private int outputChannelCount;
     private int outputSampleRate;
-    private int outputSampleFormat;
+    private SampleFormat outputSampleFormat;
     private int outputBytesPerSample;
     
     private IAudioResampleContextWrapper resampleContext;
@@ -73,18 +73,18 @@ public class AudioFrameResampler implements IFrameConsumer, IFrameProducer {
      * @param outputSampleFormat a sample format of the output frames
      * @throws LibavException if an error occurs
      */
-    public AudioFrameResampler(long inputChannelLayout, long outputChannelLayout, int inputSampleRate, int outputSampleRate, int inputSampleFormat, int outputSampleFormat) throws LibavException {
+    public AudioFrameResampler(long inputChannelLayout, long outputChannelLayout, int inputSampleRate, int outputSampleRate, SampleFormat inputSampleFormat, SampleFormat outputSampleFormat) throws LibavException {
         this.inputChannelLayout = inputChannelLayout;
         this.inputChannelCount = AVChannelLayout.getChannelCount(inputChannelLayout);
         this.inputSampleRate = inputSampleRate;
         this.inputSampleFormat = inputSampleFormat;
-        this.inputBytesPerSample = AVSampleFormat.getBytesPerSample(inputSampleFormat);
+        this.inputBytesPerSample = inputSampleFormat.getBytesPerSample();
         
         this.outputChannelLayout = outputChannelLayout;
         this.outputChannelCount = AVChannelLayout.getChannelCount(outputChannelLayout);
         this.outputSampleRate = outputSampleRate;
         this.outputSampleFormat = outputSampleFormat;
-        this.outputBytesPerSample = AVSampleFormat.getBytesPerSample(outputSampleFormat);
+        this.outputBytesPerSample = outputSampleFormat.getBytesPerSample();
         
         resampleContext = null;
         resampleBuffer = null;
@@ -131,13 +131,13 @@ public class AudioFrameResampler implements IFrameConsumer, IFrameProducer {
      * @param sampleFormat a sample format
      * @throws LibavException if an error occurs
      */
-    public synchronized void setInputFormat(long channelLayout, int sampleRate, int sampleFormat) throws LibavException {
+    public synchronized void setInputFormat(long channelLayout, int sampleRate, SampleFormat sampleFormat) throws LibavException {
         if (inputChannelLayout != channelLayout || inputSampleRate != sampleRate || inputSampleFormat != sampleFormat) {
             inputChannelLayout = channelLayout;
             inputChannelCount = AVChannelLayout.getChannelCount(channelLayout);
             inputSampleRate = sampleRate;
             inputSampleFormat = sampleFormat;
-            inputBytesPerSample = AVSampleFormat.getBytesPerSample(sampleFormat);
+            inputBytesPerSample = sampleFormat.getBytesPerSample();
             init();
         }
     }
@@ -165,7 +165,7 @@ public class AudioFrameResampler implements IFrameConsumer, IFrameProducer {
      * 
      * @return expected sample format of the input frames
      */
-    public int getInputSampleFormat() {
+    public SampleFormat getInputSampleFormat() {
         return inputSampleFormat;
     }
 
@@ -186,13 +186,13 @@ public class AudioFrameResampler implements IFrameConsumer, IFrameProducer {
      * @param sampleFormat a sample format
      * @throws LibavException if an error occurs
      */
-    public synchronized void setOutputFormat(long channelLayout, int sampleRate, int sampleFormat) throws LibavException {
+    public synchronized void setOutputFormat(long channelLayout, int sampleRate, SampleFormat sampleFormat) throws LibavException {
         if (outputChannelLayout != channelLayout || outputSampleRate != sampleRate || outputSampleFormat != sampleFormat) {
             outputChannelLayout = channelLayout;
             outputChannelCount = AVChannelLayout.getChannelCount(channelLayout);
             outputSampleRate = sampleRate;
             outputSampleFormat = sampleFormat;
-            outputBytesPerSample = AVSampleFormat.getBitsPerSample(sampleFormat);
+            outputBytesPerSample = sampleFormat.getBytesPerSample();
             init();
         }
     }
@@ -220,7 +220,7 @@ public class AudioFrameResampler implements IFrameConsumer, IFrameProducer {
      * 
      * @return sample format of the output frames
      */
-    public int getOutputSampleFormat() {
+    public SampleFormat getOutputSampleFormat() {
         return outputSampleFormat;
     }
 

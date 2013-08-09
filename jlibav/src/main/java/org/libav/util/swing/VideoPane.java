@@ -32,7 +32,7 @@ import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avcodec.FrameWrapperFactory;
 import org.libav.avcodec.IFrameWrapper;
-import org.libav.avutil.bridge.PixelFormat;
+import org.libav.avutil.PixelFormat;
 import org.libav.data.IFrameConsumer;
 import org.libav.swscale.ScaleContextWrapper;
 import org.libav.swscale.bridge.SWScaleLibrary;
@@ -74,10 +74,10 @@ public class VideoPane extends JComponent implements IFrameConsumer {
     private int y;
     private int srcWidth;
     private int srcHeight;
-    private int srcPixelFormat;
+    private PixelFormat srcPixelFormat;
     private int dstWidth;
     private int dstHeight;
-    private int dstPixelFormat;
+    private PixelFormat dstPixelFormat;
     private int scalingAlgorithm;
     
     private Insets insts;
@@ -99,13 +99,13 @@ public class VideoPane extends JComponent implements IFrameConsumer {
         y = 0;
         srcWidth = 0;
         srcHeight = 0;
-        srcPixelFormat = PixelFormat.PIX_FMT_YUV420P;
+        srcPixelFormat = PixelFormat.YUV420P;
         scalingAlgorithm = SWScaleLibrary.SWS_BICUBIC;
         dstWidth = 0;
         dstHeight = 0;
-        dstPixelFormat = PixelFormat.PIX_FMT_BGRA;
+        dstPixelFormat = PixelFormat.BGRA;
         if (ByteOrder.BIG_ENDIAN.equals(ByteOrder.nativeOrder()))
-            dstPixelFormat = PixelFormat.PIX_FMT_ARGB;
+            dstPixelFormat = PixelFormat.ARGB;
         
         insts = null;
 
@@ -188,7 +188,7 @@ public class VideoPane extends JComponent implements IFrameConsumer {
      * 
      * @return expected source frame pixel format
      */
-    public int getSourcePixelFormat() {
+    public PixelFormat getSourcePixelFormat() {
         return srcPixelFormat;
     }
     
@@ -209,7 +209,7 @@ public class VideoPane extends JComponent implements IFrameConsumer {
      * @param height a height
      * @param pixelFormat a pixel format
      */
-    public synchronized void setSourceImageFormat(int width, int height, int pixelFormat) {
+    public synchronized void setSourceImageFormat(int width, int height, PixelFormat pixelFormat) {
         if (width <= 0 || height <= 0)
             throw new IllegalArgumentException("illegal frame size");
         

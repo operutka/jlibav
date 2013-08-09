@@ -26,8 +26,7 @@ import org.libav.LibavException;
 import org.libav.avcodec.*;
 import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.avformat.IStreamWrapper;
-import org.libav.avutil.bridge.AVMediaType;
-import org.libav.avutil.bridge.AVSampleFormat;
+import org.libav.avutil.MediaType;
 import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.bridge.LibraryManager;
 import org.libav.data.IFrameConsumer;
@@ -66,7 +65,7 @@ public class AudioFrameDecoder implements IDecoder {
         
         cc = stream.getCodecContext();
         cc.clearWrapperCache();
-        if (cc.getCodecType() != AVMediaType.AVMEDIA_TYPE_AUDIO)
+        if (cc.getCodecType() != MediaType.AUDIO)
             throw new IllegalArgumentException("not an audio stream");
         
         cc.open(CodecWrapperFactory.getInstance().findDecoder(cc.getCodecId()));
@@ -163,7 +162,7 @@ public class AudioFrameDecoder implements IDecoder {
             frame.setPts(sTimeBase.mul(frame.getPacketDts()).longValue());
         else {
             frame.setPts(pts);
-            pts += frame.getLineSize().get(0) * 1000 / (cc.getChannels() * cc.getSampleRate() * AVSampleFormat.getBytesPerSample(cc.getSampleFormat()));
+            pts += frame.getLineSize().get(0) * 1000 / (cc.getChannels() * cc.getSampleRate() * cc.getSampleFormat().getBytesPerSample());
         }
         
         return frame;

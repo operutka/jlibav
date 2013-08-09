@@ -20,6 +20,7 @@ package org.libav.avresample;
 import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avresample.bridge.AVResampleLibrary;
+import org.libav.avutil.SampleFormat;
 import org.libav.avutil.bridge.AVChannelLayout;
 import org.libav.avutil.bridge.AVOptionHandler;
 import org.libav.bridge.LibraryManager;
@@ -34,10 +35,10 @@ public class AudioResampleContextWrapperLAVR implements IAudioResampleContextWra
     private static final AVResampleLibrary resLib = LibraryManager.getInstance().getAVResampleLibrary();
     
     private Long inChannelLayout;
-    private Integer inSampleFormat;
+    private SampleFormat inSampleFormat;
     private Integer inSampleRate;
     private Long outChannelLayout;
-    private Integer outSampleFormat;
+    private SampleFormat outSampleFormat;
     private Integer outSampleRate;
     
     private Pointer<?> context;
@@ -137,13 +138,13 @@ public class AudioResampleContextWrapperLAVR implements IAudioResampleContextWra
     }
 
     @Override
-    public int getInputSampleFormat() {
+    public SampleFormat getInputSampleFormat() {
         if (context == null)
-            return 0;
+            return null;
         
         try {
             if (inSampleFormat == null)
-                inSampleFormat = AVOptionHandler.getInt(context, "in_sample_fmt");
+                inSampleFormat = SampleFormat.valueOf(AVOptionHandler.getInt(context, "in_sample_fmt"));
         } catch (LibavException ex) {
             throw new RuntimeException(ex);
         }
@@ -152,12 +153,12 @@ public class AudioResampleContextWrapperLAVR implements IAudioResampleContextWra
     }
 
     @Override
-    public void setInputSampleFormat(int sampleFormat) {
+    public void setInputSampleFormat(SampleFormat sampleFormat) {
         if (context == null)
             return;
         
         try {
-            AVOptionHandler.setInt(context, "in_sample_fmt", sampleFormat);
+            AVOptionHandler.setInt(context, "in_sample_fmt", sampleFormat.value());
         } catch (LibavException ex) {
             throw new RuntimeException(ex);
         }
@@ -224,13 +225,13 @@ public class AudioResampleContextWrapperLAVR implements IAudioResampleContextWra
     }
 
     @Override
-    public int getOutputSampleFormat() {
+    public SampleFormat getOutputSampleFormat() {
         if (context == null)
-            return 0;
+            return null;
         
         try {
             if (outSampleFormat == null)
-                outSampleFormat = AVOptionHandler.getInt(context, "out_sample_fmt");
+                outSampleFormat = SampleFormat.valueOf(AVOptionHandler.getInt(context, "out_sample_fmt"));
         } catch (LibavException ex) {
             throw new RuntimeException(ex);
         }
@@ -239,12 +240,12 @@ public class AudioResampleContextWrapperLAVR implements IAudioResampleContextWra
     }
 
     @Override
-    public void setOutputSampleFormat(int sampleFormat) {
+    public void setOutputSampleFormat(SampleFormat sampleFormat) {
         if (context == null)
             return;
         
         try {
-            AVOptionHandler.setInt(context, "out_sample_fmt", sampleFormat);
+            AVOptionHandler.setInt(context, "out_sample_fmt", sampleFormat.value());
         } catch (LibavException ex) {
             throw new RuntimeException(ex);
         }

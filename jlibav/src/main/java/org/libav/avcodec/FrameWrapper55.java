@@ -21,6 +21,8 @@ import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.avcodec.bridge.AVFrame55;
+import org.libav.avutil.PixelFormat;
+import org.libav.avutil.SampleFormat;
 import org.libav.avutil.bridge.AVUtilLibrary;
 import org.libav.bridge.LibraryManager;
 
@@ -94,12 +96,12 @@ public class FrameWrapper55 extends AbstractFrameWrapper {
     }
 
     @Override
-    public void fillAudioFrame(int sampleCount, int channelCount, int sampleFormat, Pointer<Byte> buffer, int bufferSize) throws LibavException {
+    public void fillAudioFrame(int sampleCount, int channelCount, SampleFormat sampleFormat, Pointer<Byte> buffer, int bufferSize) throws LibavException {
         if (frame == null)
             return;
         
         setNbSamples(sampleCount);
-        int res = codecLib.avcodec_fill_audio_frame(getPointer(), channelCount, sampleFormat, buffer, bufferSize, 0);
+        int res = codecLib.avcodec_fill_audio_frame(getPointer(), channelCount, sampleFormat.value(), buffer, bufferSize, 0);
         if (res != 0)
             throw new LibavException(res);
     }
@@ -256,7 +258,7 @@ public class FrameWrapper55 extends AbstractFrameWrapper {
         this.nbSamples = nbSamples;
     }
     
-    public static FrameWrapper55 allocatePicture(int pixelFormat, int width, int height) throws LibavException {
+    public static FrameWrapper55 allocatePicture(PixelFormat pixelFormat, int width, int height) throws LibavException {
         FrameWrapper55 result = allocateFrame();
         Pointer data;
 
@@ -268,7 +270,7 @@ public class FrameWrapper55 extends AbstractFrameWrapper {
         }
 
         result.toBeFreed = new Pointer[] { data };
-        codecLib.avpicture_fill(result.getPointer(), data, pixelFormat, width, height);
+        codecLib.avpicture_fill(result.getPointer(), data, pixelFormat.value(), width, height);
 
         return result;
     }
@@ -281,8 +283,8 @@ public class FrameWrapper55 extends AbstractFrameWrapper {
         return new FrameWrapper55(new AVFrame55(ptr));
     }
     
-    private static Pointer<?> allocatePictureBuffer(int pixelFormat, int width, int height) throws LibavException {
-        int size = codecLib.avpicture_get_size(pixelFormat, width, height);
+    private static Pointer<?> allocatePictureBuffer(PixelFormat pixelFormat, int width, int height) throws LibavException {
+        int size = codecLib.avpicture_get_size(pixelFormat.value(), width, height);
         if (size <= 0)
             throw new LibavException("invalid picture size");
         
