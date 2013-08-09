@@ -33,12 +33,17 @@ import org.libav.util.Rational;
  */
 public class CodecContextWrapper54 extends AbstractCodecContextWrapper {
     
+    private static final int DEFAULT_OUTPUT_BUFFER_SIZE = 256 * 1024;
+    
     private static final AVCodecLibrary codecLib;
+    private static final AVUtilLibrary utilLib;
     
     private static final boolean avcEncodeVideo2;
     
     static {
-        codecLib = LibraryManager.getInstance().getAVCodecLibrary();
+        LibraryManager lm = LibraryManager.getInstance();
+        codecLib = lm.getAVCodecLibrary();
+        utilLib = lm.getAVUtilLibrary();
         
         avcEncodeVideo2 = codecLib.functionExists("avcodec_encode_video2");
     }
@@ -48,6 +53,9 @@ public class CodecContextWrapper54 extends AbstractCodecContextWrapper {
     
     private Pointer<Integer> intByRef;
     private IEncodeVideoFunction encodeVideoFunction;
+    
+    private int outputBufferSize;
+    private Pointer<Byte> outputBuffer;
     
     /**
      * Create a new wrapper for the given AVCodecContext.
@@ -63,6 +71,9 @@ public class CodecContextWrapper54 extends AbstractCodecContextWrapper {
             this.encodeVideoFunction = new EncodeVideo2();
         else
             this.encodeVideoFunction = new EncodeVideo();
+        
+        outputBufferSize = DEFAULT_OUTPUT_BUFFER_SIZE;
+        outputBuffer = null;
     }
 
     @Override
@@ -130,12 +141,13 @@ public class CodecContextWrapper54 extends AbstractCodecContextWrapper {
     public void free() {
         close();
         
-        if (context == null)
-            return;
+        if (context != null)
+            utilLib.av_free(getPointer());
+        if (outputBuffer != null)
+            utilLib.av_free(outputBuffer);
         
-        AVUtilLibrary lib = LibraryManager.getInstance().getAVUtilLibrary();
-        lib.av_free(getPointer());
         context = null;
+        outputBuffer = null;
     }
     
     @Override
@@ -594,7 +606,16 @@ public class CodecContextWrapper54 extends AbstractCodecContextWrapper {
     private class EncodeVideo implements IEncodeVideoFunction {
         @Override
         public boolean encodeVideoFrame(IFrameWrapper frame, IPacketWrapper packet) throws LibavException {
-            int size = codecLib.avcodec_encode_video(getPointer(), packet.getData(), packet.getSize(), frame == null ? null : frame.getPointer());
+            if (outputBuffer == null)
+                outputBuffer = utilLib.av_malloc(outputBufferSize).as(Byte.class);
+            if (outputBuffer == null)
+                throw new OutOfMemoryError("not enough memory for the video frame encoder");
+            
+            packet.init();
+            packet.setData(outputBuffer);
+            packet.setSize(outputBufferSize);
+            
+            int size = codecLib.avcodec_encode_video(getPointer(), outputBuffer, outputBufferSize, frame == null ? null : frame.getPointer());
             if (size < 0)
                 throw new LibavException(size);
             else if (size == 0)

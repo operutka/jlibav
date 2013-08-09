@@ -20,7 +20,6 @@ package org.libav.video;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import org.bridj.Pointer;
 import org.libav.CopyTimestampGenerator;
 import org.libav.IEncoder;
 import org.libav.ITimestampGenerator;
@@ -32,7 +31,6 @@ import org.libav.avformat.IStreamWrapper;
 import org.libav.avformat.bridge.AVFormatLibrary;
 import org.libav.avutil.bridge.AVMediaType;
 import org.libav.avutil.bridge.AVUtilLibrary;
-import org.libav.bridge.LibraryManager;
 import org.libav.data.IPacketConsumer;
 import org.libav.util.Rational;
 
@@ -43,18 +41,12 @@ import org.libav.util.Rational;
  */
 public class VideoFrameEncoder implements IEncoder {
     
-    private static final AVUtilLibrary utilLib = LibraryManager.getInstance().getAVUtilLibrary();
-    
-    public static final int DEFAULT_OUTPUT_BUFFER_SIZE = 256 * 1024;
-    
     private IStreamWrapper stream;
     private ICodecContextWrapper cc;
     private boolean initialized;
     
     private boolean rawFormat;
     
-    private int outputBufferSize;
-    private Pointer<Byte> outputBuffer;
     private IPacketWrapper packet;
     private Rational tsToCodecBase;
     private Rational tsToStreamBase;
@@ -82,8 +74,6 @@ public class VideoFrameEncoder implements IEncoder {
         
         rawFormat = (formatContext.getOutputFormat().getFlags() & AVFormatLibrary.AVFMT_RAWPICTURE) != 0;
         
-        outputBufferSize = DEFAULT_OUTPUT_BUFFER_SIZE;
-        outputBuffer = malloc(outputBufferSize);
         packet = PacketWrapperFactory.getInstance().alloc();
         tsToCodecBase = null;
         tsToStreamBase = null;
@@ -115,52 +105,15 @@ public class VideoFrameEncoder implements IEncoder {
     @Override
     public synchronized void close() {
         cc.close();
-        if (outputBuffer != null)
-            utilLib.av_free(outputBuffer);
         if (packet != null)
             packet.free();
         
-        outputBuffer = null;
         packet = null;
     }
     
     @Override
     public boolean isClosed() {
-        return outputBuffer == null;
-    }
-    
-    /**
-     * Get size of the output buffer in bytes (it is the buffer passed to the 
-     * encoding function).
-     * 
-     * @return size of the output buffer
-     */
-    public int getOutputBufferSize() {
-        return outputBufferSize;
-    }
-
-    /**
-     * Set size of the output buffer (it is the buffer passed to the encoding 
-     * function). DO NOT USE this method until you know what you are doing.
-     * 
-     * @param outputBufferSize a size in bytes
-     */
-    public synchronized void setOutputBufferSize(int outputBufferSize) {
-        if (isClosed())
-            return;
-            
-        utilLib.av_free(outputBuffer);
-        outputBuffer = malloc(outputBufferSize);
-        
-        this.outputBufferSize = outputBufferSize;
-    }
-    
-    private Pointer<Byte> malloc(int size) {
-        Pointer<Byte> ptr = utilLib.av_malloc(size).as(Byte.class);
-        if (ptr == null)
-            throw new OutOfMemoryError("not enough memory for the video frame encoder");
-        
-        return ptr;
+        return packet == null;
     }
     
     @Override
@@ -217,8 +170,8 @@ public class VideoFrameEncoder implements IEncoder {
             packet.setSize((int)FrameWrapperFactory.getInstance().getAVPictureSize());
             packet.setStreamIndex(stream.getIndex());
         } else {
-            packet.setData(outputBuffer);
-            packet.setSize(outputBufferSize);
+            packet.setData(null);
+            packet.setSize(0);
 
             boolean gotPacket;
             if (frame == null)

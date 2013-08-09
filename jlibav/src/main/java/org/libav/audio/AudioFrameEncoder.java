@@ -44,8 +44,6 @@ public class AudioFrameEncoder implements IEncoder {
     
     private static final AVUtilLibrary utilLib = LibraryManager.getInstance().getAVUtilLibrary();
     
-    public static final int DEFAULT_OUTPUT_BUFFER_SIZE = 256 * 1024;
-    
     private IStreamWrapper stream;
     private ICodecContextWrapper cc;
     private boolean initialized;
@@ -58,8 +56,6 @@ public class AudioFrameEncoder implements IEncoder {
     private long frameDuration;
     private Rational byteDuration;
     
-    private Pointer<Byte> outputBuffer;
-    private int outputBufferSize;
     private IPacketWrapper packet;
     
     private long flushFramePts;
@@ -94,8 +90,6 @@ public class AudioFrameEncoder implements IEncoder {
         frameDuration = 0;
         byteDuration = null;
         
-        outputBufferSize = DEFAULT_OUTPUT_BUFFER_SIZE;
-        outputBuffer = malloc(outputBufferSize);
         packet = PacketWrapperFactory.getInstance().alloc();
         
         flushFramePts = 0;
@@ -128,47 +122,18 @@ public class AudioFrameEncoder implements IEncoder {
     @Override
     public synchronized void close() {
         cc.close();
-        if (outputBuffer != null)
-            utilLib.av_free(outputBuffer);
         if (packet != null)
             packet.free();
         if (tmpFrame != null)
             utilLib.av_free(tmpFrame.getData().get(0));
         
-        outputBuffer = null;
         packet = null;
         tmpFrame = null;
     }
     
     @Override
     public boolean isClosed() {
-        return outputBuffer == null;
-    }
-    
-    /**
-     * Get size of the output buffer in bytes (it is the buffer passed to the 
-     * encoding function).
-     * 
-     * @return size of the output buffer
-     */
-    public int getOutputBufferSize() {
-        return outputBufferSize;
-    }
-
-    /**
-     * Set size of the output buffer (it is the buffer passed to the encoding 
-     * function). DO NOT USE this method until you know what you are doing.
-     * 
-     * @param outputBufferSize a size in bytes
-     */
-    public synchronized void setOutputBufferSize(int outputBufferSize) {
-        if (isClosed())
-            return;
-            
-        utilLib.av_free(outputBuffer);
-        outputBuffer = malloc(outputBufferSize);
-        
-        this.outputBufferSize = outputBufferSize;
+        return packet == null;
     }
     
     private Pointer<Byte> malloc(int size) {
@@ -231,8 +196,8 @@ public class AudioFrameEncoder implements IEncoder {
     
     private boolean flushFrame() throws LibavException {
         packet.init();
-        packet.setData(outputBuffer);
-        packet.setSize(outputBufferSize);
+        packet.setData(null);
+        packet.setSize(0);
         
         int sampleCount = offset / (cc.getChannels() * AVSampleFormat.getBytesPerSample(cc.getSampleFormat()));
         if (sampleCount > 0) {
@@ -277,8 +242,8 @@ public class AudioFrameEncoder implements IEncoder {
                 tmpFrame.fillAudioFrame(frameSampleCount, cc.getChannels(), cc.getSampleFormat(), frameData, frameSize);
                 
                 packet.init();
-                packet.setData(outputBuffer);
-                packet.setSize(outputBufferSize);
+                packet.setData(null);
+                packet.setSize(0);
                 
                 if (cc.encodeAudioFrame(tmpFrame, packet)) {
                     packet.clearWrapperCache();
