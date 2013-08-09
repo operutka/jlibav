@@ -586,6 +586,11 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         else if (size == 0)
             return false;
         
+        rebindCodedFrame();
+        IFrameWrapper cf = getCodedFrame();
+        cf.clearWrapperCache();
+        
+        packet.setPts(cf.getPts());
         packet.setSize(size);
         
         return true;
