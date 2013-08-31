@@ -607,7 +607,9 @@ public final class AVUtilLibrary implements ILibrary {
         public static native int av_log_get_level();
         public static native void av_log_set_level(int logLevel);
         
+        @Optional
         public static native Pointer<?> av_frame_alloc();
+        @Optional
         public static native void av_frame_free(@Ptr long frame);
         
         public static native Pointer<?> av_dict_get(Pointer<?> m, Pointer<Byte> key, Pointer<?> prev, int flags);
