@@ -37,18 +37,10 @@ public class FrameWrapper54 extends AbstractFrameWrapper {
     private static final AVUtilLibrary utilLib;
     
     private static final IFreeFrame freeFrame;
-    private static final int fillFrameAlignment;
     
     static {
         codecLib = LibraryManager.getInstance().getAVCodecLibrary();
         utilLib = LibraryManager.getInstance().getAVUtilLibrary();
-        
-        if (utilLib.getMajorVersion() > 51 ||
-                (utilLib.getMajorVersion() == 51 && utilLib.getMinorVersion() > 27) ||
-                (utilLib.getMajorVersion() == 51 && utilLib.getMinorVersion() == 27 && utilLib.getMicroVersion() >= 2))
-            fillFrameAlignment = 0;
-        else
-            fillFrameAlignment = 1;
         
         if (codecLib.functionExists("avcodec_free_frame"))
             freeFrame = new FreeFrame2();
@@ -104,7 +96,7 @@ public class FrameWrapper54 extends AbstractFrameWrapper {
             return;
         
         setNbSamples(sampleCount);
-        int res = codecLib.avcodec_fill_audio_frame(getPointer(), channelCount, sampleFormat.value(), buffer, bufferSize, fillFrameAlignment);
+        int res = codecLib.avcodec_fill_audio_frame(getPointer(), channelCount, sampleFormat.value(), buffer, bufferSize, 1);
         if (res != 0)
             throw new LibavException(res);
     }

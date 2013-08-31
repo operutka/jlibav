@@ -101,7 +101,7 @@ public class FrameWrapper55 extends AbstractFrameWrapper {
             return;
         
         setNbSamples(sampleCount);
-        int res = codecLib.avcodec_fill_audio_frame(getPointer(), channelCount, sampleFormat.value(), buffer, bufferSize, 0);
+        int res = codecLib.avcodec_fill_audio_frame(getPointer(), channelCount, sampleFormat.value(), buffer, bufferSize, 1);
         if (res != 0)
             throw new LibavException(res);
     }
