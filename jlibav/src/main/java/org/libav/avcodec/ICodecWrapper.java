@@ -17,6 +17,7 @@
  */
 package org.libav.avcodec;
 
+import org.libav.avutil.MediaType;
 import org.libav.avutil.PixelFormat;
 import org.libav.avutil.SampleFormat;
 import org.libav.bridge.IWrapper;
@@ -50,7 +51,7 @@ public interface ICodecWrapper extends IWrapper {
      * 
      * @return 
      */
-    int getType();
+    MediaType getType();
     
     /**
      * Get the name property from the AVCodec.

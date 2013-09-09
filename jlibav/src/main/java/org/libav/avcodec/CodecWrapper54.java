@@ -23,6 +23,7 @@ import org.bridj.Pointer;
 import org.libav.LibavException;
 import org.libav.avcodec.bridge.AVCodec54;
 import org.libav.avcodec.bridge.AVCodecLibrary;
+import org.libav.avutil.MediaType;
 import org.libav.avutil.PixelFormat;
 import org.libav.avutil.SampleFormat;
 import org.libav.avutil.bridge.AVRational;
@@ -81,9 +82,9 @@ public class CodecWrapper54 extends AbstractCodecWrapper {
     }
 
     @Override
-    public int getType() {
+    public MediaType getType() {
         if (type == null)
-            type = codec.type();
+            type = MediaType.valueOf(codec.type());
         
         return type;
     }

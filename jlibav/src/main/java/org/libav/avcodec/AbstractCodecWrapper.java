@@ -17,6 +17,7 @@
  */
 package org.libav.avcodec;
 
+import org.libav.avutil.MediaType;
 import org.libav.avutil.PixelFormat;
 import org.libav.avutil.SampleFormat;
 import org.libav.util.Rational;
@@ -29,7 +30,7 @@ import org.libav.util.Rational;
 public abstract class AbstractCodecWrapper implements ICodecWrapper {
     
     protected CodecID id;
-    protected Integer type;
+    protected MediaType type;
     protected String name;
     protected Integer capabilities;
     protected Rational[] supportedFrameRates;
