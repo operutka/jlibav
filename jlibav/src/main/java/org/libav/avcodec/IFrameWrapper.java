@@ -49,8 +49,26 @@ public interface IFrameWrapper extends IWrapper {
      * @param sampleFormat sample format
      * @param buffer audio data buffer
      * @param bufferSize size of the buffer
+     * @throws LibavException on Libav error
      */
     void fillAudioFrame(int sampleCount, int channelCount, SampleFormat sampleFormat, Pointer<Byte> buffer, int bufferSize) throws LibavException;
+    
+    /**
+     * Fill audio frame data and linesize. AVFrame extended_data channel 
+     * pointers are allocated if necessary for planar audio.
+     * 
+     * This method allows to fill planar audio frames using data buffer with 
+     * longer line size than is needed for the audio frame.
+     * 
+     * @param sampleCount number of samples to be filled into the frame
+     * @param channelCount number of channels
+     * @param sampleFormat sample format
+     * @param buffer audio data buffer
+     * @param bufferSize size of the buffer
+     * @param bufferSampleCapacity buffer capacity
+     * @throws LibavException on Libav error
+     */
+    void fillAudioFrame(int sampleCount, int channelCount, SampleFormat sampleFormat, Pointer<Byte> buffer, int bufferSize, int bufferSampleCapacity) throws LibavException;
     
     /**
      * Get the data property from the AVFrame.
@@ -69,6 +87,24 @@ public interface IFrameWrapper extends IWrapper {
      * @return length of the data array
      */
     int getDataLength();
+    
+    /**
+     * Get the extended_data property from the AVFrame.
+     * 
+     * WARNING:
+     * The returned value may be cached. Call the clearWrapperCahce() if you
+     * think the value have been changed.
+     * 
+     * @return extended data
+     */
+    Pointer<Pointer<Byte>> getExtendedData();
+    
+    /**
+     * Set the extended_data property of the AVFrame. The value may be cached.
+     * 
+     * @param extendedData 
+     */
+    void setExtendedData(Pointer<Pointer<Byte>> extendedData);
     
     /**
      * Get the linesize property from the AVFrame.

@@ -92,13 +92,25 @@ public class FrameWrapper54 extends AbstractFrameWrapper {
 
     @Override
     public void fillAudioFrame(int sampleCount, int channelCount, SampleFormat sampleFormat, Pointer<Byte> buffer, int bufferSize) throws LibavException {
+        fillAudioFrame(sampleCount, channelCount, sampleFormat, buffer, bufferSize, sampleCount);
+    }
+
+    @Override
+    public void fillAudioFrame(int sampleCount, int channelCount, SampleFormat sampleFormat, Pointer<Byte> buffer, int bufferSize, int bufferSampleCapacity) throws LibavException {
         if (frame == null)
             return;
         
-        setNbSamples(sampleCount);
+        setNbSamples(bufferSampleCapacity);
         int res = codecLib.avcodec_fill_audio_frame(getPointer(), channelCount, sampleFormat.value(), buffer, bufferSize, 1);
         if (res != 0)
             throw new LibavException(res);
+        
+        int ls = sampleCount * sampleFormat.getBytesPerSample();
+        if (!sampleFormat.isPlanar())
+            ls *= channelCount;
+        
+        getLineSize().set(0, ls);
+        setNbSamples(sampleCount);
     }
     
     @Override
@@ -115,6 +127,26 @@ public class FrameWrapper54 extends AbstractFrameWrapper {
     @Override
     public int getDataLength() {
         return 8;
+    }
+
+    @Override
+    public Pointer<Pointer<Byte>> getExtendedData() {
+        if (frame == null)
+            return null;
+        
+        if (extendedData == null)
+            extendedData = frame.extended_data();
+        
+        return extendedData;
+    }
+
+    @Override
+    public void setExtendedData(Pointer<Pointer<Byte>> extendedData) {
+        if (frame == null)
+            return;
+        
+        frame.extended_data(extendedData);
+        this.extendedData = extendedData;
     }
     
     @Override

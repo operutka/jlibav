@@ -27,6 +27,7 @@ import org.bridj.Pointer;
 public abstract class AbstractFrameWrapper implements IFrameWrapper {
     
     protected Pointer<Pointer<Byte>> data;
+    protected Pointer<Pointer<Byte>> extendedData;
     protected Pointer<Integer> lineSize;
     protected Boolean keyFrame;
     protected Long pts;
@@ -37,6 +38,7 @@ public abstract class AbstractFrameWrapper implements IFrameWrapper {
 
     public AbstractFrameWrapper() {
         data = null;
+        extendedData = null;
         lineSize = null;
         keyFrame = null;
         pts = null;
@@ -49,6 +51,7 @@ public abstract class AbstractFrameWrapper implements IFrameWrapper {
     @Override
     public void clearWrapperCache() {
         data = null;
+        extendedData = null;
         lineSize = null;
         keyFrame = null;
         pts = null;
