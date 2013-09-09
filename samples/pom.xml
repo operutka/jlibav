@@ -18,5 +18,6 @@
     <module>quick-start-01</module>
     <module>quick-start-02</module>
     <module>quick-start-03</module>
+    <module>quick-start-04</module>
   </modules>
 </project>
