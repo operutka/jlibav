@@ -6,7 +6,7 @@
   <parent>
     <groupId>com.google.code.jlibav</groupId>
     <artifactId>samples</artifactId>
-    <version>0.2</version>
+    <version>0.2.1</version>
   </parent>
 
   <artifactId>rtsp-sample</artifactId>
@@ -23,7 +23,7 @@
     <dependency>
       <groupId>com.google.code.jlibav</groupId>
       <artifactId>jlibav</artifactId>
-      <version>0.2</version>
+      <version>0.2.1</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
