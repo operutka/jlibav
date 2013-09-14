@@ -50,7 +50,11 @@ public class AudioFrameEncoder implements IEncoder {
     private boolean smallLastFrame;
     
     private IFrameWrapper tmpFrame;
-    private Pointer<Byte> frameData;
+    private Pointer<Byte> buffer;
+    private int bufferSize;
+    private int bufferSampleCapacity;
+    private Pointer<Pointer<Byte>> planes;
+    private int planeCount;
     private int frameSize;
     private int frameSampleCount;
     private long frameDuration;
@@ -86,7 +90,11 @@ public class AudioFrameEncoder implements IEncoder {
         smallLastFrame = false;
         
         tmpFrame = FrameWrapperFactory.getInstance().allocFrame();
-        frameData = malloc(AVCodecLibrary.AVCODEC_MAX_AUDIO_FRAME_SIZE + AVCodecLibrary.FF_INPUT_BUFFER_PADDING_SIZE);
+        bufferSize = AVCodecLibrary.AVCODEC_MAX_AUDIO_FRAME_SIZE;
+        buffer = malloc(bufferSize + AVCodecLibrary.FF_INPUT_BUFFER_PADDING_SIZE);
+        bufferSampleCapacity = 0;
+        planes = null;
+        planeCount = 0;
         frameSize = 0;
         frameSampleCount = 0;
         frameDuration = 0;
@@ -130,12 +138,16 @@ public class AudioFrameEncoder implements IEncoder {
             utilLib.av_free(outputBuffer);
         if (packet != null)
             packet.free();
+        if (buffer != null)
+            utilLib.av_free(buffer);
         if (tmpFrame != null)
-            utilLib.av_free(tmpFrame.getData().get(0));
+            tmpFrame.free();
         
         outputBuffer = null;
         packet = null;
+        buffer = null;
         tmpFrame = null;
+        planes = null;
     }
     
     @Override
@@ -223,7 +235,27 @@ public class AudioFrameEncoder implements IEncoder {
             frameSampleCount = 8192;
         if (frameSampleCount <= 1) // keep compatibility with older PCM encoders
             frameSampleCount = 8192;
-        frameSize = frameSampleCount * cc.getChannels() * AVSampleFormat.getBytesPerSample(cc.getSampleFormat());
+        
+        int sampleFormat = cc.getSampleFormat();
+        int bytesPerSample = AVSampleFormat.getBytesPerSample(sampleFormat);
+        int channelCount = cc.getChannels();
+        
+        frameSize = frameSampleCount * bytesPerSample;
+        if (AVSampleFormat.isPlanar(sampleFormat))
+            planeCount = channelCount;
+        else {
+            frameSize *= channelCount;
+            planeCount = 1;
+        }
+        
+        planes = Pointer.allocatePointers(Byte.class, planeCount);
+        int lineSize = bufferSize / planeCount;
+        lineSize -= lineSize % bytesPerSample;
+        for (int i = 0; i < planeCount; i++)
+            planes.set(i, buffer.offset(i * lineSize));
+        
+        bufferSampleCapacity = lineSize * planeCount / (channelCount * bytesPerSample);
+        
         frameDuration = 1000 * frameSampleCount / cc.getSampleRate();
         byteDuration = new Rational(frameDuration, frameSize);
         offset = 0;
@@ -240,14 +272,16 @@ public class AudioFrameEncoder implements IEncoder {
         packet.setData(outputBuffer);
         packet.setSize(outputBufferSize);
         
-        int sampleCount = offset / (cc.getChannels() * AVSampleFormat.getBytesPerSample(cc.getSampleFormat()));
+        //int sampleCount = offset / (cc.getChannels() * AVSampleFormat.getBytesPerSample(cc.getSampleFormat()));
+        int sampleCount = offset * planeCount / (cc.getChannels() * AVSampleFormat.getBytesPerSample(cc.getSampleFormat()));
         if (sampleCount > 0) {
             if (sampleCount < frameSampleCount && !smallLastFrame) {
                 sampleCount = frameSampleCount;
-                frameData.clearBytesAtOffset(offset, frameSize - offset, (byte)0);
+                for (int i = 0; i < planeCount; i++)
+                    planes.get(i).clearBytesAtOffset(offset, frameSize - offset, (byte)0);
                 offset = frameSize;
             }
-            tmpFrame.fillAudioFrame(sampleCount, cc.getChannels(), cc.getSampleFormat(), frameData, offset);
+            fillFrame(sampleCount, cc.getChannels(), cc.getSampleFormat());
         }
         offset = 0;
 
@@ -265,22 +299,16 @@ public class AudioFrameEncoder implements IEncoder {
     }
     
     private void encodeFrame(IFrameWrapper frame, long pts) throws LibavException {
-        Pointer<Byte> data = frame.getData().get(0);
-        int tmp, size = frame.getLineSize().get(0);
+        int lineSize = frame.getLineSize().get(0);
+        int size = lineSize;
         pts -= byteDuration.mul(offset).longValue();
         
         while (size > 0) {
-            tmp = frameSize - offset;
-            if (size < tmp)
-                tmp = size;
-            data.copyTo(frameData.offset(offset), tmp);
-            offset += tmp;
-            size -= tmp;
-            data = data.offset(tmp);
+            size -= appendSamples(frame, lineSize - size);
             
             if (offset == frameSize) {
                 offset = 0;
-                tmpFrame.fillAudioFrame(frameSampleCount, cc.getChannels(), cc.getSampleFormat(), frameData, frameSize);
+                fillFrame(frameSampleCount, cc.getChannels(), cc.getSampleFormat());
                 
                 packet.init();
                 packet.setData(outputBuffer);
@@ -298,6 +326,49 @@ public class AudioFrameEncoder implements IEncoder {
                 }
             }
         }
+    }
+    
+    private int appendSamples(IFrameWrapper frame, int frameOffset) throws LibavException {
+        Pointer<Pointer<Byte>> data;
+        if (planeCount > frame.getDataLength())
+            throw new LibavException("unsupported channel count for planar audio format");
+        else
+            data = frame.getData();
+        
+        int tmp = frameSize - offset;
+        int lineSize = frame.getLineSize().get(0);
+        int size = lineSize - frameOffset;
+        
+        if (size < tmp)
+            tmp = size;
+        
+        Pointer<Byte> dataPlane;
+        Pointer<Byte> plane;
+        
+        for (int i = 0; i < planeCount; i++) {
+            dataPlane = data.get(i).offset(frameOffset);
+            plane = planes.get(i).offset(offset);
+            dataPlane.copyTo(plane, tmp);
+        }
+        
+        offset += tmp;
+        
+        return tmp;
+    }
+    
+    private void fillFrame(int sampleCount, int channelCount, int sampleFormat) throws LibavException {
+        tmpFrame.fillAudioFrame(bufferSampleCapacity, channelCount, sampleFormat, 
+                buffer, bufferSize);
+
+        int lineSize = sampleCount * AVSampleFormat.getBytesPerSample(sampleFormat);
+        if (!AVSampleFormat.isPlanar(sampleFormat))
+            lineSize *= channelCount;
+
+        tmpFrame.getLineSize().set(0, lineSize);
+        // there must not be any API breaking change, so we need this dirty hack
+        try {
+            tmpFrame.setNbSamples(sampleCount);
+        } catch (UnsatisfiedLinkError ex) { }
     }
     
     private void sendPacket(IPacketWrapper packet) throws LibavException {

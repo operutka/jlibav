@@ -515,7 +515,11 @@ public class CodecContextWrapper54 extends AbstractCodecContextWrapper {
         packet.setSize(packetSize);
         packet.setData(packetSize <= 0 ? null : packet.getData().offset(len));
         if (intByRef.getInt() != 0) {
-            frame.getLineSize().set(0, frame.getNbSamples() * getChannels() * AVSampleFormat.getBytesPerSample(getSampleFormat()));
+            int sf = getSampleFormat();
+            int lineSize = frame.getNbSamples() * AVSampleFormat.getBytesPerSample(sf);
+            if (!AVSampleFormat.isPlanar(sf))
+                lineSize *= getChannels();
+            frame.getLineSize().set(0, lineSize);
             return true;
         }
 

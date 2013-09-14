@@ -56,8 +56,7 @@ public class AudioFrameResampler implements IFrameConsumer, IFrameProducer {
     private int outputBytesPerSample;
     
     private IAudioResampleContextWrapper resampleContext;
-    private Pointer<Pointer<?>> resampleBuffer;
-    private int bufferSize;
+    private ResampleBuffer resampleBuffer;
     private IFrameWrapper outputFrame;
     
     private final Set<IFrameConsumer> consumers;
@@ -88,7 +87,6 @@ public class AudioFrameResampler implements IFrameConsumer, IFrameProducer {
         
         resampleContext = null;
         resampleBuffer = null;
-        bufferSize = AVCodecLibrary.AVCODEC_MAX_AUDIO_FRAME_SIZE + AVCodecLibrary.FF_INPUT_BUFFER_PADDING_SIZE;
         outputFrame = null;
         
         init();
@@ -100,7 +98,7 @@ public class AudioFrameResampler implements IFrameConsumer, IFrameProducer {
         if (resampleContext != null)
             resampleContext.free();
         if (resampleBuffer != null)
-            utilLib.av_free(resampleBuffer);
+            resampleBuffer.free();
         if (outputFrame != null)
             outputFrame.free();
         
@@ -117,8 +115,7 @@ public class AudioFrameResampler implements IFrameConsumer, IFrameProducer {
             resampleContext.setOutputSampleFormat(outputSampleFormat);
             resampleContext.setOutputSampleRate(outputSampleRate);
             resampleContext.open();
-            resampleBuffer = Pointer.allocatePointer();
-            resampleBuffer.set(utilLib.av_malloc(bufferSize));
+            resampleBuffer = new ResampleBuffer(outputSampleFormat, outputChannelCount);
             outputFrame = FrameWrapperFactory.getInstance().allocFrame();
         }
     }
@@ -192,7 +189,7 @@ public class AudioFrameResampler implements IFrameConsumer, IFrameProducer {
             outputChannelCount = AVChannelLayout.getChannelCount(channelLayout);
             outputSampleRate = sampleRate;
             outputSampleFormat = sampleFormat;
-            outputBytesPerSample = AVSampleFormat.getBitsPerSample(sampleFormat);
+            outputBytesPerSample = AVSampleFormat.getBytesPerSample(sampleFormat);
             init();
         }
     }
@@ -240,7 +237,7 @@ public class AudioFrameResampler implements IFrameConsumer, IFrameProducer {
         if (resampleContext != null)
             resampleContext.free();
         if (resampleBuffer != null)
-            utilLib.av_free(resampleBuffer);
+            resampleBuffer.free();
         if (outputFrame != null)
             outputFrame.free();
         
@@ -254,13 +251,32 @@ public class AudioFrameResampler implements IFrameConsumer, IFrameProducer {
         if (resampleContext == null)
             sendFrame(frame);
         else {
+            Pointer inputData = frame.getData();
             int inPlaneSize = frame.getLineSize().get(0);
-            int inSampleCount = inPlaneSize / (inputChannelCount * inputBytesPerSample);
-            int outSampleCount = bufferSize / (outputChannelCount * outputBytesPerSample);
-            outSampleCount = resampleContext.convert(resampleBuffer, bufferSize, outSampleCount, 
-                    (Pointer)frame.getData(), inPlaneSize, inSampleCount);
-            outputFrame.fillAudioFrame(outSampleCount, outputChannelCount, outputSampleFormat, 
-                    resampleBuffer.get().as(Byte.class), bufferSize);
+            int inSampleCount = inPlaneSize / inputBytesPerSample;
+            if (AVSampleFormat.isPlanar(inputSampleFormat) && inputChannelCount > frame.getDataLength())
+                throw new LibavException("unsupported channel count for planar audio format");
+            else if (!AVSampleFormat.isPlanar(inputSampleFormat))
+                inSampleCount /= inputChannelCount;
+            
+            int outSampleCount = resampleContext.convert(resampleBuffer.getData(), 
+                    resampleBuffer.getLineSize(), resampleBuffer.getMaxSampleCount(), 
+                    inputData, inPlaneSize, inSampleCount);
+            
+            outputFrame.fillAudioFrame(resampleBuffer.getMaxSampleCount(), 
+                    outputChannelCount, outputSampleFormat, 
+                    resampleBuffer.getBuffer(), resampleBuffer.getBufferSize());
+            
+            int lineSize = outSampleCount * outputBytesPerSample;
+            if (!AVSampleFormat.isPlanar(outputSampleFormat))
+                lineSize *= outputChannelCount;
+            
+            outputFrame.getLineSize().set(0, lineSize);
+            // there must not be any API breaking change, so we need this dirty hack
+            try {
+                outputFrame.setNbSamples(outSampleCount);
+            } catch (UnsatisfiedLinkError ex) { }
+            
             outputFrame.setKeyFrame(frame.isKeyFrame());
             outputFrame.setPacketDts(frame.getPacketDts());
             outputFrame.setPacketPts(frame.getPacketPts());
@@ -288,6 +304,63 @@ public class AudioFrameResampler implements IFrameConsumer, IFrameProducer {
     
     public int getConsumerCount() {
         return consumers.size();
+    }
+    
+    private static class ResampleBuffer {
+        private Pointer<Pointer<?>> data;
+        private Pointer<Byte> buffer;
+        private int bufferSize;
+        private int lineSize;
+        private int maxSampleCount;
+
+        public ResampleBuffer(int sampleFormat, int channelCount) {
+            int planes = AVSampleFormat.isPlanar(sampleFormat) ? channelCount : 1;
+            
+            bufferSize = AVCodecLibrary.AVCODEC_MAX_AUDIO_FRAME_SIZE;
+            buffer = utilLib.av_malloc(bufferSize + AVCodecLibrary.FF_INPUT_BUFFER_PADDING_SIZE).as(Byte.class);
+            if (buffer == null)
+                throw new OutOfMemoryError("not enough memory for the audio frame resampler");
+            
+            int bytesPerSample = AVSampleFormat.getBytesPerSample(sampleFormat);
+            lineSize = bufferSize / planes;
+            lineSize -= lineSize % bytesPerSample;
+            
+            data = Pointer.allocatePointers(planes);
+            for (int i = 0; i < planes; i++)
+                data.set(i, buffer.offset(i * lineSize));
+            
+            maxSampleCount = lineSize * planes / (channelCount * bytesPerSample);
+        }
+        
+        public void free() {
+            if (buffer == null)
+                return;
+            
+            utilLib.av_free(buffer);
+            
+            buffer = null;
+            data = null;
+        }
+
+        public Pointer<Pointer<?>> getData() {
+            return data;
+        }
+
+        public int getLineSize() {
+            return lineSize;
+        }
+
+        public Pointer<Byte> getBuffer() {
+            return buffer;
+        }
+        
+        public int getBufferSize() {
+            return bufferSize;
+        }
+        
+        public int getMaxSampleCount() {
+            return maxSampleCount;
+        }
     }
     
 }
