@@ -43,6 +43,7 @@ public abstract class AbstractFrameWrapper implements IFrameWrapper {
         repeatPicture = null;
         packetPts = null;
         packetDts = null;
+        nbSamples = null;
     }
 
     @Override
@@ -54,6 +55,7 @@ public abstract class AbstractFrameWrapper implements IFrameWrapper {
         repeatPicture = null;
         packetPts = null;
         packetDts = null;
+        nbSamples = null;
     }
     
 }
