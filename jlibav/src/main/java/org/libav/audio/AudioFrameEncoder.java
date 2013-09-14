@@ -44,8 +44,6 @@ public class AudioFrameEncoder implements IEncoder {
     
     private static final AVUtilLibrary utilLib = LibraryManager.getInstance().getAVUtilLibrary();
     
-    public static final int DEFAULT_OUTPUT_BUFFER_SIZE = 256 * 1024;
-    
     private IStreamWrapper stream;
     private ICodecContextWrapper cc;
     private boolean initialized;
@@ -94,8 +92,8 @@ public class AudioFrameEncoder implements IEncoder {
         frameDuration = 0;
         byteDuration = null;
         
-        outputBufferSize = DEFAULT_OUTPUT_BUFFER_SIZE;
-        outputBuffer = malloc(outputBufferSize);
+        outputBufferSize = 0;
+        outputBuffer = null;
         packet = PacketWrapperFactory.getInstance().alloc();
         
         flushFramePts = 0;
@@ -142,7 +140,7 @@ public class AudioFrameEncoder implements IEncoder {
     
     @Override
     public boolean isClosed() {
-        return outputBuffer == null;
+        return packet == null;
     }
     
     /**
@@ -164,9 +162,17 @@ public class AudioFrameEncoder implements IEncoder {
     public synchronized void setOutputBufferSize(int outputBufferSize) {
         if (isClosed())
             return;
-            
-        utilLib.av_free(outputBuffer);
-        outputBuffer = malloc(outputBufferSize);
+        
+        if (outputBuffer != null)
+            utilLib.av_free(outputBuffer);
+        
+        if (outputBufferSize < 0)
+            outputBufferSize = 0;
+        
+        if (outputBufferSize > 0)
+            outputBuffer = malloc(outputBufferSize);
+        else
+            outputBuffer = null;
         
         this.outputBufferSize = outputBufferSize;
     }
