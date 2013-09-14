@@ -17,9 +17,15 @@
  */
 package org.libav;
 
+import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 import org.libav.audio.AudioFrameEncoder;
+import org.libav.avcodec.CodecWrapperFactory;
+import org.libav.avcodec.ICodecContextWrapper;
+import org.libav.avcodec.ICodecWrapper;
+import org.libav.avcodec.IPacketWrapper;
+import org.libav.avformat.IFormatContextWrapper;
 import org.libav.avformat.IStreamWrapper;
 import org.libav.video.VideoFrameEncoder;
 
@@ -48,8 +54,8 @@ public class DefaultMediaEncoder implements IMediaEncoder {
         this(new DefaultMediaWriter(url, outputFormatName));
     }
     
-    protected DefaultMediaEncoder(IMediaWriter mr) {
-        this.mw = mr;
+    protected DefaultMediaEncoder(IMediaWriter mw) {
+        this.mw = new MediaWriterAdapter(mw);
         
         aef = new DefaultAudioEncoderFactory();
         vef = new DefaultVideoEncoderFactory();
@@ -144,6 +150,117 @@ public class DefaultMediaEncoder implements IMediaEncoder {
         @Override
         public IEncoder createEncoder(IStreamWrapper stream) throws LibavException {
             return new VideoFrameEncoder(mw.getFormatContext(), stream);
+        }
+    }
+    
+    private class MediaWriterAdapter implements IMediaWriter {
+        private IMediaWriter mw;
+
+        public MediaWriterAdapter(IMediaWriter mw) {
+            this.mw = mw;
+        }
+
+        @Override
+        public IFormatContextWrapper getFormatContext() {
+            return mw.getFormatContext();
+        }
+
+        @Override
+        public boolean getInterleave() {
+            return mw.getInterleave();
+        }
+
+        @Override
+        public void setInterleave(boolean interleave) {
+            mw.setInterleave(interleave);
+        }
+
+        @Override
+        public int getStreamCount() {
+            return mw.getStreamCount();
+        }
+
+        @Override
+        public IStreamWrapper getStream(int streamIndex) {
+            return mw.getStream(streamIndex);
+        }
+
+        @Override
+        public int getVideoStreamCount() {
+            return mw.getVideoStreamCount();
+        }
+
+        @Override
+        public int addVideoStream(int codecId, int width, int height) throws LibavException {
+            return mw.addVideoStream(codecId, width, height);
+        }
+
+        @Override
+        public IStreamWrapper getVideoStream(int videoStreamIndex) {
+            return mw.getVideoStream(videoStreamIndex);
+        }
+
+        @Override
+        public int getAudioStreamCount() {
+            return mw.getAudioStreamCount();
+        }
+
+        @Override
+        public int addAudioStream(int codecId, int sampleRate, int sampleFormat, int channelCount) throws LibavException {
+            return mw.addAudioStream(codecId, sampleRate, sampleFormat, channelCount);
+        }
+
+        @Override
+        public IStreamWrapper getAudioStream(int audioStreamIndex) {
+            return mw.getAudioStream(audioStreamIndex);
+        }
+
+        @Override
+        public void writeHeader() throws LibavException {
+            CodecWrapperFactory cwf = CodecWrapperFactory.getInstance();
+            IStreamWrapper stream;
+            ICodecContextWrapper cc;
+            ICodecWrapper codec;
+            
+            for (int i = 0; i < mw.getStreamCount(); i++) {
+                stream = mw.getStream(i);
+                cc = stream.getCodecContext();
+                cc.clearWrapperCache();
+                codec = cwf.findEncoder(cc.getCodecId());
+                cc.open(codec);
+            }
+            
+            mw.writeHeader();
+        }
+
+        @Override
+        public void writeTrailer() throws LibavException {
+            mw.writeTrailer();
+        }
+
+        @Override
+        public String getSdp() throws LibavException {
+            return mw.getSdp();
+        }
+
+        @Override
+        public void createSdpFile(String fileName) throws LibavException, FileNotFoundException {
+            mw.createSdpFile(fileName);
+        }
+
+        @Override
+        public void close() throws LibavException {
+            mw.close();
+        }
+
+        @Override
+        public boolean isClosed() {
+            return mw.isClosed();
+        }
+
+        @Override
+        public void processPacket(Object producer, IPacketWrapper packet) throws LibavException {
+            mw.processPacket(producer, packet);
         }
     }
     

@@ -48,6 +48,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
     }
     
     private AVCodecContext53 context;
+    private boolean closed;
     
     private Pointer<Integer> intByRef;
     private IDecodeAudioFunction decodeAudioFunction;
@@ -60,6 +61,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
      */
     public CodecContextWrapper53(AVCodecContext53 context) {
         this.context = context;
+        this.closed = true;
         
         this.intByRef = Pointer.allocateInt();
         
@@ -73,7 +75,23 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         else
             this.encodeAudioFunction = new EncodeAudio();
     }
+
+    @Override
+    public void clearWrapperCache() {
+        super.clearWrapperCache();
+        
+        rebindCodedFrame();
+    }
     
+    private void rebindCodedFrame() {
+        if (context == null || codedFrame == null)
+            return;
+        
+        Pointer<?> ptr = context.coded_frame();
+        if (ptr == null || !ptr.equals(codedFrame.getPointer()))
+            codedFrame = null;
+    }
+
     @Override
     public Pointer<?> getPointer() {
         if (context == null)
@@ -81,11 +99,11 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         
         return Pointer.pointerTo(context);
     }
-    
+
     @Override
     public void open(ICodecWrapper codec) throws LibavException {
-        if (this.codec != null)
-            close();
+        if (!isClosed())
+            return;
         
         int result;
         if (avcOpen2)
@@ -96,7 +114,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         if(result < 0)
             throw new LibavException(result);
         
-        this.codec = codec;
+        closed = false;
     }
     
     @Override
@@ -105,7 +123,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             return;
         
         codecLib.avcodec_close(getPointer());
-        codec = null;
+        closed = true;
     }
     
     @Override
@@ -122,7 +140,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
     
     @Override
     public boolean isClosed() {
-        return codec == null;
+        return closed;
     }
     
     @Override
@@ -237,7 +255,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
         context.height(height);
         this.height = height;
     }
-    
+
     @Override
     public int getPixelFormat() {
         if (context == null)
@@ -293,6 +311,9 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
     public void setTimeBase(Rational timeBase) {
         if (context == null)
             return;
+        
+        if (timeBase == null)
+            timeBase = new Rational(0, 0);
         
         context.time_base().num((int)timeBase.getNumerator());
         context.time_base().den((int)timeBase.getDenominator());

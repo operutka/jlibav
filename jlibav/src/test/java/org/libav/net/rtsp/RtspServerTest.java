@@ -98,16 +98,19 @@ public class RtspServerTest {
     private static class VideoStreamWriterFactory implements IStreamWriterFactory {
         private int width;
         private int height;
+        private int pixelFormat;
 
         public VideoStreamWriterFactory(ICodecContextWrapper decoderContext) {
             width = decoderContext.getWidth();
             height = decoderContext.getHeight();
+            pixelFormat = decoderContext.getPixelFormat();
         }
         
         @Override
         public int createWriter(IMediaWriter mediaWriter) throws LibavException {
             int index = mediaWriter.addVideoStream(CodecWrapperFactory.CODEC_ID_MPEG4, width, height);
             ICodecContextWrapper cc = mediaWriter.getVideoStream(index).getCodecContext();
+            cc.setPixelFormat(pixelFormat);
             cc.setBitRate(1500000);
             return index;
         }

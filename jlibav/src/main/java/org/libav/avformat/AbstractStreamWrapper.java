@@ -50,13 +50,11 @@ public abstract class AbstractStreamWrapper implements IStreamWrapper {
 
     @Override
     public void clearWrapperCache() {
-        codecContext = null;
         index = null;
         timeBase = null;
         frameRate = null;
         frameCount = null;
         duration = null;
-        metadata = null;
         disposition = null;
     }
     

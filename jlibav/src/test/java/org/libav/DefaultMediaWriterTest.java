@@ -26,6 +26,7 @@ import org.libav.avcodec.ICodecContextWrapper;
 import org.libav.avcodec.IFrameWrapper;
 import org.libav.avutil.bridge.AVSampleFormat;
 import org.libav.avutil.bridge.AVUtilLibrary;
+import org.libav.avutil.bridge.PixelFormat;
 import org.libav.bridge.LibraryManager;
 
 /**
@@ -39,9 +40,9 @@ public class DefaultMediaWriterTest {
     @Test
     public void testFileIO() throws Exception {
         System.out.println("testing media writer file IO...");
-        File tmpFile = File.createTempFile(UUID.randomUUID().toString(), ".avi");
+        File tmpFile = File.createTempFile(UUID.randomUUID().toString(), ".mp4");
         
-        DefaultMediaEncoder me = new DefaultMediaEncoder(tmpFile.getAbsolutePath(), "avi");
+        DefaultMediaEncoder me = new DefaultMediaEncoder(tmpFile.getAbsolutePath(), null);
         IMediaWriter mw = me.getMediaWriter();
         if (!mw.getInterleave())
             mw.setInterleave(true);
@@ -52,8 +53,10 @@ public class DefaultMediaWriterTest {
         IEncoder ae = me.getAudioStreamEncoder(asIndex);
         
         ICodecContextWrapper cc = ve.getCodecContext();
+        cc.setPixelFormat(PixelFormat.PIX_FMT_YUV420P);
         IFrameWrapper picture = FrameWrapperFactory.getInstance().allocPicture(cc.getPixelFormat(), cc.getWidth(), cc.getHeight());
         IFrameWrapper af = FrameWrapperFactory.getInstance().allocFrame();
+        picture.setPts(0);
         af.getData().set(0, lib.av_malloc(10000).as(Byte.class));
         af.getLineSize().set(0, 7680);
         
@@ -61,6 +64,7 @@ public class DefaultMediaWriterTest {
         for (int i = 0; i < 125; i++) {
             ve.processFrame(null, picture);
             ae.processFrame(null, af);
+            picture.setPts(picture.getPts() + 40);
         }
         me.flush();
         mw.writeTrailer();
@@ -85,11 +89,15 @@ public class DefaultMediaWriterTest {
         IEncoder ve = me.getVideoStreamEncoder(vsIndex);
         
         ICodecContextWrapper cc = ve.getCodecContext();
+        cc.setPixelFormat(PixelFormat.PIX_FMT_YUV420P);
         IFrameWrapper picture = FrameWrapperFactory.getInstance().allocPicture(cc.getPixelFormat(), cc.getWidth(), cc.getHeight());
+        picture.setPts(0);
         
         mw.writeHeader();
-        for (int i = 0; i < 125; i++)
+        for (int i = 0; i < 125; i++) {
             ve.processFrame(null, picture);
+            picture.setPts(picture.getPts() + 40);
+        }
         me.flush();
         mw.writeTrailer();
         me.close();

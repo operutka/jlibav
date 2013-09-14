@@ -60,7 +60,17 @@ public class ChapterWrapper implements IChapterWrapper {
         id = null;
         start = null;
         end = null;
-        metadata = null;
+        
+        if (chapter == null)
+            return;
+        
+        Pointer<?> ptr;
+        
+        if (metadata != null) {
+            ptr = chapter.metadata();
+            if (ptr == null || !ptr.equals(metadata.getPointer()))
+                metadata = null;
+        }
     }
 
     @Override

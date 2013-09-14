@@ -44,6 +44,32 @@ public class StreamWrapper53 extends AbstractStreamWrapper {
     public StreamWrapper53(AVStream53 stream) {
         this.stream = stream;
     }
+
+    @Override
+    public void clearWrapperCache() {
+        super.clearWrapperCache();
+        
+        rebindCodecContext();
+        rebindMetadata();
+    }
+    
+    private void rebindCodecContext() {
+        if (stream == null || codecContext == null)
+            return;
+        
+        Pointer<?> ptr = stream.codec();
+        if (ptr == null || !ptr.equals(codecContext.getPointer()))
+            codecContext = null;
+    }
+    
+    private void rebindMetadata() {
+        if (stream == null || metadata == null)
+            return;
+        
+        Pointer<?> ptr = stream.metadata();
+        if (ptr == null || !ptr.equals(metadata.getPointer()))
+            metadata = null;
+    }
     
     @Override
     public Pointer<?> getPointer() {

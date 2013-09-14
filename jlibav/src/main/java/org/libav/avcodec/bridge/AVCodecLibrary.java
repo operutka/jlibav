@@ -334,6 +334,23 @@ public final class AVCodecLibrary implements ILibrary {
     }
     
     /**
+     * Set the fields of the given AVCodecContext to default values
+     * corresponding to the given codec (defaults may be codec-dependent).
+     *
+     * Do not call this function if a non-NULL codec has been passed to
+     * avcodec_alloc_context3() that allocated this AVCodecContext. If codec
+     * is non-NULL, it is illegal to call avcodec_open2() with a different
+     * codec on this AVCodecContext.
+     *
+     * @param s codec context
+     * @param codec codec
+     * @return 0 on success
+     */
+    public int avcodec_get_context_defaults3(Pointer<?> s, Pointer<?> codec) {
+        return Lib.avcodec_get_context_defaults3(s.getPeer(), codec.getPeer());
+    }
+    
+    /**
      * Initialize the AVCodecContext to use the given AVCodec. Prior to using this
      * function the context has to be allocated.
      *
@@ -776,6 +793,7 @@ public final class AVCodecLibrary implements ILibrary {
         public static native void av_free_packet(@Ptr long pkt);
         public static native int av_grow_packet(@Ptr long pkt, int grow_by);
         public static native void av_shrink_packet(@Ptr long pkt, int size);
+        public static native int avcodec_get_context_defaults3(@Ptr long s, @Ptr long codec);
         @Optional
 	public static native int avcodec_open(@Ptr long avctx, @Ptr long codec);
         @Optional
