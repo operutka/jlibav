@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bridj.BridJ;
+import org.bridj.Callback;
 import org.bridj.NativeLibrary;
 import org.bridj.Pointer;
 import org.bridj.ann.Library;
@@ -134,6 +135,9 @@ public final class AVCodecLibrary implements ILibrary {
     
     private NativeLibrary lib;
     
+    private LockManager lockManager;
+    private Pointer<RegisterLockMgrCallback> lockMgrCallback;
+    
     public AVCodecLibrary() throws IOException {
         lib = BridJ.getNativeLibrary(Lib.class);
         
@@ -150,6 +154,11 @@ public final class AVCodecLibrary implements ILibrary {
         
         if (majorVersion < MIN_MAJOR_VERSION || majorVersion > MAX_MAJOR_VERSION)
             throw new UnsatisfiedLinkError("Unsupported version of the " + LIB_NAME + " native library. (" + MIN_MAJOR_VERSION + ".x.x <= required <= " + MAX_MAJOR_VERSION + ".x.x, found " + version + ")");
+        
+        lockManager = new LockManager();
+        lockMgrCallback = lockManager.toPointer();
+        
+        av_lockmgr_register(lockMgrCallback);
     }
 
     @Override
@@ -365,7 +374,7 @@ public final class AVCodecLibrary implements ILibrary {
      * @param codec The codec to use within the context.
      * @return zero on success, a negative value on error
      */
-    public synchronized int avcodec_open(Pointer<?> avctx, Pointer<?> codec) {
+    public int avcodec_open(Pointer<?> avctx, Pointer<?> codec) {
         return Lib.avcodec_open(avctx.getPeer(), codec.getPeer());
     }
     
@@ -388,12 +397,29 @@ public final class AVCodecLibrary implements ILibrary {
      * not found
      * @return zero on success, a negative value on error
      */
-    public synchronized int avcodec_open2(Pointer<?> avctx, Pointer<?> codec, Pointer<Pointer<?>> options) {
+    public int avcodec_open2(Pointer<?> avctx, Pointer<?> codec, Pointer<Pointer<?>> options) {
         return Lib.avcodec_open2(avctx.getPeer(), codec.getPeer(), options == null ? 0 : options.getPeer());
     }
     
-    public synchronized int avcodec_close(Pointer<?> avctx) {
+    public int avcodec_close(Pointer<?> avctx) {
         return Lib.avcodec_close(avctx.getPeer());
+    }
+    
+    /**
+     * Register a user provided lock manager supporting the operations
+     * specified by AVLockOp. mutex points to a (void *) where the
+     * lockmgr should store/get a pointer to a user allocated mutex. It's
+     * NULL upon AV_LOCK_CREATE and != NULL for all other ops.
+     *
+     * @param cb User defined callback. Note: Libav may invoke calls to this
+     *           callback during the call to av_lockmgr_register().
+     *           Thus, the application must be prepared to handle that.
+     *           If cb is set to NULL the lockmgr will be unregistered.
+     *           Also note that during unregistration the previously registered
+     *           lockmgr callback may also be invoked.
+     */
+    public int av_lockmgr_register(Pointer<RegisterLockMgrCallback> cb) {
+        return Lib.av_lockmgr_register(Pointer.getPeer(cb));
     }
     
     /**
@@ -771,6 +797,10 @@ public final class AVCodecLibrary implements ILibrary {
         return Lib.avcodec_fill_audio_frame(frame.getPeer(), nb_channels, sample_fmt, buf.getPeer(), buf_size, align);
     }
     
+    public static abstract class RegisterLockMgrCallback extends Callback<RegisterLockMgrCallback> {
+        public abstract int apply(Pointer<Pointer<?>> mutex, int op);
+    }
+    
     @Library("avcodec")
     private static class Lib {
         static {
@@ -799,6 +829,7 @@ public final class AVCodecLibrary implements ILibrary {
         @Optional
 	public static native int avcodec_open2(@Ptr long avctx, @Ptr long codec, @Ptr long options);
         public static native int avcodec_close(@Ptr long avctx);
+        public static native int av_lockmgr_register(@Ptr long cb);
         public static native int avcodec_decode_video2(@Ptr long avctx, @Ptr long picture, @Ptr long got_picture_ptr, @Ptr long avpkt);
         @Optional
 	public static native int avcodec_encode_video(@Ptr long avctx, @Ptr long buf, int buf_size, @Ptr long pict);
