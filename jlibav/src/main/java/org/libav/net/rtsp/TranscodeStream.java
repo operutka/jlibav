@@ -177,7 +177,7 @@ public class TranscodeStream extends AbstractSingleMediaStream implements ISingl
         IMediaEncoder me = null;
         
         try {
-            UnicastConnectionInfo ci = new UnicastConnectionInfo(InetAddress.getLocalHost(), port, port + 1);
+            UnicastConnectionInfo ci = new UnicastConnectionInfo(InetAddress.getLoopbackAddress(), port, port + 1);
             me = createUnicastMediaEncoder(ci);
             IMediaWriter mw = me.getMediaWriter();
             streamWriterFactory.createWriter(mw);
