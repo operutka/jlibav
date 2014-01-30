@@ -129,9 +129,6 @@ public class BufferedPacketReader {
             throw new RuntimeException(ex);
         }
         
-        if (packet != null)
-            packet.free();
-        
         packet = null;
         packetPool.dispose();
         
