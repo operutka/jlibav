@@ -57,7 +57,6 @@ public class PacketPool {
      */
     public IPacketWrapper getEmptyPacket() {
         IPacketWrapper result = getPacket();
-        result.free();
         result.init();
         
         return result;
