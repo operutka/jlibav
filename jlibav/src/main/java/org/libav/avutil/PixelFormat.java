@@ -148,6 +148,12 @@ public enum PixelFormat {
     YUVA422P16LE("PIX_FMT_YUVA422P16LE"),
     YUVA444P16BE("PIX_FMT_YUVA444P16BE"),
     YUVA444P16LE("PIX_FMT_YUVA444P16LE"),
+    VDPAU("PIX_FMT_VDPAU"),
+    XYZ12LE("PIX_FMT_XYZ12LE"),
+    XYZ12BE("PIX_FMT_XYZ12BE"),
+    NV16("PIX_FMT_NV16"),
+    NV20LE("PIX_FMT_NV20LE"),
+    NV20BE("PIX_FMT_NV20BE"),
     NB("PIX_FMT_NB");
     
     private static final Map<Integer, PixelFormat> idMap;

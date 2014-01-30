@@ -142,6 +142,12 @@ public interface PixelFormat {
     public static final int PIX_FMT_YUVA422P16LE = 106;
     public static final int PIX_FMT_YUVA444P16BE = 107;
     public static final int PIX_FMT_YUVA444P16LE = 108;
-    public static final int PIX_FMT_NB = 109;
+    public static final int PIX_FMT_VDPAU = 109;
+    public static final int PIX_FMT_XYZ12LE = 110;
+    public static final int PIX_FMT_XYZ12BE = 111;
+    public static final int PIX_FMT_NV16 = 112;
+    public static final int PIX_FMT_NV20LE = 113;
+    public static final int PIX_FMT_NV20BE = 114;
+    public static final int PIX_FMT_NB = 115;
     
 }

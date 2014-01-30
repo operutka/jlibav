@@ -58,7 +58,7 @@ public final class AVUtilLibrary implements ILibrary {
 
     public static final String LIB_NAME = BridJ.getNativeLibraryName(Lib.class);
     public static final int MIN_MAJOR_VERSION = 51;
-    public static final int MAX_MAJOR_VERSION = 52;
+    public static final int MAX_MAJOR_VERSION = 53;
     
     private int majorVersion;
     private int minorVersion;
