@@ -67,6 +67,7 @@ public class VideoPane extends JComponent implements IFrameConsumer {
     private ScaleContextWrapper scaleContext;
     private IFrameWrapper rgbFrame;
     private Pointer<Byte> rgbFrameData;
+    private int rgbFrameStride;
     private BufferedImage img;
     private int[] imageData;
 
@@ -92,6 +93,7 @@ public class VideoPane extends JComponent implements IFrameConsumer {
         scaleContext = null;
         rgbFrame = null;
         rgbFrameData = null;
+        rgbFrameStride = 0;
         img = null;
         imageData = null;
         
@@ -250,6 +252,7 @@ public class VideoPane extends JComponent implements IFrameConsumer {
             scaleContext = ScaleContextWrapper.createContext(srcWidth, srcHeight, srcPixelFormat, dstWidth, dstHeight, dstPixelFormat, scalingAlgorithm);
             rgbFrame = FrameWrapperFactory.getInstance().allocPicture(dstPixelFormat, dstWidth, dstHeight);
             rgbFrameData = rgbFrame.getData().get();
+            rgbFrameStride = rgbFrame.getLineSize().get();
         } catch (LibavException ex) {
             Logger.getLogger(VideoPane.class.getName()).log(Level.SEVERE, "unable initialize video pane scaling context", ex);
             if (scaleContext != null)
@@ -301,7 +304,17 @@ public class VideoPane extends JComponent implements IFrameConsumer {
         
         try {
             scaleContext.scale(frame, rgbFrame, 0, srcHeight);
-            rgbFrameData.getIntsAtOffset(0, imageData, 0, imageData.length);
+            if ((dstWidth * 4) == rgbFrameStride)
+                rgbFrameData.getIntsAtOffset(0, imageData, 0, imageData.length);
+            else {
+                int frameOffset = 0;
+                int dataOffset = 0;
+                while (dataOffset < imageData.length) {
+                    rgbFrameData.getIntsAtOffset(frameOffset, imageData, dataOffset, dstWidth);
+                    frameOffset += rgbFrameStride;
+                    dataOffset += dstWidth;
+                }
+            }
             repaint();
         } catch (LibavException ex) {
             Logger.getLogger(VideoPane.class.getName()).log(Level.WARNING, "video pane has uninitielized source image format", ex);
