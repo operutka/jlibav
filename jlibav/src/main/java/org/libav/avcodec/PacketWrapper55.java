@@ -235,14 +235,6 @@ public class PacketWrapper55 extends AbstractPacketWrapper {
         packet.side_data_elems(sideDataElems);
     }
 
-    private Pointer<?> getBufferRef() {
-        return packet.buf();
-    }
-    
-    private void setBufferRef(Pointer<?> bufferRef) {
-        packet.buf(bufferRef);
-    }
-    
     @Override
     public PacketWrapper55 clone() {
         PacketWrapper55 result = new PacketWrapper55(new AVPacket55());
@@ -250,18 +242,14 @@ public class PacketWrapper55 extends AbstractPacketWrapper {
         if (res != 0)
             throw new RuntimeException(new LibavException(res));
         
-        Pointer<?> pBufferRef = result.getBufferRef();
-        Pointer<Byte> pData = result.getData();
-        getPointer().copyTo(result.getPointer());
-        result.setData(pData);
-        result.setBufferRef(pBufferRef);
+        res = codecLib.av_packet_copy_props(result.getPointer(), getPointer());
+        if (res != 0)
+            throw new RuntimeException(new LibavException(res));
         
-        pData = getData();
+        Pointer<Byte> pData = getData();
         if (pData != null)
             pData.copyTo(result.getData(), getSize());
-        
-        result.setSideData(null);
-        result.setSideDataElems(0);
+        result.setSize(getSize());
         
         return result;
     }
@@ -272,18 +260,14 @@ public class PacketWrapper55 extends AbstractPacketWrapper {
         if (growBy > 0)
             grow(growBy);
         
-        Pointer<?> pBufferRef = getBufferRef();
-        Pointer<Byte> pData = getData();
-        packet.getPointer().copyTo(getPointer());
-        setData(pData);
-        setBufferRef(pBufferRef);
+        int res = codecLib.av_packet_copy_props(getPointer(), packet.getPointer());
+        if (res != 0)
+            throw new RuntimeException(new LibavException(res));
         
-        pData = packet.getData();
+        Pointer<Byte> pData = packet.getData();
         if (pData != null)
             pData.copyTo(getData(), packet.getSize());
-        
-        setSideData(null);
-        setSideDataElems(0);
+        setSize(packet.getSize());
         
         clearWrapperCache();
     }

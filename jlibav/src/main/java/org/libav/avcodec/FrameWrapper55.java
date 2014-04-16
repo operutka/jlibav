@@ -42,8 +42,9 @@ public class FrameWrapper55 extends AbstractFrameWrapper {
     }
     
     private AVFrame55 frame;
-    
-    private Pointer[] toBeFreed;
+    private Integer width;
+    private Integer height;
+    private Integer format;
     
     /**
      * Create a new wrapper for the given AVFrame.
@@ -52,8 +53,18 @@ public class FrameWrapper55 extends AbstractFrameWrapper {
      */
     public FrameWrapper55(AVFrame55 frame) {
         this.frame = frame;
+        this.width = null;
+        this.height = null;
+        this.format = null;
+    }
+
+    @Override
+    public void clearWrapperCache() {
+        super.clearWrapperCache();
         
-        this.toBeFreed = null;
+        this.width = null;
+        this.height = null;
+        this.format = null;
     }
     
     @Override
@@ -74,16 +85,11 @@ public class FrameWrapper55 extends AbstractFrameWrapper {
         if (frame == null)
             return;
 
-        if (toBeFreed != null) {
-            for (Pointer p : toBeFreed)
-                utilLib.av_free(p);
-        }
         Pointer<Pointer<?>> tmp = Pointer.allocatePointer();
         tmp.set(getPointer());
         utilLib.av_frame_free(tmp);
 
         frame = null;
-        toBeFreed = null;
     }
     
     @Override
@@ -176,7 +182,7 @@ public class FrameWrapper55 extends AbstractFrameWrapper {
             return false;
         
         if (keyFrame == null)
-            keyFrame = frame.key_frame() == 0 ? false : true;
+            keyFrame = frame.key_frame() != 0;
         
         return keyFrame;
     }
@@ -290,20 +296,72 @@ public class FrameWrapper55 extends AbstractFrameWrapper {
         this.nbSamples = nbSamples;
     }
     
+    public int getWidth() {
+        if (frame == null)
+            return 0;
+        
+        if (width == null)
+            width = frame.width();
+        
+        return width;
+    }
+    
+    public void setWidth(int width) {
+        if (frame == null)
+            return;
+        
+        frame.width(width);
+        this.width = width;
+    }
+    
+    public int getHeight() {
+        if (frame == null)
+            return 0;
+        
+        if (height == null)
+            height = frame.height();
+        
+        return height;
+    }
+    
+    public void setHeight(int height) {
+        if (frame == null)
+            return;
+        
+        frame.height(height);
+        this.height = height;
+    }
+    
+    public int getFormat() {
+        if (frame == null)
+            return 0;
+        
+        if (format == null)
+            format = frame.format();
+        
+        return format;
+    }
+    
+    public void setFormat(int format) {
+        if (frame == null)
+            return;
+        
+        frame.format(format);
+        this.format = format;
+    }
+    
     public static FrameWrapper55 allocatePicture(PixelFormat pixelFormat, int width, int height) throws LibavException {
         FrameWrapper55 result = allocateFrame();
-        Pointer data;
-
-        try {
-            data = allocatePictureBuffer(pixelFormat, width, height);
-        } catch (LibavException ex) {
-            utilLib.av_free(result.getPointer());
-            throw ex;
-        }
-
-        result.toBeFreed = new Pointer[] { data };
-        codecLib.avpicture_fill(result.getPointer(), data, pixelFormat.value(), width, height);
-
+        result.setWidth(width);
+        result.setHeight(height);
+        result.setFormat(pixelFormat.value());
+        
+        Pointer<?> framePtr = result.getPointer();
+        
+        int err = utilLib.av_frame_get_buffer(framePtr, 32);
+        if (err != 0)
+            throw new LibavException(err);
+        
         return result;
     }
     
@@ -313,18 +371,6 @@ public class FrameWrapper55 extends AbstractFrameWrapper {
             throw new LibavException("unable to allocate a new frame");
         
         return new FrameWrapper55(new AVFrame55(ptr));
-    }
-    
-    private static Pointer<?> allocatePictureBuffer(PixelFormat pixelFormat, int width, int height) throws LibavException {
-        int size = codecLib.avpicture_get_size(pixelFormat.value(), width, height);
-        if (size <= 0)
-            throw new LibavException("invalid picture size");
-        
-        Pointer<?> result = utilLib.av_malloc(size);
-        if (result == null)
-            throw new LibavException("unable to allocate a new picture");
-
-        return result;
     }
     
 }

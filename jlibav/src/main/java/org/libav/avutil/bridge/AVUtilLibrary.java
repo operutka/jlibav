@@ -234,6 +234,91 @@ public final class AVUtilLibrary implements ILibrary {
     }
     
     /**
+     * Set up a new reference to the data described by the source frame.
+     *
+     * Copy frame properties from src to dst and create a new reference for each
+     * AVBufferRef from src.
+     *
+     * If src is not reference counted, new buffers are allocated and the data is
+     * copied.
+     *
+     * @param dst 
+     * @param src 
+     * @return 0 on success, a negative AVERROR on error
+     */
+    public int av_frame_ref(Pointer<?> dst, Pointer<?> src) {
+        return Lib.av_frame_ref(dst.getPeer(), src.getPeer());
+    }
+    
+    /**
+     * Unreference all the buffers referenced by frame and reset the frame fields.
+     * 
+     * @param frame 
+     */
+    public void av_frame_unref(Pointer<?> frame) {
+        Lib.av_frame_unref(frame.getPeer());
+    }
+    
+    /**
+     * Move everythnig contained in src to dst and reset src.
+     * 
+     * @param dst 
+     * @param src 
+     */
+    public void av_frame_move_ref(Pointer<?> dst, Pointer<?> src) {
+        Lib.av_frame_move_ref(dst.getPeer(), src.getPeer());
+    }
+    
+    /**
+     * Create a new frame that references the same data as src.
+     *
+     * This is a shortcut for av_frame_alloc()+av_frame_ref().
+     *
+     * @param src
+     * @return newly created AVFrame on success, NULL on error.
+     */
+    public Pointer<?> av_frame_clone(Pointer<?> src) {
+        return Lib.av_frame_clone(src.getPeer());
+    }
+    
+    /**
+     * Allocate new buffer(s) for audio or video data.
+     *
+     * The following fields must be set on frame before calling this function:
+     * - format (pixel format for video, sample format for audio)
+     * - width and height for video
+     * - nb_samples and channel_layout for audio
+     *
+     * This function will fill AVFrame.data and AVFrame.buf arrays and, if
+     * necessary, allocate and fill AVFrame.extended_data and AVFrame.extended_buf.
+     * For planar formats, one buffer will be allocated for each plane.
+     *
+     * @param frame frame in which to store the new buffers.
+     * @param align required buffer size alignment
+     *
+     * @return 0 on success, a negative AVERROR on error.
+     */
+    public int av_frame_get_buffer(Pointer<?> frame, int align) {
+        return Lib.av_frame_get_buffer(frame.getPeer(), align);
+    }
+    
+    /**
+     * Copy only "metadata" fields from src to dst.
+     *
+     * Metadata for the purpose of this function are those fields that do not affect
+     * the data layout in the buffers.  E.g. pts, sample rate (for audio) or sample
+     * aspect ratio (for video), but not width/height or channel layout.
+     * Side data is also copied.
+     * 
+     * @param dst
+     * @param src 
+     * @return
+     */
+    public int av_frame_copy_props(Pointer<?> dst, Pointer<?> src) {
+        return Lib.av_frame_copy_props(dst.getPeer(), src.getPeer());
+    }
+    
+    /**
      * Get a dictionary entry with matching key.
      * 
      * @param m
@@ -535,6 +620,7 @@ public final class AVUtilLibrary implements ILibrary {
      * be a sequence of numeric scalars or named flags separated by '+' or '-'. 
      * Prefixing a flag with '+' causes it to be set without affecting the other 
      * flags; similarly, '-' unsets a flag.
+     * @param size 
      * @param search_flags flags passed to av_opt_find2. I.e. if 
      * AV_OPT_SEARCH_CHILDREN is passed here, then the option may be set on 
      * a child of obj
@@ -611,6 +697,18 @@ public final class AVUtilLibrary implements ILibrary {
         public static native Pointer<?> av_frame_alloc();
         @Optional
         public static native void av_frame_free(@Ptr long frame);
+        @Optional
+        public static native int av_frame_ref(@Ptr long dst, @Ptr long src);
+        @Optional
+        public static native void av_frame_unref(@Ptr long frame);
+        @Optional
+        public static native void av_frame_move_ref(@Ptr long dst, @Ptr long src);
+        @Optional
+        public static native Pointer<?> av_frame_clone(@Ptr long src);
+        @Optional
+        public static native int av_frame_get_buffer(@Ptr long frame, int align);
+        @Optional
+        public static native int av_frame_copy_props(@Ptr long dst, @Ptr long src);
         
         public static native Pointer<?> av_dict_get(Pointer<?> m, Pointer<Byte> key, Pointer<?> prev, int flags);
         public static native int av_dict_set(Pointer<Pointer<?>> pm, Pointer<Byte> key, Pointer<Byte> value, int flags);

@@ -206,7 +206,7 @@ public final class AVCodecLibrary implements ILibrary {
     /**
      * Finds a decoder for the specified codec.
      * 
-     * @param codecId one of the CodecID constants
+     * @param id one of the CodecID constants
      * @return a pointer to a decoder or null, if no such decoder exists
      */
     public Pointer<?> avcodec_find_decoder(int id) {
@@ -226,7 +226,7 @@ public final class AVCodecLibrary implements ILibrary {
     /**
      * Finds a encoder for the specified codec.
      * 
-     * @param codecId one of the CodecID constants
+     * @param id one of the CodecID constants
      * @return  a pointer to an encoder or null, if no such encoder exists
      */
     public Pointer<?> avcodec_find_encoder(int id) {
@@ -260,6 +260,7 @@ public final class AVCodecLibrary implements ILibrary {
      * Allocate an AVFrame and set its fields to default values. 
      * The resulting struct can be deallocated by simply calling av_free().
      * 
+     * @deprecated since 55.28.1; use av_frame_alloc() from libavutil instead
      * @return An AVFrame filled with default values or NULL on failure.
      */
     public Pointer<?> avcodec_alloc_frame() {
@@ -274,6 +275,7 @@ public final class AVCodecLibrary implements ILibrary {
      * (it does not know how, since they might have been allocated with
      *  a custom get_buffer()).
      * 
+     * @deprecated since 55.28.1; use av_frame_alloc() from libavutil instead
      * @param frame frame to be freed. The pointer will be set to NULL.
      */
     public void avcodec_free_frame(Pointer<Pointer<?>> frame) {
@@ -283,6 +285,7 @@ public final class AVCodecLibrary implements ILibrary {
     /**
      * Set the fields of the given AVFrame to default values.
      * 
+     * @deprecated since 55.28.1; use av_frame_alloc() from libavutil instead
      * @param pic The AVFrame of which the fields should be set to default 
      * values.
      */
@@ -303,7 +306,7 @@ public final class AVCodecLibrary implements ILibrary {
      * Allocate the payload of a packet and initialize its fields with default 
      * values.
      * 
-     * @param packet
+     * @param pkt
      * @param size wanted payload size
      * @return 0 if OK, AVERROR_xxx otherwise
      */
@@ -340,6 +343,79 @@ public final class AVCodecLibrary implements ILibrary {
      */
     public void av_shrink_packet(Pointer<?> pkt, int size) {
         Lib.av_shrink_packet(pkt.getPeer(), size);
+    }
+    
+    /**
+     * Initialize a reference-counted packet from av_malloc()ed data.
+     *
+     * @param pkt packet to be initialized. This function will set the data, size,
+     *        buf and destruct fields, all others are left untouched.
+     * @param data Data allocated by av_malloc() to be used as packet data. If this
+     *        function returns successfully, the data is owned by the underlying AVBuffer.
+     *        The caller may not access the data through other means.
+     * @param size size of data in bytes, without the padding. I.e. the full buffer
+     *        size is assumed to be size + FF_INPUT_BUFFER_PADDING_SIZE.
+     *
+     * @return 0 on success, a negative AVERROR on error
+     */
+    public int av_packet_from_data(Pointer<?> pkt, Pointer<Byte> data, int size) {
+        return Lib.av_packet_from_data(pkt.getPeer(), data.getPeer(), size);
+    }
+    
+    /**
+     * Setup a new reference to the data described by a given packet
+     *
+     * If src is reference-counted, setup dst as a new reference to the
+     * buffer in src. Otherwise allocate a new buffer in dst and copy the
+     * data from src into it.
+     *
+     * All the other fields are copied from src.
+     * 
+     * @param dst Destination packet
+     * @param src Source packet
+     *
+     * @return 0 on success, a negative AVERROR on error.
+     */
+    public int av_packet_ref(Pointer<?> dst, Pointer<?> src) {
+        return Lib.av_packet_ref(dst.getPeer(), src.getPeer());
+    }
+    
+    /**
+     * Wipe the packet.
+     *
+     * Unreference the buffer referenced by the packet and reset the
+     * remaining packet fields to their default values.
+     *
+     * @param pkt The packet to be unreferenced.
+     */
+    public void av_packet_unref(Pointer<?> pkt) {
+        Lib.av_packet_unref(pkt.getPeer());
+    }
+    
+    /**
+     * Move every field in src to dst and reset src.
+     *
+     * @param src Source packet, will be reset
+     * @param dst Destination packet
+     */
+    public void av_packet_move_ref(Pointer<?> dst, Pointer<?> src) {
+        Lib.av_packet_move_ref(dst.getPeer(), src.getPeer());
+    }
+    
+    /**
+     * Copy only "properties" fields from src to dst.
+     *
+     * Properties for the purpose of this function are all the fields
+     * beside those related to the packet data (buf, data, size)
+     *
+     * @param dst Destination packet
+     * @param src Source packet
+     *
+     * @return 0 on success AVERROR on failure.
+     *
+     */
+    public int av_packet_copy_props(Pointer<?> dst, Pointer<?> src) {
+        return Lib.av_packet_copy_props(dst.getPeer(), src.getPeer());
     }
     
     /**
@@ -417,6 +493,7 @@ public final class AVCodecLibrary implements ILibrary {
      *           If cb is set to NULL the lockmgr will be unregistered.
      *           Also note that during unregistration the previously registered
      *           lockmgr callback may also be invoked.
+     * @return
      */
     public int av_lockmgr_register(Pointer<RegisterLockMgrCallback> cb) {
         return Lib.av_lockmgr_register(Pointer.getPeer(cb));
@@ -560,7 +637,7 @@ public final class AVCodecLibrary implements ILibrary {
      * @param avctx the codec context
      * @param samples the output buffer, sample type in avctx->sample_fmt
      * @param frameSizePtr the output buffer size in bytes
-     * @param packet The input AVPacket containing the input buffer. You can 
+     * @param avpkt The input AVPacket containing the input buffer. You can 
      * create such packet with av_init_packet() and by then setting data and 
      * size, some decoders might in addition need other fields. All decoders 
      * are designed to use the least fields possible though.
@@ -718,7 +795,7 @@ public final class AVCodecLibrary implements ILibrary {
      * The data is stored compactly, without any gaps for alignment or padding 
      * which may be applied by avpicture_fill().
      * 
-     * @param picture AVPicture containing image data
+     * @param src AVPicture containing image data
      * @param pix_fmt the format in which the picture data is stored
      * @param width the width of the image in pixels
      * @param height the height of the image in pixels
@@ -734,6 +811,7 @@ public final class AVCodecLibrary implements ILibrary {
     /**
      * Initialize audio resampling context.
      * 
+     * @deprecated removed in later versions of Libav
      * @param outputChannels number of output channels
      * @param inputChannels number of input channels
      * @param outputRate output sample rate
@@ -757,6 +835,7 @@ public final class AVCodecLibrary implements ILibrary {
     /**
      * Resample the input using given ReSampleContext.
      * 
+     * @deprecated removed in later versions of Libav
      * @param s ReSampleContext
      * @param output
      * @param input
@@ -770,6 +849,7 @@ public final class AVCodecLibrary implements ILibrary {
     /**
      * Free resample context.
      * 
+     * @deprecated removed in later versions of Libav
      * @param s non-NULL pointer to a resample context previously created 
      * with av_audio_resample_init()
      */
@@ -823,6 +903,17 @@ public final class AVCodecLibrary implements ILibrary {
         public static native void av_free_packet(@Ptr long pkt);
         public static native int av_grow_packet(@Ptr long pkt, int grow_by);
         public static native void av_shrink_packet(@Ptr long pkt, int size);
+        @Optional
+        public static native int av_packet_from_data(@Ptr long pkt, @Ptr long data, int size);
+        @Optional
+        public static native int av_packet_ref(@Ptr long dst, @Ptr long src);
+        @Optional
+        public static native void av_packet_unref(@Ptr long pkt);
+        @Optional
+        public static native void av_packet_move_ref(@Ptr long dst, @Ptr long src);
+        @Optional
+        public static native int av_packet_copy_props(@Ptr long dst, @Ptr long src);
+        @Optional
         public static native int avcodec_get_context_defaults3(@Ptr long s, @Ptr long codec);
         @Optional
 	public static native int avcodec_open(@Ptr long avctx, @Ptr long codec);
@@ -846,8 +937,11 @@ public final class AVCodecLibrary implements ILibrary {
         public static native int avpicture_get_size(int pix_fmt, int width, int height);
         public static native int avpicture_fill(@Ptr long picture, @Ptr long ptr, int pix_fmt, int width, int height);
         public static native int avpicture_layout(@Ptr long src, int pix_fmt, int width, int height, @Ptr long dest, int dest_size);
+        @Optional
         public static native Pointer<?> av_audio_resample_init(int output_channels, int input_channels, int output_rate, int input_rate, int sample_fmt_out, int sample_fmt_in, int filter_length, int log2_phase_count, int linear, double cutoff);
+        @Optional
         public static native int audio_resample(@Ptr long s, @Ptr long output, @Ptr long input, int nb_samples);
+        @Optional
         public static native void audio_resample_close(@Ptr long s);
         @Optional
         public static native int avcodec_fill_audio_frame(@Ptr long frame, int nb_channels, int sample_fmt, @Ptr long buf, int buf_size, int align);
