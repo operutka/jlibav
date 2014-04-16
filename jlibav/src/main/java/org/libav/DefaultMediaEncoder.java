@@ -50,6 +50,7 @@ public class DefaultMediaEncoder implements IMediaEncoder {
      * Create a new media encoder using the default media writer.
      * 
      * @param url a media URL
+     * @param outputFormatName 
      * @throws LibavException if an error occurs
      */
     public DefaultMediaEncoder(String url, String outputFormatName) throws LibavException {
@@ -156,7 +157,7 @@ public class DefaultMediaEncoder implements IMediaEncoder {
     }
     
     private class MediaWriterAdapter implements IMediaWriter {
-        private IMediaWriter mw;
+        private final IMediaWriter mw;
 
         public MediaWriterAdapter(IMediaWriter mw) {
             this.mw = mw;

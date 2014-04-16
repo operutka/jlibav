@@ -228,7 +228,7 @@ public class MixingSampleInputStream extends InputStream {
     }
     
     private static class InputStreamInfo {
-        private AudioInputStream ais;
+        private final AudioInputStream ais;
         private float volume;
 
         public InputStreamInfo(AudioInputStream ais) {

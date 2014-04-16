@@ -38,7 +38,7 @@ import org.libav.avutil.bridge.AVChannelLayout;
  */
 public class SimpleAudioPlayer {
     
-    private IMediaPlayer player;
+    private final IMediaPlayer player;
     private SampleInputStream sampleInputStream;
     private AudioInputStream audioInputStream;
     private Frame2AudioFrameAdapter audioFrameAdapter;

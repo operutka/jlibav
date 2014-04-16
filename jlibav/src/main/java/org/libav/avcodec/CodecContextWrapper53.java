@@ -57,9 +57,9 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
     private AVCodecContext53 context;
     private boolean closed;
     
-    private Pointer<Integer> intByRef;
-    private IDecodeAudioFunction decodeAudioFunction;
-    private IEncodeAudioFunction encodeAudioFunction;
+    private final Pointer<Integer> intByRef;
+    private final IDecodeAudioFunction decodeAudioFunction;
+    private final IEncodeAudioFunction encodeAudioFunction;
     
     private int outputBufferSize;
     private Pointer<Byte> outputBuffer;
@@ -715,10 +715,7 @@ public class CodecContextWrapper53 extends AbstractCodecContextWrapper {
             if (len < 0)
                 throw new LibavException(len);
             
-            if (intByRef.getInt() != 0)
-                return true;
-            
-            return false;
+            return intByRef.getInt() != 0;
         }
     }
     

@@ -33,7 +33,7 @@ import org.libav.data.IFrameConsumer;
  */
 public class Frame2AudioFrameAdapter implements IFrameConsumer, IAudioFrameProducer {
 
-    private AudioFrameResampler resampler;
+    private final AudioFrameResampler resampler;
     private final Set<IAudioFrameConsumer> consumers;
 
     /**

@@ -53,8 +53,8 @@ public class CodecContextWrapper54 extends AbstractCodecContextWrapper {
     private AVCodecContext54 context;
     private boolean closed;
     
-    private Pointer<Integer> intByRef;
-    private IEncodeVideoFunction encodeVideoFunction;
+    private final Pointer<Integer> intByRef;
+    private final IEncodeVideoFunction encodeVideoFunction;
     
     private int outputBufferSize;
     private Pointer<Byte> outputBuffer;
@@ -599,10 +599,7 @@ public class CodecContextWrapper54 extends AbstractCodecContextWrapper {
         if (len < 0)
             throw new LibavException(len);
 
-        if (intByRef.getInt() != 0)
-            return true;
-
-        return false;
+        return intByRef.getInt() != 0;
     }
     
     private static interface IEncodeVideoFunction {
@@ -647,10 +644,7 @@ public class CodecContextWrapper54 extends AbstractCodecContextWrapper {
             if (len < 0)
                 throw new LibavException(len);
 
-            if (intByRef.getInt() != 0)
-                return true;
-
-            return false;
+            return intByRef.getInt() != 0;
         }
     }
     

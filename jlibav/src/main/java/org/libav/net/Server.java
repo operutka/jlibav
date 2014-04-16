@@ -32,7 +32,7 @@ public class Server {
     
     public static final int DEFAULT_THREAD_POOL_SIZE = 50;
     
-    private IConnectionHandlerFactory chFactory;
+    private final IConnectionHandlerFactory chFactory;
     private ConnectionListener cl;
     
     /**
@@ -101,8 +101,8 @@ public class Server {
     }
     
     private class ConnectionListener implements Runnable {
-        private ServerSocket ss;
-        private ExecutorService threadPool;
+        private final ServerSocket ss;
+        private final ExecutorService threadPool;
 
         public ConnectionListener(ServerSocket ss, int threadPoolSize) {
             this.ss = ss;

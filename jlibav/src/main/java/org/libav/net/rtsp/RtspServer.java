@@ -34,9 +34,9 @@ public class RtspServer implements IConnectionHandlerFactory {
     private final Map<String, IMediaStream> mediaStreams;
     private final Map<IMediaStream, Set<String>> mediaStreamAliases;
     private final Map<String, RtspSession> sessions;
-    private AggregateChangeListener aggregateChangeListener;
+    private final AggregateChangeListener aggregateChangeListener;
     
-    private Timer sessionChecker;
+    private final Timer sessionChecker;
 
     /**
      * Create a new RTSP server.
@@ -60,8 +60,10 @@ public class RtspServer implements IConnectionHandlerFactory {
     
     private void removeAlias(IMediaStream mediaStream, String alias) {
         Set<String> aliases = mediaStreamAliases.get(mediaStream);
-        if (aliases != null)
-            aliases.remove(alias);
+        if (aliases == null)
+            return;
+        
+        aliases.remove(alias);
         if (aliases.isEmpty())
             mediaStreamAliases.remove(mediaStream);
     }

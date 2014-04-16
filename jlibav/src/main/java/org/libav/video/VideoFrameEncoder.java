@@ -41,8 +41,8 @@ import org.libav.util.Rational;
  */
 public class VideoFrameEncoder implements IEncoder {
     
-    private IStreamWrapper stream;
-    private ICodecContextWrapper cc;
+    private final IStreamWrapper stream;
+    private final ICodecContextWrapper cc;
     private boolean initialized;
     
     private boolean rawFormat;

@@ -40,9 +40,9 @@ public class PlaybackMixer {
         defaultFormat = new AudioFormat(44100, 16, 2, true, ByteOrder.BIG_ENDIAN.equals(ByteOrder.nativeOrder()));
     }
     
-    private MixingSampleInputStream mixingStream;
-    private AudioInputStream as;
-    private AudioStreamPlayer asp;
+    private final MixingSampleInputStream mixingStream;
+    private final AudioInputStream as;
+    private final AudioStreamPlayer asp;
     
     private PlaybackMixer(AudioFormat af) throws LineUnavailableException {
         mixingStream = new MixingSampleInputStream(af);

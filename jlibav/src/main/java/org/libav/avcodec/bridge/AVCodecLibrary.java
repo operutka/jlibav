@@ -129,11 +129,11 @@ public final class AVCodecLibrary implements ILibrary {
     public static final int MIN_MAJOR_VERSION = 53;
     public static final int MAX_MAJOR_VERSION = 55;
     
-    private int majorVersion;
-    private int minorVersion;
-    private int microVersion;
+    private final int majorVersion;
+    private final int minorVersion;
+    private final int microVersion;
     
-    private NativeLibrary lib;
+    private final NativeLibrary lib;
     
     private LockManager lockManager;
     private Pointer<RegisterLockMgrCallback> lockMgrCallback;

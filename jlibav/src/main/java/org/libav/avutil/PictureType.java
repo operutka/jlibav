@@ -48,7 +48,7 @@ public enum PictureType {
             idMap.put(pictureType.value(), pictureType);
     }
     
-    private int value;
+    private final int value;
     
     private PictureType(String fieldName) {
         value = PictureTypeMapper.getInstance().pictureTypeValue(fieldName);

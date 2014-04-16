@@ -56,7 +56,7 @@ public class FrameScaler implements IFrameConsumer, IFrameProducer {
      * 
      * @param srcWidth a width of source images
      * @param srcHeight a height of source images
-     * @param srcFormat a pixel format of source images
+     * @param srcPixelFormat a pixel format of source images
      * @param dstWidth a width of produced images
      * @param dstHeight a height of produced images
      * @param dstPixelFormat a pixel format of produced images

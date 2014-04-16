@@ -31,8 +31,8 @@ import org.libav.avcodec.PacketWrapperFactory;
  */
 public class PacketPool {
     
-    private PacketWrapperFactory packetFactory;
-    private Deque<PooledPacket> recycle;
+    private final PacketWrapperFactory packetFactory;
+    private final Deque<PooledPacket> recycle;
     
     /**
      * Create a new packet pool instance.

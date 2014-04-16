@@ -380,7 +380,7 @@ public enum CodecID {
             idMap.put(codecId.value(), codecId);
     }
     
-    private int value;
+    private final int value;
 
     private CodecID(String fieldName) {
         value = CodecIdMapper.getInstance().codecIdValue(fieldName);

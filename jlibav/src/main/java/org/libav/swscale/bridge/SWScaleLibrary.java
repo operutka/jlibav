@@ -51,11 +51,11 @@ public final class SWScaleLibrary implements ILibrary {
     public static final int MIN_MAJOR_VERSION = 2;
     public static final int MAX_MAJOR_VERSION = 2;
     
-    private int majorVersion;
-    private int minorVersion;
-    private int microVersion;
+    private final int majorVersion;
+    private final int minorVersion;
+    private final int microVersion;
     
-    private NativeLibrary lib;
+    private final NativeLibrary lib;
     
     public SWScaleLibrary() throws IOException {
         lib = BridJ.getNativeLibrary(Lib.class);
@@ -157,8 +157,7 @@ public final class SWScaleLibrary implements ILibrary {
      * 
      * Assumes planar YUV to be in YUV order instead of YVU.
      * 
-     * @param context the scaling context previously created with 
-     * sws_getContext()
+     * @param c the scaling context previously created with sws_getContext()
      * @param srcSlice the array containing the pointers to the planes of the 
      * source slice
      * @param srcStride the array containing the strides for each plane of the 

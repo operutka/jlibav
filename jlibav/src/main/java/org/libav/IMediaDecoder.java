@@ -82,7 +82,7 @@ public interface IMediaDecoder {
     /**
      * Get decoder for the audio stream at the given index.
      * 
-     * @param videoStreamIndex an audio stream index
+     * @param audioStreamIndex an audio stream index
      * @return decoder
      * @throws LibavException if an error occurs
      */

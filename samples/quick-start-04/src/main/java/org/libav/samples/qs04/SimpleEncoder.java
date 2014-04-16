@@ -37,7 +37,7 @@ public class SimpleEncoder {
     private static final int VIDEO_FRAME_DURATION = 40;
     
     private IMediaEncoder encoder;
-    private IMediaWriter writer;
+    private final IMediaWriter writer;
     
     private IEncoder audioEncoder;
     private AudioFrameGenerator audioFrameGenerator;

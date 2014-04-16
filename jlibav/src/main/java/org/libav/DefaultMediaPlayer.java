@@ -276,9 +276,9 @@ public class DefaultMediaPlayer implements IMediaPlayer {
             playerThreads[sw.getIndex()].setDaemon(true);
         }
         
-        for (int i = 0; i < playerThreads.length; i++) {
-            if (playerThreads[i] != null)
-                playerThreads[i].start();
+        for (Thread playerThread : playerThreads) {
+            if (playerThread != null)
+                playerThread.start();
         }
     }
 
@@ -338,15 +338,13 @@ public class DefaultMediaPlayer implements IMediaPlayer {
             return true;
         if (url.startsWith("rtsp:"))
             return true;
-        if (url.endsWith(".sdp"))
-            return true;
         
-        return false;
+        return url.endsWith(".sdp");
     }
     
     private class ThreadedVideoStreamPlayer extends ThreadedStreamPlayer {
-        private long startPoint;
-        private int videoStreamIndex;
+        private final long startPoint;
+        private final int videoStreamIndex;
         
         public ThreadedVideoStreamPlayer(IMediaReader mr, int videoStreamIndex, long startPoint) {
             super(mr, mr.getVideoStream(videoStreamIndex).getIndex());
@@ -379,8 +377,8 @@ public class DefaultMediaPlayer implements IMediaPlayer {
     }
     
     private class ThreadedAudioStreamPlayer extends ThreadedStreamPlayer {
-        private long startPoint;
-        private int audioStreamIndex;
+        private final long startPoint;
+        private final int audioStreamIndex;
         
         public ThreadedAudioStreamPlayer(IMediaReader mr, int audioStreamIndex, long startPoint) {
             super(mr, mr.getAudioStream(audioStreamIndex).getIndex());
@@ -414,7 +412,7 @@ public class DefaultMediaPlayer implements IMediaPlayer {
     
     private static class ThreadedStreamPlayer implements Runnable {
         protected IMediaReader mr;
-        private int streamIndex;
+        private final int streamIndex;
         private boolean stop;
 
         public ThreadedStreamPlayer(IMediaReader mr, int streamIndex) {
@@ -502,7 +500,7 @@ public class DefaultMediaPlayer implements IMediaPlayer {
     }
     
     private class MediaReaderAdapter implements IMediaReader {
-        private IMediaReader mr;
+        private final IMediaReader mr;
 
         public MediaReaderAdapter(IMediaReader mr) {
             this.mr = mr;

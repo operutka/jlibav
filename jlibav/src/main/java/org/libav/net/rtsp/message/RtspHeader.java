@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
  */
 public abstract class RtspHeader {
     
-    private Map<String, Field> fields;
+    private final Map<String, Field> fields;
 
     protected RtspHeader() {
         fields = new HashMap<String, Field>();
@@ -109,7 +109,7 @@ public abstract class RtspHeader {
     public static abstract class Field implements Cloneable {
         private static final Pattern parsePattern = Pattern.compile("([^\\s:]+):[ \\t]*(.*)");
         
-        private String name;
+        private final String name;
 
         /**
          * Create a new header field and set its name.

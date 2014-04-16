@@ -46,14 +46,16 @@ public interface IMediaReader {
     /**
      * Add a new packet consumer.
      * 
-     * @param c a packet consumer
+     * @param streamIndex 
+     * @param consumer a packet consumer
      */
     void addPacketConsumer(int streamIndex, IPacketConsumer consumer);
     
     /**
      * Remove the given packet consumer.
      * 
-     * @param c a packet consumer
+     * @param streamIndex 
+     * @param consumer a packet consumer
      */
     void removePacketConsumer(int streamIndex, IPacketConsumer consumer);
     
@@ -93,14 +95,16 @@ public interface IMediaReader {
     /**
      * Add a new video packet consumer.
      * 
-     * @param c a packet consumer
+     * @param videoStreamIndex  
+     * @param consumer a packet consumer
      */
     void addVideoPacketConsumer(int videoStreamIndex, IPacketConsumer consumer);
     
     /**
      * Remove the given video packet consumer.
      * 
-     * @param c a packet consumer
+     * @param videoStreamIndex  
+     * @param consumer a packet consumer
      */
     void removeVideoPacketConsumer(int videoStreamIndex, IPacketConsumer consumer);
     
@@ -124,7 +128,7 @@ public interface IMediaReader {
     /**
      * Get stream wrapper for the audio stream at the given index.
      * 
-     * @param videoStreamIndex an audio stream index
+     * @param audioStremIndex  an audio stream index
      * @return stream wrapper
      */
     IStreamWrapper getAudioStream(int audioStremIndex);
@@ -132,14 +136,16 @@ public interface IMediaReader {
     /**
      * Add a new audio packet consumer.
      * 
-     * @param c a packet consumer
+     * @param audioStreamIndex  
+     * @param consumer a packet consumer
      */
     void addAudioPacketConsumer(int audioStreamIndex, IPacketConsumer consumer);
     
     /**
      * Remove the given audio packet consumer.
      * 
-     * @param c a packet consumer
+     * @param audioStreamIndex  
+     * @param consumer a packet consumer
      */
     void removeAudioPacketConsumer(int audioStreamIndex, IPacketConsumer consumer);
     
@@ -179,7 +185,7 @@ public interface IMediaReader {
     /**
      * Get audio stream duration in miliseconds.
      * 
-     * @param videoStreamIndex an audio stream index
+     * @param audioStreamIndex  an audio stream index
      * @return stream duration
      */
     long getAudioStreamDuration(int audioStreamIndex);

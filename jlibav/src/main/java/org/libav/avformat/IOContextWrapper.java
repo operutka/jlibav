@@ -50,10 +50,8 @@ public class IOContextWrapper extends AbstractIOContextWrapper {
     
     @Override
     public boolean isSeekable() {
-        if (seekable == null) {
-            int s = context.seekable();
-            seekable = s == 0 ? false : true;
-        }
+        if (seekable == null)
+            seekable = context.seekable() != 0;
         
         return seekable;
     }

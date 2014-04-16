@@ -296,7 +296,7 @@ public class AudioFrameResampler implements IFrameConsumer, IFrameProducer {
     private static class ResampleBuffer {
         private Pointer<Pointer<?>> data;
         private Pointer<Byte> buffer;
-        private int bufferSize;
+        private final int bufferSize;
         private int lineSize;
         private int maxSampleCount;
 

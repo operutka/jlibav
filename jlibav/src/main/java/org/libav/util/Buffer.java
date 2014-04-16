@@ -21,6 +21,8 @@ package org.libav.util;
  * Generic synchronized buffer of fixed size.
  * 
  * @author Ondrej Perutka
+ * 
+ * @param <T>
  */
 public class Buffer<T> {
     
@@ -105,6 +107,7 @@ public class Buffer<T> {
      * the buffer is full.
      * 
      * @param elem an element
+     * @throws InterruptedException
      */
     public synchronized void waitPut(T elem) throws InterruptedException {
         while (count == buffer.length)
@@ -162,6 +165,7 @@ public class Buffer<T> {
      * 
      * @return the least recently inserted element or null if the buffer is 
      * empty
+     * @throws InterruptedException
      */
     public synchronized T waitGet() throws InterruptedException {
         while (count == 0)

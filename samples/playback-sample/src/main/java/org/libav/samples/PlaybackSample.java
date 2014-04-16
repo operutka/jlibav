@@ -62,7 +62,7 @@ public class PlaybackSample extends javax.swing.JFrame {
     private static final AVResampleLibrary resampleLib = LibraryManager.getInstance().getAVResampleLibrary();
     
     private DefaultMediaPlayer player;
-    private VideoPane videoPane;
+    private final VideoPane videoPane;
     private SampleInputStream sis;
     private AudioInputStream audioStream;
     private PlaybackMixer audioMixer;
@@ -70,8 +70,8 @@ public class PlaybackSample extends javax.swing.JFrame {
     
     private boolean liveStream;
     
-    private SeekListener seekListener;
-    private Timer timer;
+    private final SeekListener seekListener;
+    private final Timer timer;
     
     /**
      * Create a new player.

@@ -69,8 +69,8 @@ public interface IDictionaryWrapper extends IWrapper, Iterable<IDictionaryWrappe
     List<Pair> toList();
     
     public static class Pair {
-        private String key;
-        private String value;
+        private final String key;
+        private final String value;
 
         public Pair(String key, String value) {
             this.key = key;

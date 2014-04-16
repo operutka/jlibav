@@ -41,8 +41,8 @@ public class AudioFrameDecoder implements IDecoder {
     
     private static final AVUtilLibrary utilLib = LibraryManager.getInstance().getAVUtilLibrary();
     
-    private IStreamWrapper stream;
-    private ICodecContextWrapper cc;
+    private final IStreamWrapper stream;
+    private final ICodecContextWrapper cc;
     
     private Rational sTimeBase;
     private long pts;

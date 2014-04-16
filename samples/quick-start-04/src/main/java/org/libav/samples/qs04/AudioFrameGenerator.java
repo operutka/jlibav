@@ -42,13 +42,13 @@ public class AudioFrameGenerator implements IFrameProducer {
     
     private static final int TONE_FREQUENCY = 1000;
     
-    private AudioFrameResampler resampler;
-    private IFrameWrapper audioFrame;
-    private int sampleRate;
+    private final AudioFrameResampler resampler;
+    private final IFrameWrapper audioFrame;
+    private final int sampleRate;
     
     private Pointer<Byte> frameData;
-    private int frameDataSize;
-    private short[] samples;
+    private final int frameDataSize;
+    private final short[] samples;
     
     private long encodedSamples;
     private long nextFrameTime;

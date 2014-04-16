@@ -37,8 +37,8 @@ import org.libav.util.Rational;
  */
 public class VideoFrameDecoder implements IDecoder {
     
-    private IStreamWrapper stream;
-    private ICodecContextWrapper cc;
+    private final IStreamWrapper stream;
+    private final ICodecContextWrapper cc;
     
     private Rational sTimeBase;
     private long pts;

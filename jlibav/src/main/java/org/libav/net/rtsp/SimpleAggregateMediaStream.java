@@ -37,7 +37,7 @@ public class SimpleAggregateMediaStream extends AbstractMediaStream implements I
     
     private final List<ISingleMediaStream> mediaStreams;
     private final Set<IStreamChangeListener> streamChangeListeners;
-    private TimestampGeneratorFactory tsGeneratorFactory;
+    private final TimestampGeneratorFactory tsGeneratorFactory;
     private long maxId;
 
     /**

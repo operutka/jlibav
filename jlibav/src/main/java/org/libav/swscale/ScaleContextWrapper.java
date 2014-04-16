@@ -78,6 +78,15 @@ public class ScaleContextWrapper implements IScaleContextWrapper {
     /**
      * Create SWScale context using given params.
      * 
+     * @param srcWidth
+     * @param srcHeight
+     * @param srcFormat
+     * @param dstWidth
+     * @param dstHeight
+     * @param dstFormat
+     * @param flags
+     * @return 
+     * @throws LibavException 
      * @see ISWScaleLibrary
      */
     public static ScaleContextWrapper createContext(int srcWidth, int srcHeight, PixelFormat srcFormat, int dstWidth, int dstHeight, PixelFormat dstFormat, int flags) throws LibavException {
@@ -87,6 +96,17 @@ public class ScaleContextWrapper implements IScaleContextWrapper {
     /**
      * Create SWScale context using given params.
      * 
+     * @param srcWidth
+     * @param srcHeight
+     * @param srcFormat
+     * @param dstWidth
+     * @param dstHeight
+     * @param dstFormat
+     * @param flags
+     * @param srcFilter
+     * @param dstFilter
+     * @return 
+     * @throws LibavException 
      * @see ISWScaleLibrary
      */
     public static ScaleContextWrapper createContext(int srcWidth, int srcHeight, PixelFormat srcFormat, int dstWidth, int dstHeight, PixelFormat dstFormat, int flags, Pointer srcFilter, Pointer dstFilter) throws LibavException {
@@ -96,6 +116,18 @@ public class ScaleContextWrapper implements IScaleContextWrapper {
     /**
      * Create SWScale context using given params.
      * 
+     * @param srcWidth
+     * @param srcHeight
+     * @param srcFormat
+     * @param dstWidth
+     * @param dstHeight
+     * @param dstFormat
+     * @param flags
+     * @param srcFilter
+     * @param dstFilter
+     * @param param
+     * @return 
+     * @throws LibavException 
      * @see ISWScaleLibrary
      */
     public static ScaleContextWrapper createContext(int srcWidth, int srcHeight, PixelFormat srcFormat, int dstWidth, int dstHeight, PixelFormat dstFormat, int flags, Pointer srcFilter, Pointer dstFilter, Pointer param) throws LibavException {

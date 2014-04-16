@@ -43,16 +43,16 @@ public class CopyStream extends AbstractSingleMediaStream implements ISingleMedi
     
     private final Map<String, IMediaWriter> mediaWriters;
     private final Set<IMediaWriter> playbackSet;
-    private IStreamWrapper inputStream;
+    private final IStreamWrapper inputStream;
     
-    private SessionDescription sdp;
+    private final SessionDescription sdp;
     
     private long ptsOffset;
     
     /**
      * Create a new transcode RTSP stream.
      * 
-     * @param streamWriterFactory a stream writer factory
+     * @param inputStream an input stream
      * @throws IOException if the stream cannot be created
      */
     public CopyStream(IStreamWrapper inputStream) throws IOException {

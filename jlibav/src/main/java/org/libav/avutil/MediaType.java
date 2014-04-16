@@ -48,7 +48,7 @@ public enum MediaType {
             idMap.put(mediaType.value(), mediaType);
     }
     
-    private int value;
+    private final int value;
     
     private MediaType(String fieldName) {
         value = MediaTypeMapper.getInstance().mediaTypeValue(fieldName);

@@ -31,7 +31,7 @@ public class ConnectionField extends RtspHeader.Field {
     
     private static final Pattern parsePattern = Pattern.compile("[^,]+");
 
-    private Set<String> params;
+    private final Set<String> params;
     
     /**
      * Create a new empty Connection field.

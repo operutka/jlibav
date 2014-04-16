@@ -31,8 +31,8 @@ import java.nio.charset.Charset;
  */
 public class NetworkStreamWriter implements Closeable, Flushable {
 
-    private OutputStream os;
-    private Charset cs;
+    private final OutputStream os;
+    private final Charset cs;
     
     /**
      * Create a new NetworkStreamWriter.

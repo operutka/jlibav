@@ -56,17 +56,17 @@ public class VideoFrameGenerator implements IFrameProducer {
     private static final int GREEN_PERIOD = 11000;
     private static final int BLUE_PERIOD = 17000;
     
-    private FrameScaler frameScaler;
-    private IFrameWrapper videoFrame;
+    private final FrameScaler frameScaler;
+    private final IFrameWrapper videoFrame;
     
-    private BufferedImage image;
-    private int[] pixels;
-    private Graphics2D imageGraphics;
+    private final BufferedImage image;
+    private final int[] pixels;
+    private final Graphics2D imageGraphics;
     
     private Font font;
-    private FontRenderContext fontRenderContext;
+    private final FontRenderContext fontRenderContext;
     
-    private int frameDuration;
+    private final int frameDuration;
     private long nextFrameTime;
     
     /**

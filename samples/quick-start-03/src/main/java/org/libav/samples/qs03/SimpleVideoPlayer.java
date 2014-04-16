@@ -39,7 +39,7 @@ import org.libav.util.swing.VideoPane;
  */
 public class SimpleVideoPlayer {
     
-    private IMediaPlayer player;
+    private final IMediaPlayer player;
     private SampleInputStream sampleInputStream;
     private AudioInputStream audioInputStream;
     private Frame2AudioFrameAdapter audioFrameAdapter;

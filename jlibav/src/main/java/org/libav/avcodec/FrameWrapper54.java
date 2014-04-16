@@ -171,7 +171,7 @@ public class FrameWrapper54 extends AbstractFrameWrapper {
             return false;
         
         if (keyFrame == null)
-            keyFrame = frame.key_frame() == 0 ? false : true;
+            keyFrame = frame.key_frame() != 0;
         
         return keyFrame;
     }

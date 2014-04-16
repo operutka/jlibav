@@ -45,9 +45,9 @@ public class RtspConnectionHandler implements Runnable {
     private static final Pattern uriParsePattern = Pattern.compile("rtsp://([^\\s:/]+)(:([0-9]+))?(/[^\\s?]*)?.*");
     private static final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
     
-    private Charset charset;
-    private RtspServer server;
-    private Socket socket;
+    private final Charset charset;
+    private final RtspServer server;
+    private final Socket socket;
 
     /**
      * Create a new RTSP connection handler.

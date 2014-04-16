@@ -98,9 +98,9 @@ public interface IMediaStream {
      * Description for unicast connection.
      */
     public static class UnicastConnectionInfo {
-        private InetAddress clientAddress;
-        private int clientRtpPort;
-        private int clientRtcpPort;
+        private final InetAddress clientAddress;
+        private final int clientRtpPort;
+        private final int clientRtcpPort;
         private int serverRtpPort;
         private int serverRtcpPort;
 

@@ -38,6 +38,7 @@ public interface ICodecContextWrapper extends IWrapper {
      * corresponding to the given codec.
      * 
      * @param codec a codec
+     * @throws LibavException
      */
     void getDefaults(ICodecWrapper codec) throws LibavException;
     
@@ -364,7 +365,7 @@ public interface ICodecContextWrapper extends IWrapper {
      * Set the channel_layout property of the AVCodecContext. The value may be 
      * cached.
      * 
-     * @param channels a channel layout
+     * @param channelLayout a channel layout
      */
     void setChannelLayout(long channelLayout);
 

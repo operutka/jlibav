@@ -33,6 +33,8 @@ public interface IAudioResampleContextWrapper extends IWrapper {
     
     /**
      * Open resample context.
+     * 
+     * @throws LibavException
      */
     void open() throws LibavException;
     
@@ -142,6 +144,7 @@ public interface IAudioResampleContextWrapper extends IWrapper {
      * array
      * @return mixing coefficients; matrix[i + stride * o] is the weight of 
      * input channel i in output channel o
+     * @throws LibavException
      */
     double[] getMatrix(int stride) throws LibavException;
     
@@ -155,6 +158,7 @@ public interface IAudioResampleContextWrapper extends IWrapper {
      * of input channel i in output channel o
      * @param stride distance between adjacent input channels in the matrix 
      * array
+     * @throws LibavException
      */
     void setMatrix(double[] matrix, int stride) throws LibavException;
     
@@ -177,6 +181,7 @@ public interface IAudioResampleContextWrapper extends IWrapper {
      * @param inSampleCount number of input samples to convert
      * @return number of samples written to the output buffer, not including 
      * converted samples added to the internal output FIFO
+     * @throws LibavException
      */
     int convert(Pointer<Pointer<?>> output, int outPlaneSize, int outSampleCount, Pointer<Pointer<?>> input, int inPlaneSize, int inSampleCount) throws LibavException;
     

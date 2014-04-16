@@ -26,7 +26,7 @@ import org.libav.net.rtsp.message.RtspMessage;
  */
 public class RtspException extends Exception {
 
-    private RtspMessage response;
+    private final RtspMessage response;
     
     /**
      * Create a new RTSP exception and set the response code, response message

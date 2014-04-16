@@ -95,6 +95,7 @@ public class PacketWrapperFactory {
      * 
      * @param size packet size
      * @return packet wrapper
+     * @throws LibavException
      */
     public IPacketWrapper alloc(int size) throws LibavException {
         switch (codecLib.getMajorVersion()) {

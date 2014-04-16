@@ -30,8 +30,8 @@ import org.libav.ITimestampGenerator;
  */
 public class TimestampGeneratorFactory {
     
-    private Map<String, Long> sessionOffsets;
-    private Map<String, Set<Generator>> sessionGenerators;
+    private final Map<String, Long> sessionOffsets;
+    private final Map<String, Set<Generator>> sessionGenerators;
 
     public TimestampGeneratorFactory() {
         sessionOffsets = new HashMap<String, Long>();
@@ -80,7 +80,7 @@ public class TimestampGeneratorFactory {
     }
     
     private class Generator implements ITimestampGenerator {
-        private String sessionId;
+        private final String sessionId;
         private long lastTimestamp;
         private long offset;
         private boolean updateOffset;

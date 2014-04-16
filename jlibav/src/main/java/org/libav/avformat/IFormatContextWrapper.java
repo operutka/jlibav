@@ -35,8 +35,6 @@ public interface IFormatContextWrapper extends IWrapper {
     
     /**
      * Close the format context.
-     * 
-     * @throws LibavException exception caused by the Libav
      */
     void close();
     

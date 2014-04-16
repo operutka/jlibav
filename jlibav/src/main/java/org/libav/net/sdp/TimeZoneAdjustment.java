@@ -33,7 +33,7 @@ public class TimeZoneAdjustment implements Cloneable {
     private static final Pattern parsePattern = Pattern.compile("^z=([0-9]+[ \\t]+[0-9]+[ \\t]*)+$");
     private static final Pattern numberParsePattern = Pattern.compile("[0-9]+");
     
-    private List<Adjustment> adjustments;
+    private final List<Adjustment> adjustments;
 
     /**
      * Create a new time zone adjustment field.
@@ -114,8 +114,8 @@ public class TimeZoneAdjustment implements Cloneable {
      * description.
      */
     public static class Adjustment {
-        private long adjustmentTime;
-        private long offest;
+        private final long adjustmentTime;
+        private final long offest;
 
         public Adjustment(long adjustmentTime, long offest) {
             this.adjustmentTime = adjustmentTime;

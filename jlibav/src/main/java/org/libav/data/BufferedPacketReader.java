@@ -30,16 +30,16 @@ import org.libav.util.Buffer;
  */
 public class BufferedPacketReader {
     
-    private IFormatContextWrapper formatContext;
+    private final IFormatContextWrapper formatContext;
+    private final PacketPool packetPool;
     private IPacketWrapper packet;
-    private PacketPool packetPool;
     
     private final Buffer<IPacketWrapper> buffer;
     private boolean eof;
     
     private ReaderThread readerThread;
     private Thread t;
-    private ReentrantLock lock;
+    private final ReentrantLock lock;
 
     /**
      * Create a new pcket reader.

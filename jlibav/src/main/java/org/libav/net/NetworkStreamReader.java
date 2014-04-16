@@ -29,9 +29,9 @@ import java.nio.charset.Charset;
  */
 public class NetworkStreamReader implements Closeable {
 
-    private InputStream in;
-    private Charset charset;
-    private byte[] line;    
+    private final InputStream in;
+    private final Charset charset;
+    private final byte[] line;    
     private boolean crFlag;
 
     /**

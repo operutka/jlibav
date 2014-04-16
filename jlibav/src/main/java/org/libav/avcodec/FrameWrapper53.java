@@ -50,7 +50,7 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
     }
     
     private AVFrame53 frame;
-    private IFillAudioFrameFunction fillAudioFrameFunction;
+    private final IFillAudioFrameFunction fillAudioFrameFunction;
     
     private Pointer[] toBeFreed;
     
@@ -178,7 +178,7 @@ public class FrameWrapper53 extends AbstractFrameWrapper {
             return false;
         
         if (keyFrame == null)
-            keyFrame = frame.key_frame() == 0 ? false : true;
+            keyFrame = frame.key_frame() != 0;
         
         return keyFrame;
     }

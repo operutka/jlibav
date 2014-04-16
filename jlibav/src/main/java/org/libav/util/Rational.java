@@ -197,10 +197,8 @@ public class Rational extends Number implements Comparable<Rational> {
         final Rational other = (Rational) obj;
         if (this.num != other.num)
             return false;
-        if (this.den != other.den)
-            return false;
         
-        return true;
+        return this.den == other.den;
     }
 
     @Override

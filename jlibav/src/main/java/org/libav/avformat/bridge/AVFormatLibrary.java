@@ -72,11 +72,11 @@ public final class AVFormatLibrary implements ILibrary {
     public static final int MIN_MAJOR_VERSION = 53;
     public static final int MAX_MAJOR_VERSION = 55;
     
-    private int majorVersion;
-    private int minorVersion;
-    private int microVersion;
+    private final int majorVersion;
+    private final int minorVersion;
+    private final int microVersion;
     
-    private NativeLibrary lib;
+    private final NativeLibrary lib;
     
     public AVFormatLibrary() throws IOException {
         lib = BridJ.getNativeLibrary(Lib.class);
@@ -160,7 +160,7 @@ public final class AVFormatLibrary implements ILibrary {
      * The codecs are not opened. Only the file header (if present) is read.
      * 
      * @deprecated since 53.2.0; use avformat_open_input instead
-     * @param ps the opened media file handle is put here
+     * @param ic_ptr  the opened media file handle is put here
      * @param filename filename to open
      * @param fmt if non-NULL, force the file format to use
      * @param buf_size optional buffer size (zero if default is OK)

@@ -164,7 +164,7 @@ public enum PixelFormat {
             idMap.put(pixFmt.value(), pixFmt);
     }
     
-    private int value;
+    private final int value;
     
     private PixelFormat(String fieldName) {
         value = PixelFormatMapper.getInstance().pixelFormatValue(fieldName);

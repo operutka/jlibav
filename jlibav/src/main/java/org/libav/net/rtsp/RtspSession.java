@@ -30,11 +30,11 @@ public class RtspSession {
     
     public static final long DEFAULT_TIMEOUT = 60000;
     
-    private String id;
+    private final String id;
     private long timeout;
     private long lastAccessTime;
     
-    private Set<IMediaStream> resources;
+    private final Set<IMediaStream> resources;
 
     /**
      * Create a new RTSP session.

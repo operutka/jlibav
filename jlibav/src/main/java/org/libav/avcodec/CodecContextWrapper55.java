@@ -44,7 +44,7 @@ public class CodecContextWrapper55 extends AbstractCodecContextWrapper {
     private AVCodecContext55 context;
     private boolean closed;
     
-    private Pointer<Integer> intByRef;
+    private final Pointer<Integer> intByRef;
     
     /**
      * Create a new wrapper for the given AVCodecContext.
@@ -542,10 +542,7 @@ public class CodecContextWrapper55 extends AbstractCodecContextWrapper {
         if (len < 0)
             throw new LibavException(len);
 
-        if (intByRef.getInt() != 0)
-            return true;
-
-        return false;
+        return intByRef.getInt() != 0;
     }
 
     @Override
@@ -587,10 +584,7 @@ public class CodecContextWrapper55 extends AbstractCodecContextWrapper {
         if (len < 0)
             throw new LibavException(len);
 
-        if (intByRef.getInt() != 0)
-            return true;
-
-        return false;
+        return intByRef.getInt() != 0;
     }
     
 }

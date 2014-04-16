@@ -19,6 +19,7 @@ package org.libav.avcodec;
 
 import org.bridj.Pointer;
 import org.libav.LibavException;
+import org.libav.LibavRuntimeException;
 import org.libav.avcodec.bridge.AVCodecLibrary;
 import org.libav.avcodec.bridge.AVPacket;
 import org.libav.bridge.LibraryManager;
@@ -69,7 +70,7 @@ public class PacketWrapper extends AbstractPacketWrapper {
     public void grow(int growBy) {
         int result = codecLib.av_grow_packet(getPointer(), growBy);
         if (result != 0)
-            throw new RuntimeException(new LibavException(result));
+            throw new LibavRuntimeException(result);
         data = null;
         size = null;
     }
@@ -240,7 +241,7 @@ public class PacketWrapper extends AbstractPacketWrapper {
         PacketWrapper result = new PacketWrapper(new AVPacket());
         int res = codecLib.av_new_packet(result.getPointer(), getSize());
         if (res != 0)
-            throw new RuntimeException(new LibavException(res));
+            throw new LibavRuntimeException(res);
         
         Pointer<Byte> pData = result.getData();
         getPointer().copyTo(result.getPointer());

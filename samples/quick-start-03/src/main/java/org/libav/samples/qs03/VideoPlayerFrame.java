@@ -29,7 +29,7 @@ import org.libav.util.swing.VideoPane;
  */
 public class VideoPlayerFrame extends JFrame {
 
-    private VideoPane videoPane;
+    private final VideoPane videoPane;
     
     /**
      * Create a new video player frame, set the window title and dimension

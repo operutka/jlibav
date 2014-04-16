@@ -45,13 +45,13 @@ public class MediaDescription implements Cloneable {
     private int port;
     private int numOfPorts;
     private String transport;
-    private List<String> formats;
+    private final List<String> formats;
     
     private String mediaTitle;
     private Connection connection;
-    private Map<String, Long> bandwidth;
+    private final Map<String, Long> bandwidth;
     private Key key;
-    private Map<String, Attribute> attributes;
+    private final Map<String, Attribute> attributes;
 
     /**
      * Create a new media description.

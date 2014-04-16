@@ -94,9 +94,9 @@ public class RtspSample {
      * Factory for client video streams.
      */
     private static class VideoStreamWriterFactory implements IStreamWriterFactory {
-        private int width;
-        private int height;
-        private PixelFormat pixelFormat;
+        private final int width;
+        private final int height;
+        private final PixelFormat pixelFormat;
 
         public VideoStreamWriterFactory(ICodecContextWrapper decoderContext) {
             width = decoderContext.getWidth();
@@ -118,10 +118,10 @@ public class RtspSample {
      * Factory for client audio streams.
      */
     private static class AudioStreamWriterFactory implements IStreamWriterFactory {
-        private CodecID codecId;
-        private int channels;
-        private int sampleRate;
-        private SampleFormat sampleFormat;
+        private final CodecID codecId;
+        private final int channels;
+        private final int sampleRate;
+        private final SampleFormat sampleFormat;
 
         public AudioStreamWriterFactory(CodecID codecId, int channels, int sampleRate, SampleFormat sampleFormat) {
             this.codecId = codecId;

@@ -57,7 +57,7 @@ public enum SampleFormat {
         sampleFormatMapper = SampleFormatMapper.getInstance();
     }
     
-    private int value;
+    private final int value;
     
     private SampleFormat(String fieldName) {
         value = SampleFormatMapper.getInstance().sampleFormatValue(fieldName);

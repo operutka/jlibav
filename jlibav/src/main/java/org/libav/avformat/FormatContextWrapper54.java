@@ -323,10 +323,10 @@ public class FormatContextWrapper54 extends AbstractFormatContextWrapper {
         if (tmp == null)
             return false;
         
-        for (int i = 0; i < tmp.length; i++) {
-            if (pChapter.equals(tmp[i].getPointer()))
+        for (IChapterWrapper c : tmp) {
+            if (pChapter.equals(c.getPointer()))
                 return false;
-            else if (chapter.getId() == tmp[i].getId())
+            else if (chapter.getId() == c.getId())
                 return false;
         }
         
