@@ -30,72 +30,80 @@ import org.bridj.Pointer;
  */
 public class LockManager extends AVCodecLibrary.RegisterLockMgrCallback {
 
-    private Map<Pointer<?>, Semaphore> mutexMap;
+    private final MutexMap mutexMap;
 
     public LockManager() {
-        this.mutexMap = Collections.synchronizedMap(new HashMap<Pointer<?>, Semaphore>());
+        this.mutexMap = new MutexMap();
     }
     
     @Override
     public int apply(Pointer<Pointer<?>> mutex, int op) {
         switch (op) {
-            case AVLockOp.AV_LOCK_CREATE: return create(mutex);
-            case AVLockOp.AV_LOCK_DESTROY: return destroy(mutex);
-            case AVLockOp.AV_LOCK_OBTAIN: return obtain(mutex);
-            case AVLockOp.AV_LOCK_RELEASE: return release(mutex);
+            case AVLockOp.AV_LOCK_CREATE: return mutexMap.create(mutex);
+            case AVLockOp.AV_LOCK_DESTROY: return mutexMap.destroy(mutex);
+            case AVLockOp.AV_LOCK_OBTAIN: return mutexMap.obtain(mutex);
+            case AVLockOp.AV_LOCK_RELEASE: return mutexMap.release(mutex);
             default: return -1;
         }
     }
     
-    private int create(Pointer<Pointer<?>> mutex) {
-        // it doesn't matter what's inside
-        Pointer<?> mid = Pointer.allocateInt();
-        mutexMap.put(mid, new Semaphore(1));
-        mutex.set(mid);
-        
-        return 0;
-    }
-    
-    private int destroy(Pointer<Pointer<?>> mutex) {
-        Pointer<?> mid = mutex.get();
-        if (mid == null)
-            return -1;
-        
-        mutexMap.remove(mid);
-        
-        return 0;
-    }
-    
-    private Semaphore getMutex(Pointer<Pointer<?>> mutex) {
-        Pointer<?> mid = mutex.get();
-        if (mid == null)
-            return null;
-        
-        return mutexMap.get(mid);
-    }
-    
-    private int obtain(Pointer<Pointer<?>> mutex) {
-        Semaphore s = getMutex(mutex);
-        if (s == null)
-            return -1;
-        
-        try {
-            s.acquire();
-        } catch (InterruptedException ex) {
-            return -2;
+    private static class MutexMap {
+        private final Map<Pointer<?>, Semaphore> mutexMap;
+
+        public MutexMap() {
+            mutexMap = Collections.synchronizedMap(new HashMap<Pointer<?>, Semaphore>());
         }
-        
-        return 0;
-    }
-    
-    private int release(Pointer<Pointer<?>> mutex) {
-        Semaphore s = getMutex(mutex);
-        if (s == null)
-            return -1;
-        
-        s.release();
-        
-        return 0;
+
+        private int create(Pointer<Pointer<?>> mutex) {
+            // it doesn't matter what's inside
+            Pointer<?> mid = Pointer.allocateInt();
+            mutexMap.put(mid, new Semaphore(1));
+            mutex.set(mid);
+
+            return 0;
+        }
+
+        private int destroy(Pointer<Pointer<?>> mutex) {
+            Pointer<?> mid = mutex.get();
+            if (mid == null)
+                return -1;
+
+            mutexMap.remove(mid);
+
+            return 0;
+        }
+
+        private Semaphore getMutex(Pointer<Pointer<?>> mutex) {
+            Pointer<?> mid = mutex.get();
+            if (mid == null)
+                return null;
+
+            return mutexMap.get(mid);
+        }
+
+        private int obtain(Pointer<Pointer<?>> mutex) {
+            Semaphore s = getMutex(mutex);
+            if (s == null)
+                return -1;
+
+            try {
+                s.acquire();
+            } catch (InterruptedException ex) {
+                return -2;
+            }
+
+            return 0;
+        }
+
+        private int release(Pointer<Pointer<?>> mutex) {
+            Semaphore s = getMutex(mutex);
+            if (s == null)
+                return -1;
+
+            s.release();
+
+            return 0;
+        }
     }
     
 }
